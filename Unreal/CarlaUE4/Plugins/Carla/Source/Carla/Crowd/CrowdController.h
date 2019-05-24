@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Polygon.h"
 #include "CrowdController.generated.h"
 
 UCLASS()
-class CARLA_API ACrowdController : public AActor
-{
+class CARLA_API ACrowdController : public AActor {
   GENERATED_BODY()
 
 public:
@@ -15,13 +15,16 @@ public:
   
   void PostInitializeComponents() override;
 
-  void SetEpisoide(UCarlaEpisode *ThisEpisode)
-  {
+  void SetEpisoide(UCarlaEpisode *ThisEpisode) {
     Episode = ThisEpisode;
   }
 
+  FVector2D RandomRoadPoint() const;
+
 private:
 
-  UCarlaEpisode *Episode = nullptr; 
-    
+  UCarlaEpisode* Episode = nullptr; 
+  TArray<FPolygon> RoadPolygons;
+  float TotalRoadArea = 0;
+
 };
