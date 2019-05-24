@@ -2,9 +2,11 @@
 
 class FPolygon {
 public:
-  FPolygon(const TArray<FVector2D>& Vertices);
+  FPolygon(const TArray<FVector>& Vertices);
 
-  double GetArea() const;
+  double GetArea() const { return Area; }
+
+  double GetMaxZ() const { return MaxZ; }
 
   bool InPolygon(const FVector2D& Point) const;
 
@@ -17,4 +19,5 @@ private:
   float MaxX;
   float MinY;
   float MaxY;
+  float MaxZ;
 };

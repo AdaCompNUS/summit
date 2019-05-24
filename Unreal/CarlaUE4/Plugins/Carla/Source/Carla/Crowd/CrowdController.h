@@ -18,10 +18,6 @@ public:
     Episode = Ep;
   }
 
-  FVector2D RandRoadPoint() const;
-
-  const FActorDefinition& RandWalkerActorDefinition() const;
-
   void Initialize();
   
   void Tick(float DeltaSeconds) final;
@@ -32,5 +28,9 @@ private:
   TArray<FPolygon> RoadPolygons;
   float TotalRoadArea = 0;
   int X = 0;
+  
+  FVector RandRoadPoint() const;
+
+  const FActorDefinition& RandWalkerActorDefinition() const;
 
 };
