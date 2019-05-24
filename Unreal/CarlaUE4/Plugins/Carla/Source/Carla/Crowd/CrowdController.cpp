@@ -3,6 +3,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Regex.h"
 #include "Polygon.h"
+#include <exception>
 
 ACrowdController::ACrowdController(void) {
   PrimaryActorTick.bCanEverTick = true; 
@@ -18,8 +19,12 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  FVector2D Point = RandRoadPoint();
-  FTransform Transform(FVector(Point.X, Point.Y, 10));
+  if (X >= RoadPolygons.Num()) {
+    return;
+  }
+
+  FVector2D Point = RoadPolygons[X].RandPoint();
+  FTransform Transform(FVector(Point.X, Point.Y, 3000));
   
   const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
   FActorDescription ActorDescription;
@@ -28,6 +33,7 @@ void ACrowdController::Tick(float DeltaSeconds) {
   ActorDescription.Class = ActorDefinition.Class;
 
   Episode->SpawnActor(Transform, ActorDescription);
+  X++;
 }
 
 FVector2D ACrowdController::RandRoadPoint() const {
@@ -47,7 +53,6 @@ const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
   
   for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
     if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
-
       WalkerActorDefinitions.Add(&ActorDefinition);
     }
   }
@@ -58,15 +63,17 @@ const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
 void ACrowdController::Initialize() {
   TotalRoadArea = 0;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    if (ActorItr->GetFolderPath().ToString() == TEXT("Roads")) {
+    FRegexPattern Pattern(TEXT("\\/Game\\/Carla\\/Static\\/Road\\/RoadsTown03\\/SM_RoadTown03_[0-9]+\\.SM_RoadTown03_[0-9]+"));
+    if (FRegexMatcher(Pattern, ActorItr->GetDetailedInfo()).FindNext()){
       const FPositionVertexBuffer& VertexBuffer = ActorItr->GetStaticMeshComponent()->GetStaticMesh()->RenderData->LODResources[0].VertexBuffers.PositionVertexBuffer;
       TArray<FVector2D> Vertices;
       int Count = VertexBuffer.GetNumVertices();
       for (int Index = 0; Index < Count; Index++) {
-        const FVector Vertex3 = GetActorLocation() + GetTransform().TransformVector(VertexBuffer.VertexPosition(Index));
+        const FVector Vertex3 = ActorItr->GetTransform().TransformVector(VertexBuffer.VertexPosition(Index));
         Vertices.Emplace(Vertex3.X, Vertex3.Y);
       }
       TotalRoadArea += RoadPolygons[RoadPolygons.Emplace(Vertices)].GetArea();
+      UE_LOG(LogCarla, Display, TEXT("Area = %f, Polygon = %s"), RoadPolygons.Top().GetArea(), *ActorItr->GetDetailedInfo());
     }
   }
 

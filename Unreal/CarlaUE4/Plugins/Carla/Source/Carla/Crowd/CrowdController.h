@@ -31,5 +31,6 @@ private:
   UCarlaEpisode* Episode = nullptr; 
   TArray<FPolygon> RoadPolygons;
   float TotalRoadArea = 0;
+  int X = 0;
 
 };
