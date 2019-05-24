@@ -44,11 +44,10 @@ bool FPolygon::InPolygon(const FVector2D& Point) const {
   return C;
 }
 
-FVector2D FPolygon::RandomPoint() const {
+FVector2D FPolygon::RandPoint() const {
   FVector2D Point;
   do {
     Point = FVector2D(FMath::FRandRange(MinX, MaxX), FMath::FRandRange(MinY, MaxY));
-    UE_LOG(LogCarla, Display, TEXT("X = %f to %f, Y = %f to %f, P = %f, %f"), MinX, MaxX, MinY, MaxY, Point.X, Point.Y);
   } while (!InPolygon(Point));
   return Point;
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Polygon.h"
+#include "Carla.h"
 #include "CrowdController.generated.h"
 
 UCLASS()
@@ -12,14 +13,18 @@ public:
   ACrowdController();
 
   ACrowdController(const FObjectInitializer &InObjectInitializer);
-  
-  void PostInitializeComponents() override;
 
-  void SetEpisoide(UCarlaEpisode *ThisEpisode) {
-    Episode = ThisEpisode;
+  void SetEpisode(UCarlaEpisode *Ep) {
+    Episode = Ep;
   }
 
-  FVector2D RandomRoadPoint() const;
+  FVector2D RandRoadPoint() const;
+
+  const FActorDefinition& RandWalkerActorDefinition() const;
+
+  void Initialize();
+  
+  void Tick(float DeltaSeconds) final;
 
 private:
 

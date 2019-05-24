@@ -8,7 +8,7 @@ public:
 
   bool InPolygon(const FVector2D& Point) const;
 
-  FVector2D RandomPoint() const;
+  FVector2D RandPoint() const;
 
 private:
   TArray<FVector2D> Vertices;

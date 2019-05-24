@@ -1,23 +1,61 @@
 #include "CrowdController.h"
 #include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
-#include "Carla.h"
 #include "Regex.h"
 #include "Polygon.h"
 
 ACrowdController::ACrowdController(void) {
-  PrimaryActorTick.bCanEverTick = false; 
-  UE_LOG(LogTemp, Warning, TEXT("Crowd Controller Created"));
+  PrimaryActorTick.bCanEverTick = true; 
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
+  bAllowTickBeforeBeginPlay = false;
 }
 
 ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
-  PrimaryActorTick.bCanEverTick = false;
+  PrimaryActorTick.bCanEverTick = true; 
+  PrimaryActorTick.TickGroup = TG_PrePhysics;
+  bAllowTickBeforeBeginPlay = false;
 }
 
-void ACrowdController::PostInitializeComponents() {
-  Super::PostInitializeComponents();
+void ACrowdController::Tick(float DeltaSeconds) {
+  FVector2D Point = RandRoadPoint();
+  FTransform Transform(FVector(Point.X, Point.Y, 10));
+  
+  const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
+  FActorDescription ActorDescription;
+  ActorDescription.UId = ActorDefinition.UId;
+  ActorDescription.Id = ActorDefinition.Id;
+  ActorDescription.Class = ActorDefinition.Class;
 
+  Episode->SpawnActor(Transform, ActorDescription);
+}
+
+FVector2D ACrowdController::RandRoadPoint() const {
+  float V = FMath::FRandRange(0, TotalRoadArea);
+  
+  for (const FPolygon& Polygon : RoadPolygons){
+    V -= Polygon.GetArea();
+    if (V <= 0) return Polygon.RandPoint();
+  }
+
+  return RoadPolygons.Last().RandPoint();
+}
+
+const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
+  const TArray<FActorDefinition>& ActorDefinitions = Episode->GetActorDefinitions();
+  TArray<const FActorDefinition*> WalkerActorDefinitions;
+  
+  for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
+    if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
+
+      WalkerActorDefinitions.Add(&ActorDefinition);
+    }
+  }
+
+  return *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
+}
+
+void ACrowdController::Initialize() {
   TotalRoadArea = 0;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
     if (ActorItr->GetFolderPath().ToString() == TEXT("Roads")) {
@@ -33,18 +71,7 @@ void ACrowdController::PostInitializeComponents() {
   }
 
   for (int I = 0; I < 10; I++) {
-    FVector2D P = RandomRoadPoint();
-    UE_LOG(LogCarla, Display, TEXT("Point = %f, %f"), P.X, P.Y);
+    FVector2D Point = RandRoadPoint();
+    FTransform Transform(FVector(Point.X, Point.Y, 10));
   }
-}
-
-FVector2D ACrowdController::RandomRoadPoint() const {
-  float V = FMath::FRandRange(0, TotalRoadArea);
-  
-  for (const FPolygon& Polygon : RoadPolygons){
-    V -= Polygon.GetArea();
-    if (V <= 0) return Polygon.RandomPoint();
-  }
-
-  return RoadPolygons.Last().RandomPoint();
 }

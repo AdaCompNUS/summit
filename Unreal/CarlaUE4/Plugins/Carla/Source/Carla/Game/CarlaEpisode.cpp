@@ -204,6 +204,8 @@ void UCarlaEpisode::InitializeAtBeginPlay()
 
   // check if replayer is waiting to autostart
   Recorder->GetReplayer()->CheckPlayAfterMapLoaded();
+
+  CrowdController->Initialize();
 }
 
 void UCarlaEpisode::EndPlay(void)

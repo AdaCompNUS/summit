@@ -13,6 +13,7 @@
 #include "Carla/Game/TaggerDelegate.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
+#include "Carla/Crowd/CrowdController.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -65,6 +66,9 @@ private:
 
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;
+
+  UPROPERTY()
+  ACrowdController *CrowdController = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
