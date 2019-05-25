@@ -17,12 +17,7 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  if (X >= RoadPolygons.Num()) {
-    return;
-  }
-
-  FVector2D Point = RoadPolygons[X].RandPoint();
-  float Z = RoadPolygons[X].GetMaxZ();
+  FVector Point = RoadMap.RandPoint();
   
   const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
   FActorDescription ActorDescription;
@@ -35,28 +30,10 @@ void ACrowdController::Tick(float DeltaSeconds) {
 
   FVector Origin, BoxExtent;
   ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
-  Z += BoxExtent.Z + 10;
   
-  FTransform Transform(FVector(Point.X, Point.Y, Z));
+  FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
 
   Episode->SpawnActor(Transform, ActorDescription);
-  X++;
-}
-
-FVector ACrowdController::RandRoadPoint() const {
-  float V = FMath::FRandRange(0, TotalRoadArea);
-  int I = 0;
-  for (; V > 0 && I < RoadPolygons.Num(); I++) {
-    V -= RoadPolygons[I].GetArea();
-  }
-
-  const FPolygon& Polygon = RoadPolygons[I];
-  FVector2D Point2D = Polygon.RandPoint();
-  FVector Point;
-  Point.X = Point2D.X;
-  Point.Y = Point2D.Y;
-  Point.Z = Polygon.GetMaxZ();
-  return Point;
 }
 
 const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
@@ -73,7 +50,7 @@ const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
 }
 
 void ACrowdController::Initialize() {
-  TotalRoadArea = 0;
+  TArray<FRoadPolygon> RoadPolygons;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
     FRegexPattern Pattern(TEXT("\\/Game\\/Carla\\/Static\\/Road\\/RoadsTown03\\/SM_RoadTown03_[0-9]+\\.SM_RoadTown03_[0-9]+"));
     if (FRegexMatcher(Pattern, ActorItr->GetDetailedInfo()).FindNext()){
@@ -83,8 +60,8 @@ void ACrowdController::Initialize() {
       for (int Index = 0; Index < Count; Index++) {
         Vertices.Emplace(ActorItr->GetTransform().TransformVector(VertexBuffer.VertexPosition(Index)));
       }
-      TotalRoadArea += RoadPolygons[RoadPolygons.Emplace(Vertices)].GetArea();
-      UE_LOG(LogCarla, Display, TEXT("Area = %f, Polygon = %s"), RoadPolygons.Top().GetArea(), *ActorItr->GetDetailedInfo());
+      RoadPolygons.Emplace(Vertices);
     }
   }
+  RoadMap = FRoadMap(RoadPolygons);
 }

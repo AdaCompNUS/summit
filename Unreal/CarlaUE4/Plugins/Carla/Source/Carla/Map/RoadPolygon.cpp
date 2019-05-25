@@ -1,6 +1,6 @@
-#include "Polygon.h"
+#include "RoadPolygon.h"
 
-FPolygon::FPolygon(const TArray<FVector>& Vertices) {
+FRoadPolygon::FRoadPolygon(const TArray<FVector>& Vertices) {
   int Count = Vertices.Num();
   Area = Vertices[Count - 1].X * Vertices[0].Y - Vertices[0].X * Vertices[Count - 1].Y;
 
@@ -17,16 +17,16 @@ FPolygon::FPolygon(const TArray<FVector>& Vertices) {
     }
 
     if (!HasValue) {
-      BoundingBox.Min.X = BoundingBox.Max.X = Vertex.X;
-      BoundingBox.Min.Y = BoundingBox.Max.Y = Vertex.Y;
+      Bounds.Min.X = Bounds.Max.X = Vertex.X;
+      Bounds.Min.Y = Bounds.Max.Y = Vertex.Y;
       MaxZ = Vertex.Z;
       HasValue = true;
     }
     else {
-      BoundingBox.Min.X = FMath::Min(BoundingBox.Min.X, Vertex.X);
-      BoundingBox.Max.X = FMath::Max(BoundingBox.Max.X, Vertex.X);
-      BoundingBox.Min.Y = FMath::Min(BoundingBox.Min.Y, Vertex.Y);
-      BoundingBox.Max.Y = FMath::Max(BoundingBox.Max.Y, Vertex.Y);
+      Bounds.Min.X = FMath::Min(Bounds.Min.X, Vertex.X);
+      Bounds.Max.X = FMath::Max(Bounds.Max.X, Vertex.X);
+      Bounds.Min.Y = FMath::Min(Bounds.Min.Y, Vertex.Y);
+      Bounds.Max.Y = FMath::Max(Bounds.Max.Y, Vertex.Y);
       MaxZ = FMath::Max(MaxZ, Vertex.Z);
     }
   }
@@ -34,7 +34,7 @@ FPolygon::FPolygon(const TArray<FVector>& Vertices) {
   Area = FMath::Abs(Area) / 2;
 }
 
-bool FPolygon::InPolygon(const FVector2D& Point) const {
+bool FRoadPolygon::InPolygon(const FVector2D& Point) const {
   bool C = 0;
   for (int I = 0, J = Vertices.Num() - 1; I < Vertices.Num(); J = I++) {
     if (((Vertices[I].Y > Point.Y) != (Vertices[J].Y > Point.Y)) && 
@@ -45,10 +45,10 @@ bool FPolygon::InPolygon(const FVector2D& Point) const {
   return C;
 }
 
-FVector2D FPolygon::RandPoint() const {
+FVector2D FRoadPolygon::RandPoint() const {
   FVector2D Point;
   do {
-    Point = FVector2D(FMath::FRandRange(BoundingBox.Min.X, BoundingBox.Max.X), FMath::FRandRange(BoundingBox.Min.Y, BoundingBox.Max.Y));
+    Point = FVector2D(FMath::FRandRange(Bounds.Min.X, Bounds.Max.X), FMath::FRandRange(Bounds.Min.Y, Bounds.Max.Y));
   } while (!InPolygon(Point));
   return Point;
 }

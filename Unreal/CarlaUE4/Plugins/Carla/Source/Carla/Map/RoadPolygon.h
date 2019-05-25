@@ -1,8 +1,12 @@
 #pragma once
 
-class FPolygon {
+class FRoadPolygon {
+
 public:
-  FPolygon(const TArray<FVector>& Vertices);
+
+  FRoadPolygon() : Area(0), MaxZ(0) { }
+
+  FRoadPolygon(const TArray<FVector>& Vertices);
 
   double GetArea() const { return Area; }
 
@@ -13,8 +17,9 @@ public:
   FVector2D RandPoint() const;
 
 private:
+
   TArray<FVector2D> Vertices;
-  FBox BoundingBox;
-  float Area = 0;
+  FBox Bounds;
+  float Area;
   float MaxZ;
 };

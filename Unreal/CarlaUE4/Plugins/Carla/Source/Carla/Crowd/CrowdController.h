@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Map/Polygon.h"
+#include "Map/RoadMap.h"
 #include "Carla.h"
 #include "CrowdController.generated.h"
 
@@ -24,13 +24,9 @@ public:
 
 private:
 
-  UCarlaEpisode* Episode = nullptr; 
-  TArray<FPolygon> RoadPolygons;
-  float TotalRoadArea = 0;
-  int X = 0;
+  UCarlaEpisode* Episode = nullptr;
+  FRoadMap RoadMap;
   
-  FVector RandRoadPoint() const;
-
   const FActorDefinition& RandWalkerActorDefinition() const;
 
 };
