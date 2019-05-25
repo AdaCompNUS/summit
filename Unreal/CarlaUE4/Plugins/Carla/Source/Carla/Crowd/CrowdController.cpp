@@ -17,6 +17,7 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
+  /*
   FVector Point = RoadMap.RandPoint();
   
   const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
@@ -34,6 +35,7 @@ void ACrowdController::Tick(float DeltaSeconds) {
   FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
 
   Episode->SpawnActor(Transform, ActorDescription);
+  */
 }
 
 const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {

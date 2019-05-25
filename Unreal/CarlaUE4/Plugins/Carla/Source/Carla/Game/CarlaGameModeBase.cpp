@@ -160,8 +160,8 @@ void ACarlaGameModeBase::SpawnActorFactories()
     }
   }
 }
- 
-bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName, float Resolution) const {
+
+FRoadMap ACarlaGameModeBase::GetRoadMap() const {
   
   // Construct RoadMap.
   TArray<FRoadTriangle> RoadTriangles;
@@ -195,7 +195,11 @@ bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName, float Resolution
 
     }
   }
-  FRoadMap RoadMap(RoadTriangles); 
-  
-  return RoadMap.RenderBitmap(FileName, Resolution);
+
+  return FRoadMap(RoadTriangles); 
 }
+
+void ACarlaGameModeBase::RenderMonteCarloRoadMap(const FString& FileName, float Resolution, int Trials) const {
+  GetRoadMap().RenderMonteCarloBitmap(FileName, Resolution, Trials);  
+}
+

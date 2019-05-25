@@ -35,9 +35,9 @@ public:
     check(Episode != nullptr);
     return *Episode;
   }
-
+  
   UFUNCTION(Exec)
-  bool RenderRoadMap(const FString& FileName, float Resolution) const;
+  void RenderMonteCarloRoadMap(const FString& FileName, float Resolution, int Trials) const;
 
 protected:
 
@@ -54,6 +54,8 @@ protected:
 private:
 
   void SpawnActorFactories();
+
+  FRoadMap GetRoadMap() const;
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;

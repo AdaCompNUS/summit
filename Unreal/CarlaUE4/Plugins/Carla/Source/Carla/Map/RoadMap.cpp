@@ -18,7 +18,7 @@ FVector FRoadMap::RandPoint() const {
   return RoadTriangles[I - 1].RandPoint();
 }
 
-bool FRoadMap::RenderBitmap(const FString& FileName, float Resolution) const {
+void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, float Resolution, int Trials) const {
   // Coordinates are flipped such that X is upward and Y is rightward on image.
     
   FBox Bounds = RoadTriangles[0].GetBounds();
@@ -38,7 +38,7 @@ bool FRoadMap::RenderBitmap(const FString& FileName, float Resolution) const {
       (Bounds.Max.X - Bounds.Min.X) / Resolution);
   canvas.image().clear(0);
   
-  canvas.pen_color(255, 0, 0);
+  canvas.pen_color(255, 255, 255);
   for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
     canvas.fill_triangle(
         (RoadTriangle.V0.Y - Center.Y) / Resolution,
@@ -48,10 +48,18 @@ bool FRoadMap::RenderBitmap(const FString& FileName, float Resolution) const {
         (RoadTriangle.V2.Y - Center.Y) / Resolution,
         (RoadTriangle.V2.X - Center.X) / Resolution);
   }
+  
+  canvas.pen_color(0, 0, 255);
+  for (int I = 0; I < Trials; I++) {
+    FVector Point = RandPoint();
+
+    canvas.fill_circle(
+        (Point.Y - Center.Y) / Resolution,
+        (Point.X - Center.X) / Resolution,
+        5);
+  }
 
   canvas.image().save_image(TCHAR_TO_UTF8(*FileName));
   
   UE_LOG(LogCarla, Display, TEXT("Bitmap saved to %s"), *FileName);
-
-  return true;
 }

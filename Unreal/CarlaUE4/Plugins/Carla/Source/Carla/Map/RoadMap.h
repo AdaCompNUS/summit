@@ -10,8 +10,8 @@ public:
   FRoadMap(const TArray<FRoadTriangle>& RoadTriangles);
 
   FVector RandPoint() const;
-
-  bool RenderBitmap(const FString& FileName, float Resolution) const;
+  
+  void RenderMonteCarloBitmap(const FString& FileName, float Resolution, int Trials) const;
 
 private:
 
