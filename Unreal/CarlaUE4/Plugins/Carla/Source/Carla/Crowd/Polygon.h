@@ -14,10 +14,7 @@ public:
 
 private:
   TArray<FVector2D> Vertices;
+  FBox BoundingBox;
   float Area = 0;
-  float MinX;
-  float MaxX;
-  float MinY;
-  float MaxY;
   float MaxZ;
 };

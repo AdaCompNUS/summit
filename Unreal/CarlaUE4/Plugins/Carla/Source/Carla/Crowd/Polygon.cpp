@@ -17,16 +17,16 @@ FPolygon::FPolygon(const TArray<FVector>& Vertices) {
     }
 
     if (!HasValue) {
-      MinX = MaxX = Vertex.X;
-      MinY = MaxY = Vertex.Y;
+      BoundingBox.Min.X = BoundingBox.Max.X = Vertex.X;
+      BoundingBox.Min.Y = BoundingBox.Max.Y = Vertex.Y;
       MaxZ = Vertex.Z;
       HasValue = true;
     }
     else {
-      MinX = FMath::Min(MinX, Vertex.X);
-      MaxX = FMath::Max(MaxX, Vertex.X);
-      MinY = FMath::Min(MinY, Vertex.Y);
-      MaxY = FMath::Max(MaxY, Vertex.Y);
+      BoundingBox.Min.X = FMath::Min(BoundingBox.Min.X, Vertex.X);
+      BoundingBox.Max.X = FMath::Max(BoundingBox.Max.X, Vertex.X);
+      BoundingBox.Min.Y = FMath::Min(BoundingBox.Min.Y, Vertex.Y);
+      BoundingBox.Max.Y = FMath::Max(BoundingBox.Max.Y, Vertex.Y);
       MaxZ = FMath::Max(MaxZ, Vertex.Z);
     }
   }
@@ -48,7 +48,7 @@ bool FPolygon::InPolygon(const FVector2D& Point) const {
 FVector2D FPolygon::RandPoint() const {
   FVector2D Point;
   do {
-    Point = FVector2D(FMath::FRandRange(MinX, MaxX), FMath::FRandRange(MinY, MaxY));
+    Point = FVector2D(FMath::FRandRange(BoundingBox.Min.X, BoundingBox.Max.X), FMath::FRandRange(BoundingBox.Min.Y, BoundingBox.Max.Y));
   } while (!InPolygon(Point));
   return Point;
 }
