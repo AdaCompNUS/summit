@@ -15,7 +15,5 @@ public:
 
   FBox GetBounds() const;
 
-  bool InPolygon(const FVector2D& Point) const;
-
-  FVector2D RandPoint() const;
+  FVector RandPoint() const;
 };

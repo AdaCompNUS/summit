@@ -9,6 +9,15 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles)
   }
 }
 
+FVector FRoadMap::RandPoint() const {
+  float V = FMath::FRandRange(0, Area);
+  int I = 0;
+  for (; V > 0 && I < RoadTriangles.Num(); I++) {
+    V -= RoadTriangles[I].GetArea();
+  }
+  return RoadTriangles[I - 1].RandPoint();
+}
+
 bool FRoadMap::RenderBitmap(const FString& FileName, float Resolution) const {
   // Coordinates are flipped such that X is upward and Y is rightward on image.
     
