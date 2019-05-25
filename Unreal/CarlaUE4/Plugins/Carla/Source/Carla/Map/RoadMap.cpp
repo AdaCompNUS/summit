@@ -9,13 +9,10 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles)
   }
 }
 
-bool FRoadMap::RenderBitmap(const FString& FileName) const {
+bool FRoadMap::RenderBitmap(const FString& FileName, float Resolution) const {
+  // Coordinates are flipped such that X is upward and Y is rightward on image.
+    
   FBox Bounds = RoadTriangles[0].GetBounds();
-  UE_LOG(LogCarla, Display, TEXT("Pre : X = %f, %f, Y = %f, %f, Z = %f, %f"), 
-      Bounds.Min.X, Bounds.Max.X, 
-      Bounds.Min.Y, Bounds.Max.Y,
-      Bounds.Min.Z, Bounds.Max.Z);
-
   for (int I = 1; I < RoadTriangles.Num(); I++) {
     const FRoadTriangle& RoadTriangle = RoadTriangles[I];
     Bounds.Min.X = FMath::Min(Bounds.Min.X, RoadTriangle.GetBounds().Min.X);
@@ -25,26 +22,27 @@ bool FRoadMap::RenderBitmap(const FString& FileName) const {
     Bounds.Max.Y = FMath::Max(Bounds.Max.Y, RoadTriangle.GetBounds().Max.Y);
     Bounds.Max.Z = FMath::Max(Bounds.Max.Z, RoadTriangle.GetBounds().Max.Z);
   }
-
-  UE_LOG(LogCarla, Display, TEXT("Post: X = %f, %f, Y = %f, %f, Z = %f, %f"), 
-      Bounds.Min.X, Bounds.Max.X, 
-      Bounds.Min.Y, Bounds.Max.Y,
-      Bounds.Min.Z, Bounds.Max.Z);
+  FVector2D Center((Bounds.Min.X + Bounds.Max.X) / 2, (Bounds.Min.Y + Bounds.Max.Y) / 2);
   
-  UE_LOG(LogCarla, Display, TEXT("Num Tri = %d"), RoadTriangles.Num());
+  cartesian_canvas canvas(
+      (Bounds.Max.Y - Bounds.Min.Y) / Resolution, 
+      (Bounds.Max.X - Bounds.Min.X) / Resolution);
+  canvas.image().clear(0);
   
-  bitmap_image image(Bounds.Max.X - Bounds.Min.X, Bounds.Max.Y - Bounds.Min.Y);
-  image_drawer draw(image);
-  draw.pen_color(255, 0, 0);
+  canvas.pen_color(255, 0, 0);
   for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
-    draw.triangle(
-        RoadTriangle.V0.X - Bounds.Min.X,
-        RoadTriangle.V0.Y - Bounds.Min.Y,
-        RoadTriangle.V1.X - Bounds.Min.X,
-        RoadTriangle.V1.Y - Bounds.Min.Y,
-        RoadTriangle.V2.X - Bounds.Min.X,
-        RoadTriangle.V2.Y - Bounds.Min.Y);
+    canvas.fill_triangle(
+        (RoadTriangle.V0.Y - Center.Y) / Resolution,
+        (RoadTriangle.V0.X - Center.X) / Resolution,
+        (RoadTriangle.V1.Y - Center.Y) / Resolution,
+        (RoadTriangle.V1.X - Center.X) / Resolution,
+        (RoadTriangle.V2.Y - Center.Y) / Resolution,
+        (RoadTriangle.V2.X - Center.X) / Resolution);
   }
+
+  canvas.image().save_image(TCHAR_TO_UTF8(*FileName));
+  
+  UE_LOG(LogCarla, Display, TEXT("Bitmap saved to %s"), *FileName);
 
   return true;
 }

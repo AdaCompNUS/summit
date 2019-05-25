@@ -37,7 +37,7 @@ public:
   }
 
   UFUNCTION(Exec)
-  bool RenderRoadMap(const FString& FileName) const;
+  bool RenderRoadMap(const FString& FileName, float Resolution) const;
 
 protected:
 

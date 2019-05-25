@@ -161,7 +161,7 @@ void ACarlaGameModeBase::SpawnActorFactories()
   }
 }
  
-bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
+bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName, float Resolution) const {
   
   // Construct RoadMap.
   TArray<FRoadTriangle> RoadTriangles;
@@ -173,7 +173,7 @@ bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
       // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
 
       FStaticMeshLODResources* LODResources = &(ActorItr->GetStaticMeshComponent()->GetStaticMesh()->RenderData->LODResources[0]);
-      FIndexArrayView Indices = LODResources->WireframeIndexBuffer.GetArrayView();
+      FIndexArrayView Indices = LODResources->IndexBuffer.GetArrayView();
       const FPositionVertexBuffer& PositionVertexBuffer = LODResources->VertexBuffers.PositionVertexBuffer;
 
       for (int I = 0; I < Indices.Num(); I += 3) {
@@ -197,5 +197,5 @@ bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
   }
   FRoadMap RoadMap(RoadTriangles); 
   
-  return RoadMap.RenderBitmap(FileName);
+  return RoadMap.RenderBitmap(FileName, Resolution);
 }

@@ -9,7 +9,7 @@ public:
   FRoadMap() : Area(0) { }
   FRoadMap(const TArray<FRoadTriangle>& RoadTriangles);
 
-  bool RenderBitmap(const FString& FileName) const;
+  bool RenderBitmap(const FString& FileName, float Resolution) const;
 
 private:
 
