@@ -2,7 +2,6 @@
 #include "EngineUtils.h"
 #include "Engine/StaticMeshActor.h"
 #include "Regex.h"
-#include "Polygon.h"
 
 ACrowdController::ACrowdController(void) {
   PrimaryActorTick.bCanEverTick = true; 
