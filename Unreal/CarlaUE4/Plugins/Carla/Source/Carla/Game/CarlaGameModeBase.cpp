@@ -6,6 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Map/RoadMap.h"
+#include "Map/RoadTriangle.h"
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -84,7 +86,6 @@ void ACarlaGameModeBase::InitGame(
   SpawnActorFactories();
 
   // make connection between Episode and Recorder
-  UE_LOG(LogCarla, Display, TEXT("ASSOCIATING..."));
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
   CrowdController->SetEpisode(Episode);
@@ -158,4 +159,43 @@ void ACarlaGameModeBase::SpawnActorFactories()
       }
     }
   }
+}
+ 
+bool ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
+  
+  // Construct RoadMap.
+  TArray<FRoadTriangle> RoadTriangles;
+  for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
+    FRegexPattern Pattern(TEXT("\\/Game\\/Carla\\/Static\\/Road\\/RoadsTown03\\/SM_RoadTown03_[0-9]+\\.SM_RoadTown03_[0-9]+"));
+    if (FRegexMatcher(Pattern, ActorItr->GetDetailedInfo()).FindNext()){
+
+      // Written with reference to FStaticMeshSectionAreaWeightedTriangleSampler::GetWeights in
+      // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
+
+      FStaticMeshLODResources* LODResources = &(ActorItr->GetStaticMeshComponent()->GetStaticMesh()->RenderData->LODResources[0]);
+      FIndexArrayView Indices = LODResources->WireframeIndexBuffer.GetArrayView();
+      const FPositionVertexBuffer& PositionVertexBuffer = LODResources->VertexBuffers.PositionVertexBuffer;
+
+      for (int I = 0; I < Indices.Num(); I += 3) {
+        FRoadTriangle RoadTriangle(
+            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I])),
+            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 1])),
+            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 2])));
+
+        // Check for precision errors.
+        if (RoadTriangle.GetBounds().Min.X < -1000000) continue;
+        if (RoadTriangle.GetBounds().Min.Y < -1000000) continue;
+        if (RoadTriangle.GetBounds().Min.Z < -1000000) continue;
+        if (RoadTriangle.GetBounds().Max.X > 1000000) continue;
+        if (RoadTriangle.GetBounds().Max.Y > 1000000) continue;
+        if (RoadTriangle.GetBounds().Max.Z > 1000000) continue;
+
+        RoadTriangles.Emplace(RoadTriangle);
+      }
+
+    }
+  }
+  FRoadMap RoadMap(RoadTriangles); 
+  
+  return RoadMap.RenderBitmap(FileName);
 }

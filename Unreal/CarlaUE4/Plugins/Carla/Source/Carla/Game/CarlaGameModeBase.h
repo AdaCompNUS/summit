@@ -36,6 +36,9 @@ public:
     return *Episode;
   }
 
+  UFUNCTION(Exec)
+  bool RenderRoadMap(const FString& FileName) const;
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;

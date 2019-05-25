@@ -17,23 +17,23 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  FVector Point = RoadMap.RandPoint();
+  //FVector Point = RoadMap.RandPoint();
   
-  const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
-  FActorDescription ActorDescription;
-  ActorDescription.UId = ActorDefinition.UId;
-  ActorDescription.Id = ActorDefinition.Id;
-  ActorDescription.Class = ActorDefinition.Class;
+  //const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
+  //FActorDescription ActorDescription;
+  //ActorDescription.UId = ActorDefinition.UId;
+  //ActorDescription.Id = ActorDefinition.Id;
+  //ActorDescription.Class = ActorDefinition.Class;
 
-  TSubclassOf<AActor> Class = ActorDefinition.Class;
-  AActor* ActorClass = Class.GetDefaultObject();
+  //TSubclassOf<AActor> Class = ActorDefinition.Class;
+  //AActor* ActorClass = Class.GetDefaultObject();
 
-  FVector Origin, BoxExtent;
-  ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
-  
-  FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
+  //FVector Origin, BoxExtent;
+  //ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
 
-  Episode->SpawnActor(Transform, ActorDescription);
+  //FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
+
+  //Episode->SpawnActor(Transform, ActorDescription);
 }
 
 const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
@@ -50,18 +50,4 @@ const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
 }
 
 void ACrowdController::Initialize() {
-  TArray<FRoadPolygon> RoadPolygons;
-  for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    FRegexPattern Pattern(TEXT("\\/Game\\/Carla\\/Static\\/Road\\/RoadsTown03\\/SM_RoadTown03_[0-9]+\\.SM_RoadTown03_[0-9]+"));
-    if (FRegexMatcher(Pattern, ActorItr->GetDetailedInfo()).FindNext()){
-      const FPositionVertexBuffer& VertexBuffer = ActorItr->GetStaticMeshComponent()->GetStaticMesh()->RenderData->LODResources[0].VertexBuffers.PositionVertexBuffer;
-      TArray<FVector> Vertices;
-      int Count = VertexBuffer.GetNumVertices();
-      for (int Index = 0; Index < Count; Index++) {
-        Vertices.Emplace(ActorItr->GetTransform().TransformVector(VertexBuffer.VertexPosition(Index)));
-      }
-      RoadPolygons.Emplace(Vertices);
-    }
-  }
-  RoadMap = FRoadMap(RoadPolygons);
 }
