@@ -2556,7 +2556,10 @@ public:
 
             for (double y = p0.second; y <= p1.second; y += 0.5)
             {
-               canvas.horiztonal_line_segment(x0, x1, y);
+              if (x0 < x1)
+                canvas.horiztonal_line_segment(x0 - 0.5, x1 + 0.5, y);
+              else
+                canvas.horiztonal_line_segment(x0 + 0.5, x1 - 0.5, y);
 
                x0 += m0;
                x1 += m1;
@@ -2573,6 +2576,10 @@ public:
 
             for (double y = p2.second; y >= p0.second; y -= 0.5)
             {
+              if (x0 < x1)
+                canvas.horiztonal_line_segment(x0 - 0.5, x1 + 0.5, y);
+              else
+                canvas.horiztonal_line_segment(x0 + 0.5, x1 - 0.5, y);
                canvas.horiztonal_line_segment(x0, x1, y);
 
                x0 -= m0;
