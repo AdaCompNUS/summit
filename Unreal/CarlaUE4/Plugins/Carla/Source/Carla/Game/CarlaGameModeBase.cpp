@@ -196,10 +196,10 @@ FRoadMap ACarlaGameModeBase::GetRoadMap() const {
     }
   }
 
-  return FRoadMap(RoadTriangles); 
+  return FRoadMap(RoadTriangles, 10); 
 }
 
-void ACarlaGameModeBase::RenderMonteCarloRoadMap(const FString& FileName, float Resolution, int Trials) const {
-  GetRoadMap().RenderMonteCarloBitmap(FileName, Resolution, Trials);  
+void ACarlaGameModeBase::RenderMonteCarloRoadMap(const FString& FileName, int Trials) const {
+  GetRoadMap().RenderMonteCarloBitmap(FileName, Trials);  
 }
 

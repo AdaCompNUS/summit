@@ -1,27 +1,29 @@
 #pragma once
 
 #include "RoadTriangle.h"
-#include "AABB.h"
+#include "OccupancyGrid.h"
 
 class FRoadMap {
 
 public:
 
-  FRoadMap() : Area(0) { }
-  FRoadMap(const TArray<FRoadTriangle>& RoadTriangles);
-
-  const FBox& GetBounds() const { return Bounds; }
+  FRoadMap() : Area(0), Resolution(0) { }
+  FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution);
 
   float GetArea() const { return Area; }
 
+  float GetResolution() const { return Resolution; }
+
   FVector RandPoint() const;
   
-  void RenderMonteCarloBitmap(const FString& FileName, float Resolution, int Trials) const;
+  void RenderMonteCarloBitmap(const FString& FileName, int Trials) const;
 
 private:
 
   TArray<FRoadTriangle> RoadTriangles;
-  FBox Bounds;
   float Area;
+  FBox Bounds;
+  float Resolution;
+  FOccupancyGrid OccupancyGrid;
 
 };

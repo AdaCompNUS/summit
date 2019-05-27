@@ -3,42 +3,31 @@
 #include "bitmap_image.hpp"
 #include "GeometryUtil.h"
 
-FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles) 
-  : RoadTriangles(RoadTriangles), Area(0) {
-  for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
+FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution) 
+  : RoadTriangles(RoadTriangles), Resolution(Resolution) {
+  
+  Bounds = RoadTriangles[0].GetBounds();
+  Area = RoadTriangles[0].GetArea();
+
+  for (int I = 0; I < RoadTriangles.Num(); I++) {
+    const FRoadTriangle& RoadTriangle = RoadTriangles[I];
+    FBox TriBounds = RoadTriangle.GetBounds();
+    Bounds.Min.X = FMath::Min(Bounds.Min.X, TriBounds.Min.X);
+    Bounds.Min.Y = FMath::Min(Bounds.Min.Y, TriBounds.Min.Y);
+    Bounds.Min.Z = FMath::Min(Bounds.Min.Z, TriBounds.Min.Z);
+    Bounds.Max.X = FMath::Max(Bounds.Max.X, TriBounds.Max.X);
+    Bounds.Max.Y = FMath::Max(Bounds.Max.Y, TriBounds.Max.Y);
+    Bounds.Max.Z = FMath::Max(Bounds.Max.Z, TriBounds.Max.Z);
     Area += RoadTriangle.GetArea();
   }
-}
-
-FVector FRoadMap::RandPoint() const {
-  float V = FMath::FRandRange(0, Area);
-  int I = 0;
-  for (; V > 0 && I < RoadTriangles.Num(); I++) {
-    V -= RoadTriangles[I].GetArea();
-  }
-  return RoadTriangles[I - 1].RandPoint();
-}
-
-void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, float Resolution, int Trials) const {
-  // Coordinates are flipped such that X is upward and Y is rightward on image.
-    
-  FBox MapBounds = RoadTriangles[0].GetBounds();
-  for (int I = 1; I < RoadTriangles.Num(); I++) {
-    const FRoadTriangle& RoadTriangle = RoadTriangles[I];
-    MapBounds.Min.X = FMath::Min(MapBounds.Min.X, RoadTriangle.GetBounds().Min.X);
-    MapBounds.Min.Y = FMath::Min(MapBounds.Min.Y, RoadTriangle.GetBounds().Min.Y);
-    MapBounds.Min.Z = FMath::Min(MapBounds.Min.Z, RoadTriangle.GetBounds().Min.Z);
-    MapBounds.Max.X = FMath::Max(MapBounds.Max.X, RoadTriangle.GetBounds().Max.X);
-    MapBounds.Max.Y = FMath::Max(MapBounds.Max.Y, RoadTriangle.GetBounds().Max.Y);
-    MapBounds.Max.Z = FMath::Max(MapBounds.Max.Z, RoadTriangle.GetBounds().Max.Z);
-  }
-  FVector2D MapTopLeft(MapBounds.Max.X, MapBounds.Min.Y);
   
-  bitmap_image image(
-      (MapBounds.Max.Y - MapBounds.Min.Y) / Resolution, 
-      (MapBounds.Max.X - MapBounds.Min.X) / Resolution);
-  image_drawer draw(image);
-  draw.pen_color(255, 255, 255);
+  FVector2D TopLeft(Bounds.Max.X, Bounds.Min.Y);
+  
+  // Coordinates are flipped such that X is upward and Y is rightward on occupancy grid.
+
+  OccupancyGrid = FOccupancyGrid(
+      FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
+      FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
   for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
     FVector2D V0(RoadTriangle.V0.X, RoadTriangle.V0.Y);
@@ -46,25 +35,35 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, float Resolution,
     FVector2D V2(RoadTriangle.V2.X, RoadTriangle.V2.Y);
 
     // Calculate relative triangle bounds.
-    FBox Bounds = RoadTriangle.GetBounds();
-    FVector2D BoundsTopLeftOffset = FVector2D(Bounds.Max.X, Bounds.Min.Y) - MapTopLeft;
-    FVector2D BoundsBottomRightOffset = FVector2D(Bounds.Min.X, Bounds.Max.Y) - MapTopLeft;
+    FBox TriBounds = RoadTriangle.GetBounds();
+    FVector2D TriBoundsTopLeftOffset = FVector2D(TriBounds.Max.X, TriBounds.Min.Y) - TopLeft;
+    FVector2D TriBoundsBottomRightOffset = FVector2D(TriBounds.Min.X, TriBounds.Max.Y) - TopLeft;
     
     // Calculate bounding pixels.
-    FIntPoint BoundsTopLeftPixel(
-        FMath::FloorToInt(BoundsTopLeftOffset.Y / Resolution), 
-        FMath::FloorToInt(-BoundsTopLeftOffset.X / Resolution));
-    FIntPoint BoundsBottomRightPixel(
-        FMath::FloorToInt(BoundsBottomRightOffset.Y / Resolution), 
-        FMath::FloorToInt(-BoundsBottomRightOffset.X / Resolution));
+    FIntPoint TriBoundsTopLeftPixel(
+        FMath::FloorToInt(TriBoundsTopLeftOffset.Y / Resolution), 
+        FMath::FloorToInt(-TriBoundsTopLeftOffset.X / Resolution));
+    FIntPoint TriBoundsBottomRightPixel(
+        FMath::FloorToInt(TriBoundsBottomRightOffset.Y / Resolution), 
+        FMath::FloorToInt(-TriBoundsBottomRightOffset.X / Resolution));
+
+    // Clip to occupancy grid.
+    TriBoundsTopLeftPixel.X = FMath::Max(0,
+        FMath::Min(OccupancyGrid.GetWidth() - 1, TriBoundsTopLeftPixel.X));
+    TriBoundsTopLeftPixel.Y = FMath::Max(0, 
+        FMath::Min(OccupancyGrid.GetHeight() - 1, TriBoundsTopLeftPixel.Y));
+    TriBoundsBottomRightPixel.X = FMath::Max(0, 
+        FMath::Min(OccupancyGrid.GetWidth() - 1, TriBoundsBottomRightPixel.X));
+    TriBoundsBottomRightPixel.Y = FMath::Max(0, 
+        FMath::Min(OccupancyGrid.GetHeight() - 1, TriBoundsBottomRightPixel.Y));
     
     // Loop through bounded pixels, and consider pixel bounds.
-    for (int X = BoundsTopLeftPixel.X; X <= BoundsBottomRightPixel.X; X++) {
-      for (int Y = BoundsTopLeftPixel.Y; Y <= BoundsBottomRightPixel.Y; Y++) {
-        FVector2D P0(MapTopLeft.X - Y * Resolution, MapTopLeft.Y + X * Resolution);
-        FVector2D P1(MapTopLeft.X - Y * Resolution, MapTopLeft.Y + (X + 1) * Resolution);
-        FVector2D P2(MapTopLeft.X - (Y + 1) * Resolution, MapTopLeft.Y + X * Resolution);
-        FVector2D P3(MapTopLeft.X - (Y + 1) * Resolution, MapTopLeft.Y + (X + 1) * Resolution);
+    for (int X = TriBoundsTopLeftPixel.X; X <= TriBoundsBottomRightPixel.X; X++) {
+      for (int Y = TriBoundsTopLeftPixel.Y; Y <= TriBoundsBottomRightPixel.Y; Y++) {
+        FVector2D P0(TopLeft.X - Y * Resolution, TopLeft.Y + X * Resolution);
+        FVector2D P1(TopLeft.X - Y * Resolution, TopLeft.Y + (X + 1) * Resolution);
+        FVector2D P2(TopLeft.X - (Y + 1) * Resolution, TopLeft.Y + X * Resolution);
+        FVector2D P3(TopLeft.X - (Y + 1) * Resolution, TopLeft.Y + (X + 1) * Resolution);
         
         // || used for short circuiting.
         bool Intersects = false;
@@ -81,13 +80,49 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, float Resolution,
         Intersects = Intersects || (V2.X <= P0.X && V2.X >= P3.X && V2.Y >= P0.Y && V2.Y <= P3.Y);
 
         if (Intersects) {
-          draw.plot_pen_pixel(X, Y); 
+          OccupancyGrid(X, Y) = true; 
         }
       }
     }
   }
+
+
+}
+
+FVector FRoadMap::RandPoint() const {
+  float V = FMath::FRandRange(0, Area);
+  int I = 0;
+  for (; V > 0 && I < RoadTriangles.Num(); I++) {
+    V -= RoadTriangles[I].GetArea();
+  }
+  return RoadTriangles[I - 1].RandPoint();
+}
+
+void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const {
   
-  image.save_image(TCHAR_TO_UTF8(*FileName));
+  cartesian_canvas canvas(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
+  canvas.image().clear(0);
+  image_drawer draw(canvas.image());
+
+  draw.pen_color(255, 255, 255);
+  for (int Y = 0; Y < OccupancyGrid.GetHeight(); Y++) {
+    for (int X = 0; X < OccupancyGrid.GetWidth(); X++) {
+      if (OccupancyGrid(X, Y)) {
+        draw.plot_pen_pixel(X, Y);
+      }
+    }
+  }
+
+  canvas.pen_color(0, 0, 255);
+  for (int I = 0; I < Trials; I++) {
+    FVector Point = RandPoint();
+    canvas.fill_circle(
+        ((Point.Y - (Bounds.Min.Y + Bounds.Max.Y) / 2)) / Resolution,
+        ((Point.X - (Bounds.Min.X + Bounds.Max.X) / 2)) / Resolution,
+        5);
+  }
+  
+  canvas.image().save_image(TCHAR_TO_UTF8(*FileName));
   
   UE_LOG(LogCarla, Display, TEXT("Bitmap saved to %s"), *FileName);
 }
