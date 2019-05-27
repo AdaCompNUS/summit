@@ -15,6 +15,8 @@ public:
   float GetResolution() const { return Resolution; }
 
   FVector RandPoint() const;
+
+  TArray<FVector2D> RandPath(double Radius) const;
   
   void RenderMonteCarloBitmap(const FString& FileName, int Trials) const;
 
@@ -25,5 +27,8 @@ private:
   FBox Bounds;
   float Resolution;
   FOccupancyGrid OccupancyGrid;
+
+  FIntPoint Point2DToPixel(const FVector2D& Point) const;
+  FVector2D PixelToPoint2D(const FIntPoint& Pixel) const;
 
 };

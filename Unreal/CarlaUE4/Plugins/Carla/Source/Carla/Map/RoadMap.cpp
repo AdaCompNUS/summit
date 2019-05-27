@@ -2,6 +2,7 @@
 #include "Runtime/Engine/Public/GeomTools.h"
 #include "bitmap_image.hpp"
 #include "GeometryUtil.h"
+ #include "Algo/Reverse.h"
 
 FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution) 
   : RoadTriangles(RoadTriangles), Resolution(Resolution) {
@@ -32,20 +33,12 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution)
   for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
     FVector2D V0(RoadTriangle.V0.X, RoadTriangle.V0.Y);
     FVector2D V1(RoadTriangle.V1.X, RoadTriangle.V1.Y);
-    FVector2D V2(RoadTriangle.V2.X, RoadTriangle.V2.Y);
-
-    // Calculate relative triangle bounds.
+    FVector2D V2(RoadTriangle.V2.X, RoadTriangle.V2.Y); 
     FBox TriBounds = RoadTriangle.GetBounds();
-    FVector2D TriBoundsTopLeftOffset = FVector2D(TriBounds.Max.X, TriBounds.Min.Y) - TopLeft;
-    FVector2D TriBoundsBottomRightOffset = FVector2D(TriBounds.Min.X, TriBounds.Max.Y) - TopLeft;
-    
+
     // Calculate bounding pixels.
-    FIntPoint TriBoundsTopLeftPixel(
-        FMath::FloorToInt(TriBoundsTopLeftOffset.Y / Resolution), 
-        FMath::FloorToInt(-TriBoundsTopLeftOffset.X / Resolution));
-    FIntPoint TriBoundsBottomRightPixel(
-        FMath::FloorToInt(TriBoundsBottomRightOffset.Y / Resolution), 
-        FMath::FloorToInt(-TriBoundsBottomRightOffset.X / Resolution));
+    FIntPoint TriBoundsTopLeftPixel = Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));
+    FIntPoint TriBoundsBottomRightPixel = Point2DToPixel(FVector2D(TriBounds.Min.X, TriBounds.Max.Y));
 
     // Clip to occupancy grid.
     TriBoundsTopLeftPixel.X = FMath::Max(0,
@@ -85,8 +78,18 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution)
       }
     }
   }
+}
 
-
+FIntPoint FRoadMap::Point2DToPixel(const FVector2D& Point) const {
+  return FIntPoint(
+    FMath::FloorToInt((Point.Y - Bounds.Min.Y) / Resolution),
+    FMath::FloorToInt(-(Point.X - Bounds.Max.X) / Resolution));
+}
+  
+FVector2D FRoadMap::PixelToPoint2D(const FIntPoint& Pixel) const {
+  return FVector2D(
+      Bounds.Max.X - (Pixel.Y + 0.5) * Resolution,
+      Bounds.Min.Y + (Pixel.X + 0.5) * Resolution);
 }
 
 FVector FRoadMap::RandPoint() const {
@@ -97,9 +100,76 @@ FVector FRoadMap::RandPoint() const {
   }
   return RoadTriangles[I - 1].RandPoint();
 }
+  
+TArray<FVector2D> FRoadMap::RandPath(double Radius) const {
+  struct TNode {
+    const TNode* Parent;
+    FIntPoint Pixel;
+    TArray<TNode> Nodes;
+    TNode(const TNode* Parent, const FIntPoint& Pixel) : Parent(Parent), Pixel(Pixel) { }
+  };
+
+  FOccupancyGrid Visited(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
+  FVector RootPoint = RandPoint();
+  FVector2D RootPoint2D(RootPoint.X, RootPoint.Y);
+  TNode RootNode(nullptr, Point2DToPixel(RootPoint2D));
+
+  TQueue<TNode*, EQueueMode::Spsc> Queue;
+  Queue.Enqueue(&RootNode);
+  TSet<const TNode*> EdgeNodes;
+
+  TNode* CurrentNode;
+  while (Queue.Dequeue(CurrentNode)) {
+    UE_LOG(LogCarla, Display, TEXT("Size = %d %d, Acx = %d %d"),
+        Visited.GetWidth(),
+        Visited.GetHeight(),
+        CurrentNode->Pixel.X,
+        CurrentNode->Pixel.Y);
+    if (Visited(CurrentNode->Pixel.X, CurrentNode->Pixel.Y)) continue;
+    Visited(CurrentNode->Pixel.X, CurrentNode->Pixel.Y) = true;
+
+    for (const FIntPoint& NextPixel : { 
+        FIntPoint(CurrentNode->Pixel.X + 3, CurrentNode->Pixel.Y),
+        FIntPoint(CurrentNode->Pixel.X - 3, CurrentNode->Pixel.Y),
+        FIntPoint(CurrentNode->Pixel.X, CurrentNode->Pixel.Y + 3),
+        FIntPoint(CurrentNode->Pixel.X, CurrentNode->Pixel.Y - 3)}) {
+
+      if (NextPixel.X < 0) continue;
+      if (NextPixel.X >= Visited.GetWidth()) continue;
+      if (NextPixel.Y < 0) continue;
+      if (NextPixel.Y >= Visited.GetHeight()) continue;
+      if (Visited(NextPixel.X, NextPixel.Y)) continue;
+      if (!OccupancyGrid(NextPixel.X, NextPixel.Y)) continue;
+      if (FVector2D::Distance(RootPoint2D, PixelToPoint2D(NextPixel)) > Radius) {
+        if (CurrentNode->Parent) {
+          EdgeNodes.Add(CurrentNode->Parent);
+          continue;
+        }
+      }
+
+      UE_LOG(LogCarla, Display, TEXT("%d %d -> %d %d"),
+          CurrentNode->Pixel.X, CurrentNode->Pixel.Y,
+          NextPixel.X, NextPixel.Y);
+
+      Queue.Enqueue(&(CurrentNode->Nodes.Emplace_GetRef(CurrentNode, NextPixel)));
+    } 
+  }
+
+  UE_LOG(LogCarla, Display, TEXT("Num of vertices = %d"), EdgeNodes.Num());
+
+  const TNode* EdgeNode = EdgeNodes[FSetElementId::FromInteger(FMath::RandRange(0, EdgeNodes.Num() - 1))];
+  TArray<FVector2D> Path;
+  while (EdgeNode) {
+    Path.Add(PixelToPoint2D(EdgeNode->Pixel));
+    EdgeNode = EdgeNode->Parent;
+  }
+  Algo::Reverse(Path);
+
+  return Path;
+}
 
 void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const {
-  
+
   cartesian_canvas canvas(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
   canvas.image().clear(0);
   image_drawer draw(canvas.image());
@@ -111,6 +181,15 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
         draw.plot_pen_pixel(X, Y);
       }
     }
+  }
+
+  TArray<FVector2D> Path = RandPath(10000);
+  draw.pen_color(255, 0, 0);
+  for (int I = 0; I < Path.Num() - 1; I++) {
+    // TODO check for possible out of bounds.
+    FIntPoint Start = Point2DToPixel(Path[I]);
+    FIntPoint End = Point2DToPixel(Path[I + 1]);
+    draw.line_segment(Start.X, Start.Y, End.X, End.Y);
   }
 
   canvas.pen_color(0, 0, 255);
