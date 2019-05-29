@@ -19,6 +19,10 @@ public:
 
   FConstBitReference operator()(int X, int Y) const { return Data[Y * Width + X]; }
 
+  FBitReference operator()(const FIntPoint& Point) { return Data[Point.Y * Width + Point.X]; }
+
+  FConstBitReference operator()(const FIntPoint& Point) const { return Data[Point.Y * Width + Point.X]; }
+
 private:
 
   int Width;

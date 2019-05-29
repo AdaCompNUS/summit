@@ -28,6 +28,8 @@ private:
   float Resolution;
   FOccupancyGrid OccupancyGrid;
 
+  void InitOccupancyGrid();
+  void InitPerimeterPolygons();
   FIntPoint Point2DToPixel(const FVector2D& Point) const;
   FVector2D PixelToPoint2D(const FIntPoint& Pixel) const;
 
