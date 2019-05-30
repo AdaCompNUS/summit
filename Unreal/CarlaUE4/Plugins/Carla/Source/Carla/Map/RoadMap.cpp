@@ -4,8 +4,8 @@
 #include "GeometryUtil.h"
 #include "Algo/Reverse.h"
 
-FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution) 
-  : RoadTriangles(RoadTriangles), Resolution(Resolution) {
+FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
+  : RoadTriangles(RoadTriangles), Resolution(Resolution), OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
   Bounds = RoadTriangles[0].GetBounds();
   Area = RoadTriangles[0].GetArea();
   for (int I = 0; I < RoadTriangles.Num(); I++) {
@@ -21,7 +21,7 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution)
   }
 
   InitOccupancyGrid();
-  InitPerimeterPolygons();
+  InitOffroadPolygons();
 }
 
 void FRoadMap::InitOccupancyGrid() {
@@ -83,7 +83,7 @@ void FRoadMap::InitOccupancyGrid() {
   }
 }
   
-void FRoadMap::InitPerimeterPolygons() {
+void FRoadMap::InitOffroadPolygons() {
   FOccupancyGrid ProcessedGrid = FOccupancyGrid(
       OccupancyGrid.GetWidth(), 
       OccupancyGrid.GetHeight());
@@ -173,8 +173,14 @@ void FRoadMap::InitPerimeterPolygons() {
 
       // ===== Edge half traversal. =====
       FIntPoint CurrentEdgeHalf = StartEdgeHalf;
-      while (true) {
+      TArray<FVector2D>& OffroadPolygon = OffroadPolygons.Emplace_GetRef();
+      for (int I = 0;;I++) {
         EdgeHalfGrid(CurrentEdgeHalf) = false;
+        if (I % OffroadPolygonEdgeInterval == 0) {
+          OffroadPolygon.Emplace(
+              Bounds.Max.X - Resolution * (ObstacleBoundsMin.Y + CurrentEdgeHalf.Y * 0.5f), 
+              Bounds.Min.Y + Resolution * (ObstacleBoundsMin.X + CurrentEdgeHalf.X * 0.5f));
+        }
 
         bool HasNext = false;
         for (const FIntPoint& Offset : {
@@ -187,16 +193,34 @@ void FRoadMap::InitPerimeterPolygons() {
             FIntPoint(0, -2), 
             FIntPoint(2, 0), 
             FIntPoint(0, 2)}) {
-          
+
           FIntPoint TestEdgeHalf = CurrentEdgeHalf + Offset;
           if (TestEdgeHalf.X < 0 || TestEdgeHalf.X >= EdgeHalfGrid.GetWidth()) continue;
           if (TestEdgeHalf.Y < 0 || TestEdgeHalf.Y >= EdgeHalfGrid.GetHeight()) continue;
+          if (!EdgeHalfGrid(TestEdgeHalf)) continue;
 
-          if (EdgeHalfGrid(TestEdgeHalf)) {
-            HasNext = true;
-            CurrentEdgeHalf = TestEdgeHalf;
-            break;
+          // Check if crossing horizontally illegally.
+          if (CurrentEdgeHalf.X % 2 == 0 && Offset.X == 2) {
+            if (ObstacleGrid(CurrentEdgeHalf.X / 2, CurrentEdgeHalf.Y / 2)) {
+              continue;
+            }
+          } else if (CurrentEdgeHalf.X % 2 == 0 && Offset.X == -2) {
+            if (ObstacleGrid(CurrentEdgeHalf.X / 2 - 1, CurrentEdgeHalf.Y / 2)) {
+              continue;
+            }
+          } else if (CurrentEdgeHalf.Y % 2 == 0 && Offset.Y == 2) {
+            if (ObstacleGrid(CurrentEdgeHalf.X / 2, CurrentEdgeHalf.Y / 2)) {
+              continue;
+            }
+          } else if (CurrentEdgeHalf.Y % 2 == 0 && Offset.Y == -2) {
+            if (ObstacleGrid(CurrentEdgeHalf.X / 2, CurrentEdgeHalf.Y / 2 - 1)) {
+              continue;
+            }
           }
+            
+          HasNext = true;
+          CurrentEdgeHalf = TestEdgeHalf;
+          break;
         }
         
         if (!HasNext) break;
@@ -311,17 +335,15 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
       }
     }
   }
-  
-  /*
-  TArray<FVector2D> Path = RandPath(10000);
+ 
   draw.pen_color(255, 0, 0);
-  for (int I = 0; I < Path.Num() - 1; I++) {
-    // TODO check for possible out of bounds.
-    FIntPoint Start = Point2DToPixel(Path[I]);
-    FIntPoint End = Point2DToPixel(Path[I + 1]);
-    draw.line_segment(Start.X, Start.Y, End.X, End.Y);
+  for (const TArray<FVector2D>& Polygon : OffroadPolygons) {
+    for (int I = 0; I < Polygon.Num(); I++) {
+      FIntPoint Start = Point2DToPixel(Polygon[I]);
+      FIntPoint End = Point2DToPixel(Polygon[(I + 1) % Polygon.Num()]);
+      draw.line_segment(Start.X, Start.Y, End.X, End.Y);
+    }
   }
-  */
 
   canvas.pen_color(0, 0, 255);
   for (int I = 0; I < Trials; I++) {
