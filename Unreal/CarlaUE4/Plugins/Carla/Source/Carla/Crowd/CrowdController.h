@@ -2,6 +2,9 @@
 
 #include "Map/RoadMap.h"
 #include "Carla.h"
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/Map.h>
+
 #include "CrowdController.generated.h"
 
 UCLASS()
@@ -14,9 +17,11 @@ public:
 
   ACrowdController(const FObjectInitializer &InObjectInitializer);
 
-  void SetEpisode(UCarlaEpisode *Ep) {
-    Episode = Ep;
-  }
+  void SetEpisode(UCarlaEpisode *Ep) { Episode = Ep; }
+
+  void SetRoadMap(const FRoadMap* RdMap) { RoadMap = RdMap; }
+
+  void SetWaypointMap(const carla::road::Map* WpMap) { WaypointMap = WpMap; }
 
   void Initialize();
   
@@ -25,7 +30,8 @@ public:
 private:
 
   UCarlaEpisode* Episode = nullptr;
-  FRoadMap RoadMap;
+  const FRoadMap* RoadMap;
+  const carla::road::Map* WaypointMap;
   
   const FActorDefinition& RandWalkerActorDefinition() const;
 

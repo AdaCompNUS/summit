@@ -85,10 +85,13 @@ void ACarlaGameModeBase::InitGame(
 
   SpawnActorFactories();
 
-  // make connection between Episode and Recorder
+  CreateRoadMap();
+
+  // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
   CrowdController->SetEpisode(Episode);
+  CrowdController->SetRoadMap(&RoadMap);
   Episode->SetCrowdController(CrowdController);
 }
 
@@ -168,8 +171,8 @@ void ACarlaGameModeBase::SpawnActorFactories()
   }
 }
 
-FRoadMap ACarlaGameModeBase::GetRoadMap() const {
-  
+void ACarlaGameModeBase::CreateRoadMap() {
+
   // Construct RoadMap.
   TArray<FRoadTriangle> RoadTriangles;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
@@ -199,14 +202,12 @@ FRoadMap ACarlaGameModeBase::GetRoadMap() const {
 
         RoadTriangles.Emplace(RoadTriangle);
       }
-
     }
   }
-
-  return FRoadMap(RoadTriangles, 10, 50); 
+  RoadMap = FRoadMap(RoadTriangles, 10, 50);
 }
 
 void ACarlaGameModeBase::RenderMonteCarloRoadMap(const FString& FileName, int Trials) const {
-  GetRoadMap().RenderMonteCarloBitmap(FileName, Trials);  
+  RoadMap.RenderMonteCarloBitmap(FileName, Trials);  
 }
 

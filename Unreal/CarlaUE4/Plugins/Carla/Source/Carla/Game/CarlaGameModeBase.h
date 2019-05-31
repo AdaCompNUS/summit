@@ -18,6 +18,8 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
+#include <carla/road/Map.h>
+
 #include "CarlaGameModeBase.generated.h"
 
 /// Base class for the CARLA Game Mode.
@@ -53,9 +55,13 @@ protected:
 
 private:
 
+  // TODO Figure out what a UPROPERTY is and maybe change these to that.
+  FRoadMap RoadMap;
+  boost::optional<carla::road::Map> WaypointMap;
+
   void SpawnActorFactories();
 
-  FRoadMap GetRoadMap() const;
+  void CreateRoadMap();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
