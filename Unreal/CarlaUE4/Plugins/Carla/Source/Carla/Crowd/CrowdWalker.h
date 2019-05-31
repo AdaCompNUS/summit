@@ -1,4 +1,5 @@
 #pragma once
+#include <carla/geom/Vector2D.h>
 
 class CrowdWalker {
 
@@ -7,9 +8,9 @@ public:
   CrowdWalker(carla::road::Map* InWaypointMap, AActor* InActor)
       : WaypointMap(InWaypointMap), Actor(InActor) { }
 
-  FVector2D GetPreferredVelocity();
+  carla::geom::Vector2D GetPreferredVelocity();
 
-  void SetVelocity(const FVector2D& Velocity);
+  void SetVelocity(const carla::geom::Vector2D& Velocity);
 
 private:
   

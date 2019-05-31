@@ -5,32 +5,25 @@
 #include <carla/road/element/Waypoint.h>
 #include <vector>
 
-FVector2D CrowdWalker::GetPreferredVelocity() {
-  carla::geom::Location Location;
-  Location.x = Actor->GetTransform().GetTranslation().X;
-  Location.y = Actor->GetTransform().GetTranslation().Y;
-  Location.z = Actor->GetTransform().GetTranslation().Z;
+carla::geom::Vector2D CrowdWalker::GetPreferredVelocity() {
+  // Use constructor for units conversion.
+  carla::geom::Location Location(Actor->GetTransform().GetTranslation());
   
-  carla::road::element::Waypoint Waypoint = WaypointMap->GetWaypoint(Location).get();
-  
-  std::vector<carla::road::element::Waypoint> NextWaypoints = WaypointMap->GetNext(Waypoint, 1.0);
+  std::vector<carla::road::element::Waypoint> NextWaypoints = WaypointMap->GetNext(
+      WaypointMap->GetClosestWaypointOnRoad(Location).get(), 
+      1.0);
 
-  if (NextWaypoints.size() == 0) return FVector2D(0, 0);
-
-  carla::road::element::Waypoint NextWaypoint = NextWaypoints[FMath::RandRange(0, NextWaypoints.size() - 1)];
-  carla::geom::Location NextWaypointLocation = WaypointMap->ComputeTransform(NextWaypoint).location;
-
+  if (NextWaypoints.size() == 0) return carla::geom::Vector2D(0, 0);
+  carla::geom::Location NextWaypointLocation = WaypointMap->ComputeTransform(NextWaypoints[FMath::RandRange(0, NextWaypoints.size() - 1)]).location;
   carla::geom::Location Offset = NextWaypointLocation - Location;
-  FVector Velocity = Offset.MakeUnitVector().ToFVector();
-
-  return FVector2D(Velocity.X, Velocity.Y);
+  return (carla::geom::Vector2D(Offset.x, Offset.y)).MakeUnitVector();
 }
 
-void CrowdWalker::SetVelocity(const FVector2D& Velocity) {
+void CrowdWalker::SetVelocity(const carla::geom::Vector2D& Velocity) {
   auto Controller = Cast<AWalkerController>(Cast<APawn>(Actor)->GetController());
   FWalkerControl Control;
-  Control.Direction = FVector(Velocity.X, Velocity.Y, 0);
-  Control.Speed = 1.0f;
+  Control.Direction = FVector(Velocity.x, Velocity.y, 0);
+  Control.Speed = 500.0f;
   Control.Jump = false;
   Controller->ApplyWalkerControl(Control);
 }

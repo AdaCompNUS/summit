@@ -13,11 +13,12 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
   PrimaryActorTick.bCanEverTick = true; 
   PrimaryActorTick.TickGroup = TG_PrePhysics;
+  PrimaryActorTick.TickInterval = 0.1;
   bAllowTickBeforeBeginPlay = false;
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  while (Walkers.Num() < 5) {
+  while (Walkers.Num() < 50) {
     FVector Point = RoadMap->RandPoint();
     
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
@@ -41,7 +42,7 @@ void ACrowdController::Tick(float DeltaSeconds) {
   }
 
   for (CrowdWalker& Walker: Walkers) {
-    Walker.GetPreferredVelocity();
+    Walker.SetVelocity(Walker.GetPreferredVelocity());
   }
 }
 

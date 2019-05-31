@@ -181,8 +181,7 @@ void ACarlaGameModeBase::CreateRoadMap() {
   // Construct RoadMap.
   TArray<FRoadTriangle> RoadTriangles;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    FRegexPattern Pattern(TEXT("\\/Game\\/Carla\\/Static\\/Road\\/RoadsTown03\\/SM_RoadTown03_[0-9]+\\.SM_RoadTown03_[0-9]+"));
-    if (FRegexMatcher(Pattern, ActorItr->GetDetailedInfo()).FindNext()){
+    if (ActorItr->ActorHasTag(TEXT("Road"))){
 
       // Written with reference to FStaticMeshSectionAreaWeightedTriangleSampler::GetWeights in
       // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
