@@ -6,8 +6,10 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Util/OpenDrive.h"
 #include "Map/RoadMap.h"
 #include "Map/RoadTriangle.h"
+#include <carla/opendrive/OpenDriveParser.h>
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -87,11 +89,14 @@ void ACarlaGameModeBase::InitGame(
 
   CreateRoadMap();
 
+  CreateWaypointMap(MapName);
+
   // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
   CrowdController->SetEpisode(Episode);
   CrowdController->SetRoadMap(&RoadMap);
+  CrowdController->SetWaypointMap(&WaypointMap.get());
   Episode->SetCrowdController(CrowdController);
 }
 
@@ -205,6 +210,16 @@ void ACarlaGameModeBase::CreateRoadMap() {
     }
   }
   RoadMap = FRoadMap(RoadTriangles, 10, 50);
+}
+  
+void CreateWaypointMap(const FString& MapName) {
+  const FString XodrContent = FOpenDrive::Load(MapName);
+  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
+  if (!map.has_value())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
+    return;
+  }
 }
 
 void ACarlaGameModeBase::RenderMonteCarloRoadMap(const FString& FileName, int Trials) const {

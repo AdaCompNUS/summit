@@ -57,11 +57,14 @@ private:
 
   // TODO Figure out what a UPROPERTY is and maybe change these to that.
   FRoadMap RoadMap;
+
   boost::optional<carla::road::Map> WaypointMap;
 
   void SpawnActorFactories();
 
   void CreateRoadMap();
+
+  void CreateWaypointMap(const FString& MapName);
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
