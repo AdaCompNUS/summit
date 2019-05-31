@@ -5,6 +5,12 @@
 #include <carla/road/element/Waypoint.h>
 #include <vector>
 
+carla::geom::Vector2D CrowdWalker::GetLocation() const {
+  carla::geom::Location Location(Actor->GetTransform().GetTranslation());
+  carla::geom::Vector2D Location2D(Location.x, Location.y);
+  return Location2D;
+}
+
 carla::geom::Vector2D CrowdWalker::GetPreferredVelocity() {
   // Use constructor for units conversion.
   carla::geom::Location Location(Actor->GetTransform().GetTranslation());
@@ -23,7 +29,7 @@ void CrowdWalker::SetVelocity(const carla::geom::Vector2D& Velocity) {
   auto Controller = Cast<AWalkerController>(Cast<APawn>(Actor)->GetController());
   FWalkerControl Control;
   Control.Direction = FVector(Velocity.x, Velocity.y, 0);
-  Control.Speed = 500.0f;
+  Control.Speed = 100.0f;
   Control.Jump = false;
   Controller->ApplyWalkerControl(Control);
 }

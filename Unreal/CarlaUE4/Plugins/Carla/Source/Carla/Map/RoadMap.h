@@ -16,7 +16,7 @@ public:
 
   float GetResolution() const { return Resolution; }
 
-  int GetOffroadPolygonEdgeInterval() const { return OffroadPolygonEdgeInterval; }
+  const TArray<TArray<FVector2D>>& GetOffroadPolygons() const { return OffroadPolygons; }
 
   FVector RandPoint() const;
   

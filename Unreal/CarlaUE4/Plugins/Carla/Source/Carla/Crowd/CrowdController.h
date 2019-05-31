@@ -5,6 +5,7 @@
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 #include "CrowdWalker.h"
+#include "RVO//RVO.h"
 
 #include "CrowdController.generated.h"
 
@@ -23,7 +24,9 @@ public:
   void SetRoadMap(const FRoadMap* InRoadMap) { RoadMap = InRoadMap; }
 
   void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
-  
+
+  void InitializeAtBeginPlay();
+
   void Tick(float DeltaSeconds) final;
 
 private:
@@ -32,6 +35,7 @@ private:
   const FRoadMap* RoadMap;
   carla::road::Map* WaypointMap;
   TArray<CrowdWalker> Walkers;
+  RVO::RVOSimulator RVOSim;
   
   const FActorDefinition& RandWalkerActorDefinition() const;
 

@@ -121,6 +121,7 @@ void ACarlaGameModeBase::BeginPlay()
   }
 
   Episode->InitializeAtBeginPlay();
+  CrowdController->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
@@ -181,7 +182,7 @@ void ACarlaGameModeBase::CreateRoadMap() {
   // Construct RoadMap.
   TArray<FRoadTriangle> RoadTriangles;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    if (ActorItr->ActorHasTag(TEXT("Road"))){
+    if (ActorItr->ActorHasTag(TEXT("Crowd"))){
 
       // Written with reference to FStaticMeshSectionAreaWeightedTriangleSampler::GetWeights in
       // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
