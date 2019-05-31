@@ -4,6 +4,7 @@
 #include "Carla.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
+#include "CrowdWalker.h"
 
 #include "CrowdController.generated.h"
 
@@ -17,13 +18,11 @@ public:
 
   ACrowdController(const FObjectInitializer &InObjectInitializer);
 
-  void SetEpisode(UCarlaEpisode *Ep) { Episode = Ep; }
+  void SetEpisode(UCarlaEpisode *InEpisode) { Episode = InEpisode; }
 
-  void SetRoadMap(const FRoadMap* RdMap) { RoadMap = RdMap; }
+  void SetRoadMap(const FRoadMap* InRoadMap) { RoadMap = InRoadMap; }
 
-  void SetWaypointMap(const carla::road::Map* WpMap) { WaypointMap = WpMap; }
-
-  void Initialize();
+  void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
   
   void Tick(float DeltaSeconds) final;
 
@@ -31,7 +30,8 @@ private:
 
   UCarlaEpisode* Episode = nullptr;
   const FRoadMap* RoadMap;
-  const carla::road::Map* WaypointMap;
+  carla::road::Map* WaypointMap;
+  TArray<CrowdWalker> Walkers;
   
   const FActorDefinition& RandWalkerActorDefinition() const;
 

@@ -17,6 +17,32 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
+  while (Walkers.Num() < 5) {
+    FVector Point = RoadMap->RandPoint();
+    
+    const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
+    FActorDescription ActorDescription;
+    ActorDescription.UId = ActorDefinition.UId;
+    ActorDescription.Id = ActorDefinition.Id;
+    ActorDescription.Class = ActorDefinition.Class;
+
+    TSubclassOf<AActor> Class = ActorDefinition.Class;
+    AActor* ActorClass = Class.GetDefaultObject();
+
+    FVector Origin, BoxExtent;
+    ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
+
+    FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
+
+    AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
+    if (Actor) {
+      Walkers.Emplace(WaypointMap, Actor);
+    }
+  }
+
+  for (CrowdWalker& Walker: Walkers) {
+    Walker.GetPreferredVelocity();
+  }
 }
 
 const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
@@ -30,8 +56,4 @@ const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
   }
 
   return *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
-}
-
-void ACrowdController::Initialize() {
-  
 }

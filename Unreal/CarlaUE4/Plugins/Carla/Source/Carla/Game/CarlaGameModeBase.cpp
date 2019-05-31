@@ -96,7 +96,7 @@ void ACarlaGameModeBase::InitGame(
   Episode->SetRecorder(Recorder);
   CrowdController->SetEpisode(Episode);
   CrowdController->SetRoadMap(&RoadMap);
-  CrowdController->SetWaypointMap(&WaypointMap.get());
+  CrowdController->SetWaypointMap(&(WaypointMap.get()));
   Episode->SetCrowdController(CrowdController);
 }
 
@@ -212,10 +212,10 @@ void ACarlaGameModeBase::CreateRoadMap() {
   RoadMap = FRoadMap(RoadTriangles, 10, 50);
 }
   
-void CreateWaypointMap(const FString& MapName) {
+void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
   const FString XodrContent = FOpenDrive::Load(MapName);
-  auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
-  if (!map.has_value())
+  WaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
+  if (!WaypointMap.has_value())
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
     return;

@@ -201,8 +201,6 @@ void UCarlaEpisode::InitializeAtBeginPlay()
       ActorDispatcher->RegisterActor(*Actor, Description);
     }
   }
-  
-  CrowdController->Initialize();
 }
 
 void UCarlaEpisode::EndPlay(void)
