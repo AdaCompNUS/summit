@@ -19,8 +19,6 @@ public:
   int GetOffroadPolygonEdgeInterval() const { return OffroadPolygonEdgeInterval; }
 
   FVector RandPoint() const;
-
-  TArray<FVector2D> RandPath(double Radius) const;
   
   void RenderMonteCarloBitmap(const FString& FileName, int Trials) const;
 
