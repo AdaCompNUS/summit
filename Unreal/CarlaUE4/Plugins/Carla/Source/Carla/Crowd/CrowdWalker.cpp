@@ -5,24 +5,61 @@
 #include <carla/road/element/Waypoint.h>
 #include <vector>
 
-carla::geom::Vector2D CrowdWalker::GetLocation() const {
-  carla::geom::Location Location(Actor->GetTransform().GetTranslation());
-  carla::geom::Vector2D Location2D(Location.x, Location.y);
-  return Location2D;
+carla::geom::Location CrowdWalker::GetLocation() const {
+  return carla::geom::Location(Actor->GetTransform().GetTranslation());
 }
 
-carla::geom::Vector2D CrowdWalker::GetPreferredVelocity() {
-  // Use constructor for units conversion.
-  carla::geom::Location Location(Actor->GetTransform().GetTranslation());
+carla::geom::Vector2D CrowdWalker::GetLocation2D() const {
+  carla::geom::Location Location = GetLocation();
+  return carla::geom::Vector2D(Location.x, Location.y);
+}
   
-  std::vector<carla::road::element::Waypoint> NextWaypoints = WaypointMap->GetNext(
-      WaypointMap->GetClosestWaypointOnRoad(Location).get(), 
-      1.0);
+void CrowdWalker::AddClosestWaypointToPath() {
+  PathWaypoints.Emplace(*(WaypointMap->GetClosestWaypointOnRoad(GetLocation())));
+  PathLocations.Emplace(WaypointMap->ComputeTransform(PathWaypoints.Last()).location);
+}
 
-  if (NextWaypoints.size() == 0) return carla::geom::Vector2D(0, 0);
-  carla::geom::Location NextWaypointLocation = WaypointMap->ComputeTransform(NextWaypoints[FMath::RandRange(0, NextWaypoints.size() - 1)]).location;
-  carla::geom::Location Offset = NextWaypointLocation - Location;
-  return (carla::geom::Vector2D(Offset.x, Offset.y)).MakeUnitVector();
+bool CrowdWalker::ExtendPath() {
+  std::vector<carla::road::element::Waypoint> NextWaypoints = 
+    WaypointMap->GetNext(PathWaypoints.Last(), 0.1);
+
+  if (NextWaypoints.size() == 0) return false;
+
+  PathWaypoints.Emplace(NextWaypoints[FMath::RandRange(0, NextWaypoints.size() - 1)]);
+  PathLocations.Emplace(WaypointMap->ComputeTransform(PathWaypoints.Last()).location);
+
+  return true;
+}
+
+boost::optional<carla::geom::Vector2D> CrowdWalker::GetPreferredVelocity() {
+  carla::geom::Location Location = GetLocation();
+
+  // Extend local path.
+  if (PathWaypoints.Num() == 0) AddClosestWaypointToPath();
+  while (PathWaypoints.Num() < 500 && ExtendPath());
+  if (PathWaypoints.Num() < 500) return boost::none;
+
+  // Calculate nearest location.
+  int I = 0;
+  while (I < PathWaypoints.Num() - 1) {
+    if ((Location - PathLocations[I]).SquaredLength() < (Location - PathLocations[I + 1]).SquaredLength()) break;
+    I++;
+  }
+  carla::geom::Location TargetLocation = PathLocations[I + 20];
+
+  // Shorten path.
+  TArray<carla::road::element::Waypoint> NewPathWaypoints;
+  TArray<carla::geom::Location> NewPathLocations;
+  for (int J = I; J < PathWaypoints.Num(); J++) {
+    NewPathWaypoints.Add(PathWaypoints[J]);
+    NewPathLocations.Add(PathLocations[J]);
+  }
+  PathWaypoints = NewPathWaypoints;
+  PathLocations = NewPathLocations;
+
+  // Calculate velocity.
+  carla::geom::Vector3D Offset = TargetLocation - Location;
+  return MaxSpeed * carla::geom::Vector2D(Offset.x, Offset.y).MakeUnitVector();
 }
 
 void CrowdWalker::SetVelocity(const carla::geom::Vector2D& Velocity) {
