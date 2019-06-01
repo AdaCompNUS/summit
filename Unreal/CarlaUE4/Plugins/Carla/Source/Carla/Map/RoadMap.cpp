@@ -266,6 +266,7 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
     }
   }
  
+  draw.pen_width(3);
   draw.pen_color(255, 0, 0);
   for (const TArray<FVector2D>& Polygon : OffroadPolygons) {
     for (int I = 0; I < Polygon.Num(); I++) {

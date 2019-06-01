@@ -2341,6 +2341,65 @@ public:
                    }
                    break;
 
+         case  4 : {
+                      
+                      plot_pixel(x    , y - 1);
+                      plot_pixel(x - 1, y - 1);
+                      plot_pixel(x + 1, y - 1);
+
+                      plot_pixel(x    , y    );
+                      plot_pixel(x - 1, y    );
+                      plot_pixel(x + 1, y    );
+
+                      plot_pixel(x    , y + 1);
+                      plot_pixel(x - 1, y + 1);
+                      plot_pixel(x + 1, y + 1);
+
+                      plot_pixel(x + 2, y - 1);
+                      plot_pixel(x + 2, y);
+                      plot_pixel(x + 2, y + 1);
+                      plot_pixel(x + 2, y + 2);
+                      plot_pixel(x + 1, y + 2);
+                      plot_pixel(x    , y + 2);
+                      plot_pixel(x - 1, y + 2);
+
+                   }
+                   break;
+         case  5 : {
+                      
+                      plot_pixel(x    , y - 1);
+                      plot_pixel(x - 1, y - 1);
+                      plot_pixel(x + 1, y - 1);
+
+                      plot_pixel(x    , y    );
+                      plot_pixel(x - 1, y    );
+                      plot_pixel(x + 1, y    );
+
+                      plot_pixel(x    , y + 1);
+                      plot_pixel(x - 1, y + 1);
+                      plot_pixel(x + 1, y + 1);
+
+                      plot_pixel(x + 2, y - 1);
+                      plot_pixel(x + 2, y);
+                      plot_pixel(x + 2, y + 1);
+                      plot_pixel(x + 2, y + 2);
+                      plot_pixel(x + 1, y + 2);
+                      plot_pixel(x    , y + 2);
+                      plot_pixel(x - 1, y + 2);
+
+                      plot_pixel(x + 2, y - 2);
+                      plot_pixel(x + 1, y - 2);
+                      plot_pixel(x    , y - 2);
+                      plot_pixel(x - 1, y - 2);
+                      plot_pixel(x - 2, y - 2);
+                      plot_pixel(x - 2, y - 1);
+                      plot_pixel(x - 2, y);
+                      plot_pixel(x - 2, y + 1);
+                      plot_pixel(x - 2, y + 2);
+
+                   }
+                   break;
+
          default : plot_pixel(x,y);
                    break;
       }
@@ -2361,7 +2420,7 @@ public:
 
    void pen_width(const unsigned int& width)
    {
-      if ((width > 0) && (width < 4))
+      if ((width > 0) && (width < 6))
       {
          pen_width_ = width;
       }

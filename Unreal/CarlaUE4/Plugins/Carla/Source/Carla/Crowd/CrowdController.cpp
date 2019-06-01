@@ -23,11 +23,9 @@ void ACrowdController::InitializeAtBeginPlay() {
       10.0f, // neighborDist
       20, // maxNeighbors
       2.0f, // timeHorizon
-      2.0f, // timeHorizonObst
-      1.0f, // radius
+      0.3f, // timeHorizonObst
+      0.5f, // radius
       2.0f); // maxSpeed
-
-  return;
 
   for (const TArray<FVector2D>& OffroadPolygon : RoadMap->GetOffroadPolygons()) {
     std::vector<RVO::Vector2> Obstacle;
