@@ -209,7 +209,7 @@ void ACarlaGameModeBase::CreateRoadMap() {
       }
     }
   }
-  RoadMap = FRoadMap(RoadTriangles, 10, 5);
+  RoadMap = FRoadMap(RoadTriangles, 10, 100);
 }
   
 void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {

@@ -265,8 +265,9 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
       }
     }
   }
- 
-  draw.pen_width(3);
+
+  /*
+  draw.pen_width(9);
   draw.pen_color(255, 0, 0);
   for (const TArray<FVector2D>& Polygon : OffroadPolygons) {
     for (int I = 0; I < Polygon.Num(); I++) {
@@ -275,6 +276,7 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
       draw.line_segment(Start.X, Start.Y, End.X, End.Y);
     }
   }
+  */
 
   canvas.pen_color(0, 0, 255);
   for (int I = 0; I < Trials; I++) {

@@ -2313,96 +2313,11 @@ public:
 
    void plot_pen_pixel(int x, int y)
    {
-      switch (pen_width_)
-      {
-         case 1  : plot_pixel(x,y);
-                   break;
-
-         case 2  : {
-                      plot_pixel(x    , y    );
-                      plot_pixel(x + 1, y    );
-                      plot_pixel(x + 1, y + 1);
-                      plot_pixel(x    , y + 1);
-                   }
-                   break;
-
-         case  3 : {
-                      plot_pixel(x    , y - 1);
-                      plot_pixel(x - 1, y - 1);
-                      plot_pixel(x + 1, y - 1);
-
-                      plot_pixel(x    , y    );
-                      plot_pixel(x - 1, y    );
-                      plot_pixel(x + 1, y    );
-
-                      plot_pixel(x    , y + 1);
-                      plot_pixel(x - 1, y + 1);
-                      plot_pixel(x + 1, y + 1);
-                   }
-                   break;
-
-         case  4 : {
-                      
-                      plot_pixel(x    , y - 1);
-                      plot_pixel(x - 1, y - 1);
-                      plot_pixel(x + 1, y - 1);
-
-                      plot_pixel(x    , y    );
-                      plot_pixel(x - 1, y    );
-                      plot_pixel(x + 1, y    );
-
-                      plot_pixel(x    , y + 1);
-                      plot_pixel(x - 1, y + 1);
-                      plot_pixel(x + 1, y + 1);
-
-                      plot_pixel(x + 2, y - 1);
-                      plot_pixel(x + 2, y);
-                      plot_pixel(x + 2, y + 1);
-                      plot_pixel(x + 2, y + 2);
-                      plot_pixel(x + 1, y + 2);
-                      plot_pixel(x    , y + 2);
-                      plot_pixel(x - 1, y + 2);
-
-                   }
-                   break;
-         case  5 : {
-                      
-                      plot_pixel(x    , y - 1);
-                      plot_pixel(x - 1, y - 1);
-                      plot_pixel(x + 1, y - 1);
-
-                      plot_pixel(x    , y    );
-                      plot_pixel(x - 1, y    );
-                      plot_pixel(x + 1, y    );
-
-                      plot_pixel(x    , y + 1);
-                      plot_pixel(x - 1, y + 1);
-                      plot_pixel(x + 1, y + 1);
-
-                      plot_pixel(x + 2, y - 1);
-                      plot_pixel(x + 2, y);
-                      plot_pixel(x + 2, y + 1);
-                      plot_pixel(x + 2, y + 2);
-                      plot_pixel(x + 1, y + 2);
-                      plot_pixel(x    , y + 2);
-                      plot_pixel(x - 1, y + 2);
-
-                      plot_pixel(x + 2, y - 2);
-                      plot_pixel(x + 1, y - 2);
-                      plot_pixel(x    , y - 2);
-                      plot_pixel(x - 1, y - 2);
-                      plot_pixel(x - 2, y - 2);
-                      plot_pixel(x - 2, y - 1);
-                      plot_pixel(x - 2, y);
-                      plot_pixel(x - 2, y + 1);
-                      plot_pixel(x - 2, y + 2);
-
-                   }
-                   break;
-
-         default : plot_pixel(x,y);
-                   break;
-      }
+     for (int xi = -static_cast<int>(pen_width_ / 2); xi <= static_cast<int>(pen_width_ / 2); xi++) {
+       for (int yi = -static_cast<int>(pen_width_ / 2); yi <= static_cast<int>(pen_width_ / 2); yi++) {
+         plot_pixel(x + xi, y + yi);
+       }
+     }
    }
 
    void plot_pixel(int x, int y)
@@ -2420,10 +2335,9 @@ public:
 
    void pen_width(const unsigned int& width)
    {
-      if ((width > 0) && (width < 6))
-      {
-         pen_width_ = width;
-      }
+     if (width % 2 == 1) {
+        pen_width_ = width;
+     }
    }
 
    void pen_color(const unsigned char& red,

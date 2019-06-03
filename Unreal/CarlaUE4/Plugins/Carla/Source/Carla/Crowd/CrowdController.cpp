@@ -13,7 +13,7 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
   PrimaryActorTick.bCanEverTick = true; 
   PrimaryActorTick.TickGroup = TG_PrePhysics;
-  PrimaryActorTick.TickInterval = 0.2f;
+  PrimaryActorTick.TickInterval = 0.1f;
   bAllowTickBeforeBeginPlay = false;
 }
 
