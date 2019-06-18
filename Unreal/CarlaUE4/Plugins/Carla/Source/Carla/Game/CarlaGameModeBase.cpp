@@ -75,6 +75,7 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
+  /*
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
     // Apply default weather.
@@ -82,6 +83,7 @@ void ACarlaGameModeBase::InitGame(
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
+  */
 
   GameInstance->NotifyInitGame();
 
