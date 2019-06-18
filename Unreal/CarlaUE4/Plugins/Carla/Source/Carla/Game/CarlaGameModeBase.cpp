@@ -11,6 +11,10 @@
 #include "Map/RoadTriangle.h"
 #include <carla/opendrive/OpenDriveParser.h>
 
+#include <compiler/disable-ue4-macros.h>
+#include <carla/rpc/WeatherParameters.h>
+#include <compiler/enable-ue4-macros.h>
+
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -78,8 +82,6 @@ void ACarlaGameModeBase::InitGame(
   /*
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
-    // Apply default weather.
-    Episode->Weather->ApplyWeather(FWeatherParameters());
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
@@ -125,6 +127,11 @@ void ACarlaGameModeBase::BeginPlay()
   Episode->InitializeAtBeginPlay();
   //CrowdController->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
+
+  if (Episode->Weather != nullptr)
+  {
+    Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+  }
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
   // check if replayer is waiting to autostart
