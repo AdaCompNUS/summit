@@ -6,7 +6,6 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
-#include "Carla/Util/OpenDrive.h"
 #include "Map/RoadMap.h"
 #include "Map/RoadTriangle.h"
 #include <carla/opendrive/OpenDriveParser.h>
@@ -79,13 +78,11 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  /*
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
-  */
 
   GameInstance->NotifyInitGame();
 
@@ -222,8 +219,9 @@ void ACarlaGameModeBase::CreateRoadMap() {
 }
   
 void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
-  const FString XodrContent = FOpenDrive::Load(MapName);
-  WaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(XodrContent));
+  FString Content;
+  FFileHelper::LoadFileToString(Content, *MapName);
+  WaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(Content));
   if (!WaypointMap.has_value())
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));

@@ -12,7 +12,6 @@ namespace rpc {
   using WP = WeatherParameters;
 
   //                        cloudyness   precip.  prec.dep.     wind   azimuth   altitude
-  WP WP::Default         = {     -1.0f,    -1.0f,     -1.0f,  -1.00f,    -1.0f,     -1.0f};
   WP WP::ClearNoon       = {     15.0f,     0.0f,      0.0f,   0.35f,     0.0f,     75.0f};
   WP WP::CloudyNoon      = {     80.0f,     0.0f,      0.0f,   0.35f,     0.0f,     75.0f};
   WP WP::WetNoon         = {     20.0f,     0.0f,     50.0f,   0.35f,     0.0f,     75.0f};
@@ -27,6 +26,7 @@ namespace rpc {
   WP WP::MidRainSunset   = {     80.0f,    30.0f,     50.0f,   0.40f,     0.0f,     15.0f};
   WP WP::HardRainSunset  = {     80.0f,    60.0f,    100.0f,   1.00f,     0.0f,     15.0f};
   WP WP::SoftRainSunset  = {     90.0f,    15.0f,     50.0f,   0.35f,     0.0f,     15.0f};
+  WP WP::Default         = WP::ClearNoon;
 
 } // namespace rpc
 } // namespace carla
