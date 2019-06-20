@@ -251,7 +251,7 @@ FVector FRoadMap::RandPoint() const {
   return RoadTriangles[I - 1].RandPoint();
 }
   
-void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const {
+void FRoadMap::RenderBitmap(const FString& FileName) const {
 
   cartesian_canvas canvas(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
   canvas.image().clear(0);
@@ -266,7 +266,6 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
     }
   }
 
-  /*
   draw.pen_width(9);
   draw.pen_color(255, 0, 0);
   for (const TArray<FVector2D>& Polygon : OffroadPolygons) {
@@ -275,16 +274,6 @@ void FRoadMap::RenderMonteCarloBitmap(const FString& FileName, int Trials) const
       FIntPoint End = Point2DToPixel(Polygon[(I + 1) % Polygon.Num()]);
       draw.line_segment(Start.X, Start.Y, End.X, End.Y);
     }
-  }
-  */
-
-  canvas.pen_color(0, 0, 255);
-  for (int I = 0; I < Trials; I++) {
-    FVector Point = RandPoint();
-    canvas.fill_circle(
-        ((Point.Y - (Bounds.Min.Y + Bounds.Max.Y) / 2)) / Resolution,
-        ((Point.X - (Bounds.Min.X + Bounds.Max.X) / 2)) / Resolution,
-        5);
   }
   
   canvas.image().save_image(TCHAR_TO_UTF8(*FileName));

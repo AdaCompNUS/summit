@@ -20,7 +20,7 @@ public:
 
   FVector RandPoint() const;
   
-  void RenderMonteCarloBitmap(const FString& FileName, int Trials) const;
+  void RenderBitmap(const FString& FileName) const;
 
 private:
 

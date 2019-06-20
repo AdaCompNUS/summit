@@ -39,7 +39,7 @@ public:
   }
   
   UFUNCTION(Exec)
-  void RenderMonteCarloRoadMap(const FString& FileName, int Trials) const;
+  void RenderRoadMap(const FString& FileName) const;
 
 protected:
 
