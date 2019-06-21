@@ -58,9 +58,7 @@ public class Carla : ModuleRules
         "PhysXVehicles",
         "PhysXVehicleLib",
         "Slate",
-        "SlateCore",
-        "StreetMapRuntime",
-        "StreetMapImporting"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );

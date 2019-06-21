@@ -21,7 +21,12 @@
 			"AdditionalDependencies": [
 				"Engine"
 			]
-		}
+		},
+    {
+      "Name": "OSMImport",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
 	],
 	"Plugins": [
 		{
