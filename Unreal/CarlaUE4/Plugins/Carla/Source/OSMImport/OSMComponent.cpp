@@ -1,11 +1,13 @@
 #include "OSMComponent.h"
+#include "Engine/CollisionProfile.h"
+#include "OSMFile.h"
 
 UOSMComponent::UOSMComponent(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
 {
 	// We make sure our mesh collision profile name is set to NoCollisionProfileName at initialization. 
 	// Because we don't have collision data yet!
-	//SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
+	SetCollisionProfileName(UCollisionProfile::NoCollision_ProfileName);
 
 	// We don't currently need to be ticked.  This can be overridden in a derived class though.
 	PrimaryComponentTick.bCanEverTick = false;
@@ -26,5 +28,13 @@ UOSMComponent::UOSMComponent(const FObjectInitializer& ObjectInitializer)
 }
   
 void UOSMComponent::SetOSM(const FString& OSMPath) {
-  UE_LOG(LogTemp, Display, TEXT("Path = %s"), *OSMPath);
+  UE_LOG(LogTemp, Display, TEXT("OSMPath = %s"), *OSMPath);
+	
+  FString OSMPathMutable = OSMPath;
+  FOSMFile OSMFile;
+  if (!OSMFile.LoadOpenStreetMapFile(OSMPathMutable, false, nullptr)) {
+    UE_LOG(LogTemp, Error, TEXT("OSM load failed."));
+  } else {
+    UE_LOG(LogTemp, Display, TEXT("OSM loaded."));
+  }
 }

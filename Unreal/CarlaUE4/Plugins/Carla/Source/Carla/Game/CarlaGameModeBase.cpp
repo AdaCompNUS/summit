@@ -92,17 +92,17 @@ void ACarlaGameModeBase::InitGame(
 
   SpawnActorFactories();
 
-  CreateRoadMap();
+  //CreateRoadMap();
 
-  CreateWaypointMap(MapName);
+  //CreateWaypointMap(MapName);
 
   // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
-  CrowdController->SetEpisode(Episode);
-  CrowdController->SetRoadMap(&RoadMap);
-  CrowdController->SetWaypointMap(&(WaypointMap.get()));
-  Episode->SetCrowdController(CrowdController);
+  //CrowdController->SetEpisode(Episode);
+  //CrowdController->SetRoadMap(&RoadMap);
+  //CrowdController->SetWaypointMap(&(WaypointMap.get()));
+  //Episode->SetCrowdController(CrowdController);
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -126,7 +126,7 @@ void ACarlaGameModeBase::BeginPlay()
   }
 
   Episode->InitializeAtBeginPlay();
-  CrowdController->InitializeAtBeginPlay();
+  //CrowdController->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
 
   if (Episode->Weather != nullptr)
@@ -148,7 +148,7 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
   if (Recorder) Recorder->Tick(DeltaSeconds);
-  if (CrowdController) CrowdController->Tick(DeltaSeconds);
+  //if (CrowdController) CrowdController->Tick(DeltaSeconds);
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -10,6 +10,7 @@ class OSMIMPORT_API UOSMComponent : public UMeshComponent, public IInterface_Col
 	GENERATED_BODY()
 
 public:
+  
   UOSMComponent(const FObjectInitializer& ObjectInitializer);
 		
   void SetOSM(const FString& OSMPath);

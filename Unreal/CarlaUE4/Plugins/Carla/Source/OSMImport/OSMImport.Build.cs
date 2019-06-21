@@ -25,7 +25,8 @@ namespace UnrealBuildTool.Rules
               "RHI",
               "RawMesh",
               "AssetTools",
-              "AssetRegistry"
+              "AssetRegistry",
+              "ProceduralMeshComponent"
           }
       );
     }
