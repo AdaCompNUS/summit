@@ -39,7 +39,7 @@ void ACrowdController::InitializeAtBeginPlay() {
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  while (Walkers.Num() < 500) {
+  while (Walkers.Num() < 5) {
     FVector Point = RoadMap->RandPoint();
     
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();

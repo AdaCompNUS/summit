@@ -10,6 +10,7 @@
 #include "Map/RoadTriangle.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
+#include "OSMComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -27,6 +28,8 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
 
   CrowdController = CreateDefaultSubobject<ACrowdController>(TEXT("CrowdController"));
+
+  OSMActor = CreateDefaultSubobject<AOSMActor>(TEXT("OSMActor"));
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
@@ -233,3 +236,6 @@ void ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
   RoadMap.RenderBitmap(FileName);  
 }
 
+void ACarlaGameModeBase::LoadOSM(const FString& OSMPath) {
+  Cast<UOSMComponent>(OSMActor->GetRootComponent())->SetOSM(OSMPath);
+}

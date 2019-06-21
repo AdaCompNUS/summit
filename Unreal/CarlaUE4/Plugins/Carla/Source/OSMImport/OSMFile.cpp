@@ -362,6 +362,18 @@ bool FOSMFile::ProcessAttribute( const TCHAR* AttributeName, const TCHAR* Attrib
 					CurrentWayInfo->bIsOneWay = false;
 				}
 			}
+      else if (!FCString::Stricmp(CurrentWayTagKey, TEXT("lanes")))
+      {
+        CurrentWayInfo->Lanes = FPlatformString::Atoi(AttributeValue);
+      }
+      else if (!FCString::Stricmp(CurrentWayTagKey, TEXT("lanes:backward")))
+      {
+        CurrentWayInfo->LanesBackward = FPlatformString::Atoi(AttributeValue);
+      }
+      else if (!FCString::Stricmp(CurrentWayTagKey, TEXT("lanes:forward")))
+      {
+        CurrentWayInfo->LanesBackward = FPlatformString::Atoi(AttributeValue);
+      }
 		}
 	}
 

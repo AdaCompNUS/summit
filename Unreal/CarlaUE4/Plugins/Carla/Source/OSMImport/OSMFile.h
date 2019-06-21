@@ -169,6 +169,10 @@ public:
 
 		// If true, way is only traversable in the order the nodes are listed in the Nodes list
 		uint8 bIsOneWay : 1;
+
+    int32 Lanes;
+    int32 LanesForward;
+    int32 LanesBackward;
 	};
 
 	// Minimum latitude/longitude bounds

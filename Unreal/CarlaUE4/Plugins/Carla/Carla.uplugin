@@ -25,17 +25,13 @@
     {
       "Name": "OSMImport",
       "Type": "Runtime",
-      "LoadingPhase": "Default"
+      "LoadingPhase": "PreDefault"
     }
 	],
 	"Plugins": [
 		{
 			"Name": "PhysXVehicles",
 			"Enabled": true
-		},
-    {
-      "Name": "StreetMap",
-      "Enabled": true
-    }
+		}
 	]
 }
