@@ -13,19 +13,7 @@ namespace UnrealBuildTool.Rules
               "Core",
               "CoreUObject",
               "Engine",
-              "UnrealEd",
-              "XmlParser",
-              "AssetTools",
-              "Projects",
-              "Slate",
-              "EditorStyle",
-              "SlateCore",
-              "PropertyEditor",
-              "RenderCore",
-              "RHI",
-              "RawMesh",
-              "AssetTools",
-              "AssetRegistry"
+              "XmlParser"
           }
       );
       PublicDependencyModuleNames.AddRange(

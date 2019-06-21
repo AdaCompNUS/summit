@@ -28,8 +28,6 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
 
   CrowdController = CreateDefaultSubobject<ACrowdController>(TEXT("CrowdController"));
 
-  OSMActor = CreateDefaultSubobject<AOSMActor>(TEXT("OSMActor"));
-
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));
 }
@@ -81,11 +79,13 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
+  /*
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
+  */
 
   GameInstance->NotifyInitGame();
 
@@ -102,6 +102,8 @@ void ACarlaGameModeBase::InitGame(
   //CrowdController->SetRoadMap(&RoadMap);
   //CrowdController->SetWaypointMap(&(WaypointMap.get()));
   //Episode->SetCrowdController(CrowdController);
+
+  OSMActor = World->SpawnActor<AOSMActor>();
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
