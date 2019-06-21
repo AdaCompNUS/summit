@@ -4,11 +4,10 @@
 
 
 // Based off "Efficient Polygon Triangulation" algorithm by John W. Ratcliff (http://flipcode.net/archives/Efficient_Polygon_Triangulation.shtml)
-bool FPolygonTools::TriangulatePolygon( const TArray<FVector2D>& Polygon, TArray<int32>& TempIndices, TArray<int32>& TriangulatedIndices, bool& OutWindsClockwise )
+bool FPolygonTools::TriangulatePolygon( const TArray<FVector2D>& Polygon, TArray<int32>& TriangulatedIndices )
 {
 	checkSlow( &TempIndices != &TriangulatedIndices );
 	TriangulatedIndices.Reset();
-	OutWindsClockwise = false;
 
 	int32 NumVertices = Polygon.Num();
 	if( NumVertices < 3 )
@@ -17,12 +16,12 @@ bool FPolygonTools::TriangulatePolygon( const TArray<FVector2D>& Polygon, TArray
 	}
 
 	// Allocate and initialize a list of vertex indices for the new polygon
+  TArray<int32> TempIndices;
 	TempIndices.SetNumUninitialized( NumVertices );
 	int32* VertexIndices = TempIndices.GetData();
 
 	// We want a counter-clockwise polygon
-	OutWindsClockwise = Area( Polygon ) < 0.0f;
-	if( !OutWindsClockwise )
+	if( Area( Polygon ) >= 0.0f )
 	{
 		for( int32 PointIndex = 0; PointIndex < NumVertices; PointIndex++ )
 		{

@@ -6,8 +6,8 @@ class FPolygonTools
 
 public:
 
-	/** Triangulate a polygon given a list of contour points, then places results as indices into the original polygon array.  Does not support polygons with holes. */
-	static bool TriangulatePolygon( const TArray<FVector2D>& Polygon, TArray<int32>& TempIndices, TArray<int32>& TriangulatedIndices, bool& OutWindsClockwise );
+	/** Triangulate a polygon given a list of contour points.  Does not support polygons with holes. */
+	static bool TriangulatePolygon( const TArray<FVector2D>& Polygon, TArray<int32>& TriangulatedIndices );
 
 	/** Compute area of a polygon */
 	static inline float Area( const TArray<FVector2D>& Polygon );
