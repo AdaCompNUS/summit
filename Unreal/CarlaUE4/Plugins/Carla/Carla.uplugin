@@ -25,7 +25,10 @@
     {
       "Name": "OSMImport",
       "Type": "Runtime",
-      "LoadingPhase": "PreDefault"
+      "LoadingPhase": "PreDefault",
+			"AdditionalDependencies": [
+				"ProceduralMeshComponent"
+			]
     }
 	],
 	"Plugins": [

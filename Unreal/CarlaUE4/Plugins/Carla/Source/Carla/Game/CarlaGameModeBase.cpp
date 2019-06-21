@@ -10,7 +10,6 @@
 #include "Map/RoadTriangle.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
-#include "OSMComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -237,5 +236,5 @@ void ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
 }
 
 void ACarlaGameModeBase::LoadOSM(const FString& OSMPath) {
-  Cast<UOSMComponent>(OSMActor->GetRootComponent())->SetOSM(OSMPath);
+  OSMActor->SetOSM(OSMPath);
 }

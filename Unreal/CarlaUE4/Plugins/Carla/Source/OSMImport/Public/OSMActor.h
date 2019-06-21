@@ -1,5 +1,6 @@
 #pragma once
 
+#include "ProceduralMeshComponent.h"
 #include "OSMActor.generated.h"
 
 UCLASS(hidecategories = (Physics))
@@ -10,10 +11,10 @@ class OSMIMPORT_API AOSMActor : public AActor
 public: 
   
   AOSMActor(const FObjectInitializer& ObjectInitializer);
-
-  FORCEINLINE class UOSMComponent* GetOSMComponent() { return OSMComponent; }
+		
+  void SetOSM(const FString& OSMPath);
 
 private:
 
-	class UOSMComponent* OSMComponent;
+	UProceduralMeshComponent* MeshComponent;
 };
