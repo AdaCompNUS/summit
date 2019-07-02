@@ -1,4 +1,6 @@
-// Copyright 2017 Mike Fricker. All Rights Reserved.
+using System;
+using System.IO;
+using UnrealBuildTool;
 
 namespace UnrealBuildTool.Rules
 {
@@ -8,6 +10,9 @@ namespace UnrealBuildTool.Rules
       : base(Target)
     {
       PrivatePCHHeaderFile = "OSMImport.h";
+
+      bEnableUndefinedIdentifierWarnings = false;
+
       PrivateDependencyModuleNames.AddRange(
           new string[] {
               "Core",
@@ -21,6 +26,12 @@ namespace UnrealBuildTool.Rules
               "ProceduralMeshComponent"
           }
       );
+
+      string BoostIncludePath = Path.Combine(ModuleDirectory, "../../CarlaDependencies", "include");
+      PublicIncludePaths.Add(BoostIncludePath);
+      PrivateIncludePaths.Add(BoostIncludePath);
+    
+      PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");
     }
   }
 }
