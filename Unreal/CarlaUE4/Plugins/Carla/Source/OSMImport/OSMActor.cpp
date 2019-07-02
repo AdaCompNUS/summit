@@ -15,7 +15,7 @@ AOSMActor::AOSMActor(const FObjectInitializer& ObjectInitializer)
 }
 
 void AOSMActor::SetOSM(const FString& OSMPath) {
-  LaneNetwork::Load("/home/leeyiyuan/Projects/osm-convert/network.ln");
+  FLaneNetwork::Load("/home/leeyiyuan/Projects/osm-convert/network.ln");
   return;
 
   UE_LOG(LogTemp, Display, TEXT("OSMPath = %s"), *OSMPath);

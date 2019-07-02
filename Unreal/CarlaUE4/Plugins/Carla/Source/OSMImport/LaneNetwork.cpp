@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <boost/optional.hpp>
 
-LaneNetwork LaneNetwork::Load(const FString& Path) {
+FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
   IFileHandle* FileHandle = PlatformFile.OpenRead(*Path);
 
@@ -63,7 +63,7 @@ LaneNetwork LaneNetwork::Load(const FString& Path) {
     }
   };
 
-  LaneNetwork Network(*ReadDouble());
+  FLaneNetwork LaneNetwork(*ReadDouble());
 
   boost::optional<uint8> ElementType = ReadByte();
   while (ElementType) {
@@ -71,7 +71,7 @@ LaneNetwork LaneNetwork::Load(const FString& Path) {
       case 1: { // Node
         int64 ID = *ReadLong();
         FVector2D Pos(*ReadDouble(), *ReadDouble());
-        Network.Nodes.Emplace(ID, Node(ID, Pos));
+        LaneNetwork.Nodes.Emplace(ID, FNode(ID, Pos));
         break;
       }
       case 2: { // Road
@@ -88,7 +88,7 @@ LaneNetwork LaneNetwork::Load(const FString& Path) {
         for (int I = 0; I < NumBackwardLanes; I++) {
           BackwardLaneIDs.Add(*ReadLong());
         }
-        Network.Roads.Emplace(ID, Road(ID, SourceNodeID, DestinationNodeID, ForwardLaneIDs, BackwardLaneIDs));
+        LaneNetwork.Roads.Emplace(ID, FRoad(ID, SourceNodeID, DestinationNodeID, ForwardLaneIDs, BackwardLaneIDs));
         break;
       }
       case 3: { // Lane
@@ -96,7 +96,7 @@ LaneNetwork LaneNetwork::Load(const FString& Path) {
         int64 RoadID = *ReadLong();
         bool IsForward = *ReadBool();
         int32 Index = *ReadInt();
-        Network.Lanes.Emplace(ID, Lane(ID, RoadID, IsForward, Index));
+        LaneNetwork.Lanes.Emplace(ID, FLane(ID, RoadID, IsForward, Index));
         break;
       }
       case 4: { // Lane Connection
@@ -105,12 +105,12 @@ LaneNetwork LaneNetwork::Load(const FString& Path) {
         int64 DestinationLaneID = *ReadLong();
         double SourceOffset = *ReadDouble();
         double DestinationOffset = *ReadDouble();
-        Network.LaneConnections.Emplace(ID, LaneConnection(ID, SourceLaneID, DestinationLaneID, SourceOffset, DestinationOffset));
+        LaneNetwork.LaneConnections.Emplace(ID, FLaneConnection(ID, SourceLaneID, DestinationLaneID, SourceOffset, DestinationOffset));
         break;
       }
     }
     ElementType = ReadByte();
   }
 
-  return LaneNetwork();
+  return LaneNetwork;
 }

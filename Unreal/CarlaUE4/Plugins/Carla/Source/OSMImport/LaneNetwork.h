@@ -1,14 +1,14 @@
 #pragma once
 
-class Node {
+class FNode {
 public:
   long long ID;
   FVector2D Position;
 
-  Node(long long ID, const FVector2D& Position) : ID(ID), Position(Position) { }
+  FNode(long long ID, const FVector2D& Position) : ID(ID), Position(Position) { }
 };
 
-class Road {
+class FRoad {
 public:
   long long ID;
   long long SourceNodeID;
@@ -16,7 +16,7 @@ public:
   TArray<long long> ForwardLaneIDs;
   TArray<long long> BackwardLaneIDs;
 
-  Road(long long ID, long long SourceNodeID, long long DestinationNodeID, const TArray<long long>& ForwardLaneIDs = TArray<long long>(), const TArray<long long>& BackwardLaneIDs = TArray<long long>())
+  FRoad(long long ID, long long SourceNodeID, long long DestinationNodeID, const TArray<long long>& ForwardLaneIDs = TArray<long long>(), const TArray<long long>& BackwardLaneIDs = TArray<long long>())
     : ID(ID),
     SourceNodeID(SourceNodeID),
     DestinationNodeID(DestinationNodeID),
@@ -24,21 +24,21 @@ public:
     BackwardLaneIDs(BackwardLaneIDs) { }
 };
 
-class Lane {
+class FLane {
 public:
   long long ID;
   long long RoadID;
   bool IsForward;
   int Index;
 
-  Lane(long long ID, long long RoadID, bool IsForward, int Index)
+  FLane(long long ID, long long RoadID, bool IsForward, int Index)
     : ID(ID),
     RoadID(RoadID),
     IsForward(IsForward),
     Index(Index) { }
 };
 
-class LaneConnection {
+class FLaneConnection {
 public:
   long long ID;
   long long SourceLaneID;
@@ -46,7 +46,7 @@ public:
   double SourceOffset;
   double DestinationOffset;
 
-  LaneConnection(long long ID, long long SourceLaneID, long long DestinationLaneID, double SourceOffset = 0, double DestinationOffset = 0) 
+  FLaneConnection(long long ID, long long SourceLaneID, long long DestinationLaneID, double SourceOffset = 0, double DestinationOffset = 0) 
     : ID(ID),
     SourceLaneID(SourceLaneID),
     DestinationLaneID(DestinationLaneID),
@@ -54,15 +54,15 @@ public:
     DestinationOffset(DestinationOffset) { }
 };
 
-class LaneNetwork {
+class FLaneNetwork {
 public:  
   double LaneWidth;
-  TMap<long long, Node> Nodes;
-  TMap<long long, Road> Roads;
-  TMap<long long, Lane> Lanes;
-  TMap<long long, LaneConnection> LaneConnections;
+  TMap<long long, FNode> Nodes;
+  TMap<long long, FRoad> Roads;
+  TMap<long long, FLane> Lanes;
+  TMap<long long, FLaneConnection> LaneConnections;
 
-  LaneNetwork(double LaneWidth=3) : LaneWidth(LaneWidth) { }
+  FLaneNetwork(double LaneWidth=3) : LaneWidth(LaneWidth) { }
 
-  static LaneNetwork Load(const FString& Path);
+  static FLaneNetwork Load(const FString& Path);
 };
