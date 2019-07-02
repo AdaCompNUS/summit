@@ -103,7 +103,7 @@ void ACarlaGameModeBase::InitGame(
   //CrowdController->SetWaypointMap(&(WaypointMap.get()));
   //Episode->SetCrowdController(CrowdController);
 
-  OSMActor = World->SpawnActor<AOSMActor>();
+  LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -237,6 +237,6 @@ void ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
   RoadMap.RenderBitmap(FileName);  
 }
 
-void ACarlaGameModeBase::LoadOSM(const FString& OSMPath) {
-  OSMActor->SetOSM(OSMPath);
+void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
+  LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
 }

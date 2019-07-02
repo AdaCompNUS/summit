@@ -14,7 +14,7 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Crowd/CrowdController.h"
-#include "OSMActor.h"
+#include "LaneNetworkActor.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -43,7 +43,7 @@ public:
   void RenderRoadMap(const FString& FileName) const;
 
   UFUNCTION(Exec)
-  void LoadOSM(const FString& OSMPath);
+  void LoadLaneNetwork(const FString& LaneNetworkPath);
 
 protected:
 
@@ -89,7 +89,7 @@ private:
   ACrowdController *CrowdController = nullptr;
 
   UPROPERTY()
-  AOSMActor *OSMActor = nullptr;
+  ALaneNetworkActor *LaneNetworkActor = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
