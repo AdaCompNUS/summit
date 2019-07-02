@@ -43,10 +43,10 @@ public:
   long long ID;
   long long SourceLaneID;
   long long DestinationLaneID;
-  double SourceOffset;
-  double DestinationOffset;
+  float SourceOffset;
+  float DestinationOffset;
 
-  FLaneConnection(long long ID, long long SourceLaneID, long long DestinationLaneID, double SourceOffset = 0, double DestinationOffset = 0) 
+  FLaneConnection(long long ID, long long SourceLaneID, long long DestinationLaneID, float SourceOffset = 0, float DestinationOffset = 0) 
     : ID(ID),
     SourceLaneID(SourceLaneID),
     DestinationLaneID(DestinationLaneID),
@@ -56,13 +56,23 @@ public:
 
 class FLaneNetwork {
 public:  
-  double LaneWidth;
+  float LaneWidth;
   TMap<long long, FNode> Nodes;
   TMap<long long, FRoad> Roads;
   TMap<long long, FLane> Lanes;
   TMap<long long, FLaneConnection> LaneConnections;
 
-  FLaneNetwork(double LaneWidth=3) : LaneWidth(LaneWidth) { }
+  FLaneNetwork(float LaneWidth=3) : LaneWidth(LaneWidth) { }
 
   static FLaneNetwork Load(const FString& Path);
+  
+  float GetRoadLength(const FRoad& Road) const;
+
+  FVector2D GetRoadDirection(const FRoad& Road) const;
+
+  FVector2D GetLaneDirection(const FLane& Lane) const;
+
+  FVector2D GetLaneStart(const FLane& Lane, float Offset=0) const;
+
+  FVector2D GetLaneEnd(const FLane& Lane, float Offset=0) const;
 };

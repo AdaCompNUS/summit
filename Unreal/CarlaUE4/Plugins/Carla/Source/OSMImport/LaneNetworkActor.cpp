@@ -15,4 +15,14 @@ ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer
 
 void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(LogTemp, Display, TEXT("Loading lane network from: %s"), *LaneNetworkPath);
+
+  FLaneNetwork LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
+  UE_LOG(
+      LogTemp, 
+      Display, 
+      TEXT("Loaded lane network. Nodes = %d, Roads = %d, Lanes = %d, LaneConnections = %d"), 
+      LaneNetwork.Nodes.Num(),
+      LaneNetwork.Roads.Num(),
+      LaneNetwork.Lanes.Num(),
+      LaneNetwork.LaneConnections.Num());
 }
