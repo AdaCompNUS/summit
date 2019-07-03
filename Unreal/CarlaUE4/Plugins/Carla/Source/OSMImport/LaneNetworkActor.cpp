@@ -87,13 +87,25 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   };
 
   for (const auto& LaneEntry : LaneNetwork.Lanes) {
-    boost::optional<float> StartMinOffset = LaneNetwork.GetLaneStartMinOffset(LaneEntry.Value);
-    boost::optional<float> EndMinOffset = LaneNetwork.GetLaneEndMinOffset(LaneEntry.Value);
+    const FLane& Lane = LaneEntry.Value;
+    boost::optional<float> StartMinOffset = LaneNetwork.GetLaneStartMinOffset(Lane);
+    boost::optional<float> EndMinOffset = LaneNetwork.GetLaneEndMinOffset(Lane);
     if (StartMinOffset && EndMinOffset) {
-      FVector2D Start = LaneNetwork.GetLaneStart(LaneEntry.Value, *StartMinOffset);
-      FVector2D End = LaneNetwork.GetLaneEnd(LaneEntry.Value, *EndMinOffset);
+      FVector2D Start = LaneNetwork.GetLaneStart(Lane, *StartMinOffset);
+      FVector2D End = LaneNetwork.GetLaneEnd(Lane, *EndMinOffset);
       AddLineSegment(Start, End, LaneNetwork.LaneWidth);
     }
+  }
+
+  for (const auto& LaneConnectionEntry : LaneNetwork.LaneConnections) {
+    const FLaneConnection& LaneConnection = LaneConnectionEntry.Value;
+    FVector2D Source = LaneNetwork.GetLaneStart(
+        LaneNetwork.Lanes[LaneConnection.SourceLaneID], 
+        LaneConnection.SourceOffset);
+    FVector2D Destination = LaneNetwork.GetLaneStart(
+        LaneNetwork.Lanes[LaneConnection.DestinationLaneID], 
+        LaneConnection.DestinationOffset);
+    AddLineSegment(Source, Destination, LaneNetwork.LaneWidth);
   }
 
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, Triangles, {}, {}, {}, {}, true);
