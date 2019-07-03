@@ -4,13 +4,13 @@
 #include "LaneNetworkActor.generated.h"
 
 UCLASS(hidecategories = (Physics))
-class OSMIMPORT_API ALaneNetworkActor : public AActor
+class CARLA_API ALaneNetworkActor : public AActor
 {
 	GENERATED_BODY()
 
 public: 
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "OSM")
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CARLA")
 	UProceduralMeshComponent* MeshComponent;
   
   ALaneNetworkActor(const FObjectInitializer& ObjectInitializer);

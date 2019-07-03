@@ -37,7 +37,8 @@ public class Carla : ModuleRules
       {
         "Core",
         "RenderCore",
-        "RHI"
+        "RHI",
+        "ProceduralMeshComponent"
         // ... add other public dependencies that you statically link with here ...
       }
       );
@@ -58,8 +59,7 @@ public class Carla : ModuleRules
         "PhysXVehicles",
         "PhysXVehicleLib",
         "Slate",
-        "SlateCore",
-        "OSMImport"
+        "SlateCore"
         // ... add private dependencies that you statically link with here ...
       }
       );

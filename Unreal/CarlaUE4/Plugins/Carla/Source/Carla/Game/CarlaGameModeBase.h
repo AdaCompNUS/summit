@@ -14,7 +14,7 @@
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Crowd/CrowdController.h"
-#include "LaneNetworkActor.h"
+#include "LaneNetwork/LaneNetworkActor.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
