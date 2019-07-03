@@ -87,11 +87,14 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   };
 
   for (const auto& LaneEntry : LaneNetwork.Lanes) {
-    FVector2D Start = LaneNetwork.GetLaneStart(LaneEntry.Value);
-    FVector2D End = LaneNetwork.GetLaneEnd(LaneEntry.Value);
-    AddLineSegment(Start, End, LaneNetwork.LaneWidth);
+    boost::optional<float> StartMinOffset = LaneNetwork.GetLaneStartMinOffset(LaneEntry.Value);
+    boost::optional<float> EndMinOffset = LaneNetwork.GetLaneEndMinOffset(LaneEntry.Value);
+    if (StartMinOffset && EndMinOffset) {
+      FVector2D Start = LaneNetwork.GetLaneStart(LaneEntry.Value, *StartMinOffset);
+      FVector2D End = LaneNetwork.GetLaneEnd(LaneEntry.Value, *EndMinOffset);
+      AddLineSegment(Start, End, LaneNetwork.LaneWidth);
+    }
   }
-   
 
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, Triangles, {}, {}, {}, {}, true);
   MeshComponent->ContainsPhysicsTriMeshData(true);

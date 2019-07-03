@@ -177,11 +177,14 @@ FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
 
 boost::optional<float> FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
   boost::optional<float> MinOffset;
-  for (int LaneConnectionID : LaneConnectionsMap[Lane.ID]) {
-    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
-    if (LaneConnection.DestinationLaneID == Lane.ID) {
-      if (!MinOffset || MinOffset > LaneConnection.DestinationOffset) {
-        *MinOffset = LaneConnection.DestinationOffset;
+  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
+  if (LaneConnectionIDs) {
+    for (int LaneConnectionID : *LaneConnectionIDs) {
+      const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+      if (LaneConnection.DestinationLaneID == Lane.ID) {
+        if (!MinOffset || *MinOffset > LaneConnection.DestinationOffset) {
+          MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
+        }
       }
     }
   }
@@ -190,11 +193,14 @@ boost::optional<float> FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) co
 
 boost::optional<float> FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
   boost::optional<float> MinOffset;
-  for (int LaneConnectionID : LaneConnectionsMap[Lane.ID]) {
-    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
-    if (LaneConnection.SourceLaneID == Lane.ID) {
-      if (!MinOffset || MinOffset > LaneConnection.SourceOffset) {
-        *MinOffset = LaneConnection.DestinationOffset;
+  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
+  if (LaneConnectionIDs) {
+    for (int LaneConnectionID : *LaneConnectionIDs) {
+      const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+      if (LaneConnection.SourceLaneID == Lane.ID) {
+        if (!MinOffset || *MinOffset > LaneConnection.SourceOffset) {
+          MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
+        }
       }
     }
   }
