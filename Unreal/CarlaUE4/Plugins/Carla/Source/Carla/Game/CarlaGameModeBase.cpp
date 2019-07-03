@@ -79,29 +79,19 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  /*
   if (WeatherClass != nullptr) {
     Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
-  */
 
   GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
 
-  //CreateRoadMap();
-
-  //CreateWaypointMap(MapName);
-
   // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
-  //CrowdController->SetEpisode(Episode);
-  //CrowdController->SetRoadMap(&RoadMap);
-  //CrowdController->SetWaypointMap(&(WaypointMap.get()));
-  //Episode->SetCrowdController(CrowdController);
 
   LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
 }

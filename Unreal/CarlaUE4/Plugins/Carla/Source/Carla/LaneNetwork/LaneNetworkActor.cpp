@@ -27,9 +27,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       LaneNetwork.LaneConnections.Num());
     
   TArray<FVector> Vertices;
-  TArray<int> Triangles;
+  TArray<int> TriangleVertices;
 
-  auto AddLineSegment = [&Vertices, &Triangles](FVector2D Start, FVector2D End, float Width) {
+  auto AddLineSegment = [&Vertices, &TriangleVertices](FVector2D Start, FVector2D End, float Width) {
     FVector2D Direction = End - Start;
     Direction.Normalize();
     FVector2D Normal = Direction.GetRotated(90);
@@ -46,13 +46,13 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
       int VI4 = Vertices.Add(100 * FVector(V4.Y, V4.X, 0));
 
-      Triangles.Add(VI1);
-      Triangles.Add(VI2);
-      Triangles.Add(VI3);
+      TriangleVertices.Add(VI1);
+      TriangleVertices.Add(VI2);
+      TriangleVertices.Add(VI3);
 
-      Triangles.Add(VI4);
-      Triangles.Add(VI3);
-      Triangles.Add(VI2);
+      TriangleVertices.Add(VI4);
+      TriangleVertices.Add(VI3);
+      TriangleVertices.Add(VI2);
     }
  
     int N = 16;
@@ -66,9 +66,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       int VI2 = Vertices.Add(100 * FVector(V2.Y, V2.X, 0));
       int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
     
-      Triangles.Add(VI1);
-      Triangles.Add(VI2);
-      Triangles.Add(VI3);
+      TriangleVertices.Add(VI1);
+      TriangleVertices.Add(VI2);
+      TriangleVertices.Add(VI3);
     }
     // Add semicircles to end.
     for (int I = 0; I < N; I++) {
@@ -80,9 +80,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       int VI2 = Vertices.Add(100 * FVector(V2.Y, V2.X, 0));
       int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
       
-      Triangles.Add(VI1);
-      Triangles.Add(VI2);
-      Triangles.Add(VI3);
+      TriangleVertices.Add(VI1);
+      TriangleVertices.Add(VI2);
+      TriangleVertices.Add(VI3);
     }
   };
 
@@ -108,6 +108,14 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
     AddLineSegment(Source, Destination, LaneNetwork.LaneWidth);
   }
 
-  MeshComponent->CreateMeshSection_LinearColor(0, Vertices, Triangles, {}, {}, {}, {}, true);
+  RoadTriangles.Reset(TriangleVertices.Num() / 3);
+  for (int I = 0; I < TriangleVertices.Num(); I += 3) {
+    RoadTriangles.Emplace(
+        Vertices[TriangleVertices[I]],
+        Vertices[TriangleVertices[I + 1]],
+        Vertices[TriangleVertices[I + 2]]);
+  }
+
+  MeshComponent->CreateMeshSection_LinearColor(0, Vertices, TriangleVertices, {}, {}, {}, {}, true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
 }
