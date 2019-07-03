@@ -1,7 +1,6 @@
 #include "LaneNetwork.h"
 #include "PlatformFilemanager.h"
 #include <algorithm>
-#include <boost/optional.hpp>
 
 FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -106,6 +105,8 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
         float SourceOffset = (float)(*ReadDouble());
         float DestinationOffset = (float)(*ReadDouble());
         LaneNetwork.LaneConnections.Emplace(ID, FLaneConnection(ID, SourceLaneID, DestinationLaneID, SourceOffset, DestinationOffset));
+        LaneNetwork.LaneConnectionsMap.FindOrAdd(SourceLaneID).Add(ID);
+        LaneNetwork.LaneConnectionsMap.FindOrAdd(DestinationLaneID).Add(ID);
         break;
       }
     }
@@ -172,4 +173,30 @@ FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
   int NumLanes = Road.ForwardLaneIDs.Num() + Road.BackwardLaneIDs.Num();
 
   return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
+}
+
+boost::optional<float> FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
+  boost::optional<float> MinOffset;
+  for (int LaneConnectionID : LaneConnectionsMap[Lane.ID]) {
+    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+    if (LaneConnection.DestinationLaneID == Lane.ID) {
+      if (!MinOffset || MinOffset > LaneConnection.DestinationOffset) {
+        *MinOffset = LaneConnection.DestinationOffset;
+      }
+    }
+  }
+  return MinOffset;
+}
+
+boost::optional<float> FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
+  boost::optional<float> MinOffset;
+  for (int LaneConnectionID : LaneConnectionsMap[Lane.ID]) {
+    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+    if (LaneConnection.SourceLaneID == Lane.ID) {
+      if (!MinOffset || MinOffset > LaneConnection.SourceOffset) {
+        *MinOffset = LaneConnection.DestinationOffset;
+      }
+    }
+  }
+  return MinOffset;
 }

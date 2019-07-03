@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/optional.hpp>
+
 class FNode {
 public:
   long long ID;
@@ -75,4 +77,12 @@ public:
   FVector2D GetLaneStart(const FLane& Lane, float Offset=0) const;
 
   FVector2D GetLaneEnd(const FLane& Lane, float Offset=0) const;
+
+  boost::optional<float> GetLaneStartMinOffset(const FLane& Lane) const;
+
+  boost::optional<float> GetLaneEndMinOffset(const FLane& Lane) const;
+
+private:
+  // To keep track of lane connections related to each lane.
+  TMap<long long, TArray<long long>> LaneConnectionsMap;
 };
