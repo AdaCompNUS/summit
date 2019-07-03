@@ -59,7 +59,6 @@ protected:
 
 private:
 
-  // TODO Figure out what a UPROPERTY is and maybe change these to that.
   FRoadMap RoadMap;
 
   boost::optional<carla::road::Map> WaypointMap;
@@ -86,10 +85,10 @@ private:
   ACarlaRecorder *Recorder = nullptr;
 
   UPROPERTY()
-  ACrowdController *CrowdController = nullptr;
+  ALaneNetworkActor *LaneNetworkActor = nullptr;
 
   UPROPERTY()
-  ALaneNetworkActor *LaneNetworkActor = nullptr;
+  ACrowdController *CrowdController = nullptr;
 
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)

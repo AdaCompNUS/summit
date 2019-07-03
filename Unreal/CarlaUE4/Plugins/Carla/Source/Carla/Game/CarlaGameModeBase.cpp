@@ -85,6 +85,16 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
   }
 
+  // Warning: Episode->MapName and MapName are different.
+  if (Episode->MapName == TEXT("EmptyMap")) {
+    UE_LOG(LogCarla, Display, TEXT("Lane networks available."));
+    LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
+  } else {
+    UE_LOG(LogCarla, Display, TEXT("Lane networks unavailable."));
+    CreateRoadMap();
+    CreateWaypointMap(MapName);
+  }
+
   GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
@@ -92,8 +102,6 @@ void ACarlaGameModeBase::InitGame(
   // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
-
-  LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -216,7 +224,7 @@ void ACarlaGameModeBase::CreateRoadMap() {
 void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
   FString Content = UOpenDrive::LoadXODR(MapName);
   WaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(Content));
-  if (!WaypointMap.has_value())
+  if (!WaypointMap)
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
     return;
@@ -228,5 +236,14 @@ void ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
 }
 
 void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
+  if (!LaneNetworkActor) {
+    UE_LOG(LogCarla, Error, TEXT("Lane networks unavailable for CARLA maps."));
+    return;
+  }
+
   LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
+
+  // TODO: Find a different approach, since this blows up memory
+  // for large maps (NUS takes > 10GB).
+  //RoadMap = FRoadMap(LaneNetworkActor->GetRoadTriangles(), 10, 100);
 }
