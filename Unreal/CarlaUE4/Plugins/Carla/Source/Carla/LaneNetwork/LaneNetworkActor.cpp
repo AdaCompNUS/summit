@@ -1,5 +1,6 @@
 #include "LaneNetworkActor.h"
 #include "ConstructorHelpers.h"
+#include <vector>
 
 ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -18,15 +19,7 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
   LaneIDs.Reset(LaneNetwork.Lanes.Num());
   LaneNetwork.Lanes.GenerateKeyArray(LaneIDs);
-  UE_LOG(
-      LogTemp, 
-      Display, 
-      TEXT("Loaded lane network. Nodes = %d, Roads = %d, Lanes = %d, LaneConnections = %d"), 
-      LaneNetwork.Nodes.Num(),
-      LaneNetwork.Roads.Num(),
-      LaneNetwork.Lanes.Num(),
-      LaneNetwork.LaneConnections.Num());
-    
+  
   TArray<FVector> Vertices;
   TArray<int> TriangleVertices;
 
@@ -110,16 +103,47 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   }
 
   RoadTriangles.Reset(TriangleVertices.Num() / 3);
+  RoadTrianglesTree = aabb::Tree(2);
   for (int I = 0; I < TriangleVertices.Num(); I += 3) {
     RoadTriangles.Emplace(
         Vertices[TriangleVertices[I]],
         Vertices[TriangleVertices[I + 1]],
         Vertices[TriangleVertices[I + 2]]);
+    float MinX = FMath::Min3(
+        Vertices[TriangleVertices[I]].X,
+        Vertices[TriangleVertices[I + 1]].X,
+        Vertices[TriangleVertices[I + 2]].X);
+    float MaxX = FMath::Max3(
+        Vertices[TriangleVertices[I]].X,
+        Vertices[TriangleVertices[I + 1]].X,
+        Vertices[TriangleVertices[I + 2]].X);
+    float MinY = FMath::Min3(
+        Vertices[TriangleVertices[I]].Y,
+        Vertices[TriangleVertices[I + 1]].Y,
+        Vertices[TriangleVertices[I + 2]].Y);
+    float MaxY = FMath::Max3(
+        Vertices[TriangleVertices[I]].Y,
+        Vertices[TriangleVertices[I + 1]].Y,
+        Vertices[TriangleVertices[I + 2]].Y);
+
+    std::vector<double> LowerBound = { MinX, MinY };
+    std::vector<double> UpperBound = { MaxX, MaxY };
+    RoadTrianglesTree.insertParticle(I, LowerBound, UpperBound);
   }
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, TriangleVertices, {}, {}, {}, {}, true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
+  
+  UE_LOG(
+      LogTemp, 
+      Display, 
+      TEXT("Loaded lane network. Nodes = %d, Roads = %d, Lanes = %d, LaneConnections = %d, Triangles = %d"), 
+      LaneNetwork.Nodes.Num(),
+      LaneNetwork.Roads.Num(),
+      LaneNetwork.Lanes.Num(),
+      LaneNetwork.LaneConnections.Num(),
+      RoadTriangles.Num());
 }
 
 
@@ -136,4 +160,8 @@ FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
   FVector2D End = LaneNetwork.GetLaneEnd(Lane, *EndMinOffset);
 
   return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
+}
+
+FOccupancyGrid ALaneNetworkActor::GetOccupancyGrid(const FBox2D Area, float Resolution) const {
+  return FOccupancyGrid();
 }
