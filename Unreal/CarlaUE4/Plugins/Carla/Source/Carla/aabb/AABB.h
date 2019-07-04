@@ -317,7 +317,7 @@ namespace aabb
             \return particles
                 A vector of particle indices.
          */
-        std::vector<unsigned int> query(unsigned int);
+        std::vector<unsigned int> query(unsigned int) const;
 
         //! Query the tree to find candidate interactions for an AABB.
         /*! \param particle
@@ -329,7 +329,7 @@ namespace aabb
             \return particles
                 A vector of particle indices.
          */
-        std::vector<unsigned int> query(unsigned int, const AABB&);
+        std::vector<unsigned int> query(unsigned int, const AABB&) const;
 
         //! Query the tree to find candidate interactions for an AABB.
         /*! \param aabb
@@ -338,7 +338,7 @@ namespace aabb
             \return particles
                 A vector of particle indices.
          */
-        std::vector<unsigned int> query(const AABB&);
+        std::vector<unsigned int> query(const AABB&) const;
 
         //! Get a particle AABB.
         /*! \param particle
@@ -494,7 +494,7 @@ namespace aabb
             \return
                 Whether a periodic shift has been applied.
          */
-        bool minimumImage(std::vector<double>&, std::vector<double>&);
+        bool minimumImage(std::vector<double>&, std::vector<double>&) const;
     };
 }
 

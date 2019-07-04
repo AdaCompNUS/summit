@@ -592,7 +592,7 @@ namespace aabb
         return true;
     }
 
-    std::vector<unsigned int> Tree::query(unsigned int particle)
+    std::vector<unsigned int> Tree::query(unsigned int particle) const
     {
         // Make sure that this is a valid particle.
         if (particleMap.count(particle) == 0)
@@ -604,7 +604,7 @@ namespace aabb
         return query(particle, nodes[particleMap.find(particle)->second].aabb);
     }
 
-    std::vector<unsigned int> Tree::query(unsigned int particle, const AABB& aabb)
+    std::vector<unsigned int> Tree::query(unsigned int particle, const AABB& aabb) const
     {
         std::vector<unsigned int> stack;
         stack.reserve(256);
@@ -665,7 +665,7 @@ namespace aabb
         return particles;
     }
 
-    std::vector<unsigned int> Tree::query(const AABB& aabb)
+    std::vector<unsigned int> Tree::query(const AABB& aabb) const
     {
         // Make sure the tree isn't empty.
         if (particleMap.size() == 0)
@@ -1208,7 +1208,7 @@ namespace aabb
         }
     }
 
-    bool Tree::minimumImage(std::vector<double>& separation, std::vector<double>& shift)
+    bool Tree::minimumImage(std::vector<double>& separation, std::vector<double>& shift) const
     {
         bool isShifted = false;
 

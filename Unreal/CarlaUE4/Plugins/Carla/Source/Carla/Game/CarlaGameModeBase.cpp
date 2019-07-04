@@ -242,10 +242,7 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
   }
 
   LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
-
-  // TODO: Find a different approach, since this blows up memory
-  // for large maps (NUS takes > 10GB).
-  //RoadMap = FRoadMap(LaneNetworkActor->GetRoadTriangles(), 10, 100);
+  RoadMap = LaneNetworkActor->GetRoadMap(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)), 10);
 }
   
 void ACarlaGameModeBase::SpawnWalkers(int Num) {

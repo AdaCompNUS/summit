@@ -103,7 +103,7 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   }
 
   RoadTriangles.Reset(TriangleVertices.Num() / 3);
-  RoadTrianglesTree = aabb::Tree(2);
+  RoadTrianglesTree = aabb::Tree(2, 0); // Dimension, inflation thickness.
   for (int I = 0; I < TriangleVertices.Num(); I += 3) {
     RoadTriangles.Emplace(
         Vertices[TriangleVertices[I]],
@@ -128,7 +128,7 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
 
     std::vector<double> LowerBound = { MinX, MinY };
     std::vector<double> UpperBound = { MaxX, MaxY };
-    RoadTrianglesTree.insertParticle(I, LowerBound, UpperBound);
+    RoadTrianglesTree.insertParticle(I / 3, LowerBound, UpperBound);
   }
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
@@ -162,6 +162,14 @@ FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
   return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
 }
 
-FOccupancyGrid ALaneNetworkActor::GetOccupancyGrid(const FBox2D Area, float Resolution) const {
-  return FOccupancyGrid();
+FRoadMap ALaneNetworkActor::GetRoadMap(const FBox2D Area, float Resolution) const {
+  const std::vector<double> LowerBound = { Area.Min.X, Area.Min.Y };
+  const std::vector<double> UpperBound = { Area.Max.X, Area.Max.Y };
+  
+  TArray<FRoadTriangle> MapTriangles;
+  for (int I : RoadTrianglesTree.query(aabb::AABB(LowerBound, UpperBound))) {
+    MapTriangles.Add(RoadTriangles[I]);
+  }
+
+  return FRoadMap(MapTriangles, Resolution, 10);
 }
