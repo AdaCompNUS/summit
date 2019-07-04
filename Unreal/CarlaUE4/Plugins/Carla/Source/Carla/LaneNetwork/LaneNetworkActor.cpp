@@ -162,14 +162,14 @@ FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
   return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
 }
 
-FRoadMap ALaneNetworkActor::GetRoadMap(const FBox2D Area, float Resolution) const {
-  const std::vector<double> LowerBound = { Area.Min.X, Area.Min.Y };
-  const std::vector<double> UpperBound = { Area.Max.X, Area.Max.Y };
+FRoadMap ALaneNetworkActor::GetRoadMap(const FBox2D Bounds, float Resolution) const {
+  const std::vector<double> LowerBound = { Bounds.Min.X, Bounds.Min.Y };
+  const std::vector<double> UpperBound = { Bounds.Max.X, Bounds.Max.Y };
   
   TArray<FRoadTriangle> MapTriangles;
   for (int I : RoadTrianglesTree.query(aabb::AABB(LowerBound, UpperBound))) {
     MapTriangles.Add(RoadTriangles[I]);
   }
 
-  return FRoadMap(MapTriangles, Resolution, 10);
+  return FRoadMap(FBox(FVector(Bounds.Min, 0), FVector(Bounds.Max, 0)), MapTriangles, Resolution, 10);
 }

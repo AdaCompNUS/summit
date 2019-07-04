@@ -6,6 +6,7 @@
 
 FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
   : RoadTriangles(RoadTriangles), Resolution(Resolution), OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
+
   Bounds = RoadTriangles[0].GetBounds();
   Area = RoadTriangles[0].GetArea();
   for (int I = 0; I < RoadTriangles.Num(); I++) {
@@ -19,6 +20,16 @@ FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution,
     Bounds.Max.Z = FMath::Max(Bounds.Max.Z, TriBounds.Max.Z);
     Area += RoadTriangle.GetArea();
   }
+
+  InitOccupancyGrid();
+  InitOffroadPolygons();
+}
+
+FRoadMap::FRoadMap(const FBox& Bounds, const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
+  : Bounds(Bounds),
+  RoadTriangles(RoadTriangles), 
+  Resolution(Resolution), 
+  OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
 
   InitOccupancyGrid();
   InitOffroadPolygons();
@@ -42,24 +53,18 @@ void FRoadMap::InitOccupancyGrid() {
     // Calculate bounding pixels.
     FIntPoint TriBoundsTopLeftPixel = Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));
     FIntPoint TriBoundsBottomRightPixel = Point2DToPixel(FVector2D(TriBounds.Min.X, TriBounds.Max.Y));
-
-    // Clip to occupancy grid.
-    TriBoundsTopLeftPixel.X = FMath::Max(0,
-        FMath::Min(OccupancyGrid.GetWidth() - 1, TriBoundsTopLeftPixel.X));
-    TriBoundsTopLeftPixel.Y = FMath::Max(0, 
-        FMath::Min(OccupancyGrid.GetHeight() - 1, TriBoundsTopLeftPixel.Y));
-    TriBoundsBottomRightPixel.X = FMath::Max(0, 
-        FMath::Min(OccupancyGrid.GetWidth() - 1, TriBoundsBottomRightPixel.X));
-    TriBoundsBottomRightPixel.Y = FMath::Max(0, 
-        FMath::Min(OccupancyGrid.GetHeight() - 1, TriBoundsBottomRightPixel.Y));
     
     // Loop through bounded pixels, and consider pixel bounds.
     for (int X = TriBoundsTopLeftPixel.X; X <= TriBoundsBottomRightPixel.X; X++) {
+      if (X < 0 || X >= OccupancyGrid.GetWidth()) continue;
       for (int Y = TriBoundsTopLeftPixel.Y; Y <= TriBoundsBottomRightPixel.Y; Y++) {
+        if (Y < 0 || Y >= OccupancyGrid.GetHeight()) continue;
+
         FVector2D P0(TopLeft.X - Y * Resolution, TopLeft.Y + X * Resolution);
         FVector2D P1(TopLeft.X - Y * Resolution, TopLeft.Y + (X + 1) * Resolution);
         FVector2D P2(TopLeft.X - (Y + 1) * Resolution, TopLeft.Y + X * Resolution);
         FVector2D P3(TopLeft.X - (Y + 1) * Resolution, TopLeft.Y + (X + 1) * Resolution);
+
         
         // || used for short circuiting.
         bool Intersects = false;

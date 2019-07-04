@@ -9,6 +9,7 @@ public:
 
   FRoadMap() : Area(0), Resolution(0), OffroadPolygonEdgeInterval(0) { }
   FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval);
+  FRoadMap(const FBox& Bounds, const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval);
 
   FBox GetBounds() const { return Bounds; }
 
@@ -24,8 +25,8 @@ public:
 
 private:
 
-  TArray<FRoadTriangle> RoadTriangles;
   FBox Bounds;
+  TArray<FRoadTriangle> RoadTriangles;
   float Area;
   
   FOccupancyGrid OccupancyGrid;

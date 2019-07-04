@@ -24,7 +24,7 @@ public:
 
   FVector2D RandomVehicleSpawnPoint() const;
 
-  FRoadMap GetRoadMap(const FBox2D Area, float Resolution) const;
+  FRoadMap GetRoadMap(const FBox2D Bounds, float Resolution) const;
 
 private:
 
