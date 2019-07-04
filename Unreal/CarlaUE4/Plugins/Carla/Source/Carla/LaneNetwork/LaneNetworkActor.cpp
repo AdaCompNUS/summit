@@ -1,6 +1,5 @@
 #include "LaneNetworkActor.h"
 #include "ConstructorHelpers.h"
-#include "LaneNetwork.h"
 
 ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -16,7 +15,9 @@ ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer
 void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(LogTemp, Display, TEXT("Loading lane network from: %s"), *LaneNetworkPath);
 
-  FLaneNetwork LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
+  LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
+  LaneIDs.Reset(LaneNetwork.Lanes.Num());
+  LaneNetwork.Lanes.GenerateKeyArray(LaneIDs);
   UE_LOG(
       LogTemp, 
       Display, 
@@ -41,10 +42,10 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       FVector2D V3 = End + Normal * Width / 2; 
       FVector2D V4 = End - Normal * Width / 2; 
 
-      int VI1 = Vertices.Add(100 * FVector(V1.Y, V1.X, 0));
-      int VI2 = Vertices.Add(100 * FVector(V2.Y, V2.X, 0));
-      int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
-      int VI4 = Vertices.Add(100 * FVector(V4.Y, V4.X, 0));
+      int VI1 = Vertices.Add(ToUE(V1));
+      int VI2 = Vertices.Add(ToUE(V2));
+      int VI3 = Vertices.Add(ToUE(V3));
+      int VI4 = Vertices.Add(ToUE(V4));
 
       TriangleVertices.Add(VI1);
       TriangleVertices.Add(VI2);
@@ -62,9 +63,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       FVector2D V2 = Start + Normal.GetRotated((180.0f / N) * I) * Width / 2;
       FVector2D V3 = Start + Normal.GetRotated((180.0f / N) * (I + 1)) * Width / 2;
 
-      int VI1 = Vertices.Add(100 * FVector(V1.Y, V1.X, 0));
-      int VI2 = Vertices.Add(100 * FVector(V2.Y, V2.X, 0));
-      int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
+      int VI1 = Vertices.Add(ToUE(V1));
+      int VI2 = Vertices.Add(ToUE(V2));
+      int VI3 = Vertices.Add(ToUE(V3));
     
       TriangleVertices.Add(VI1);
       TriangleVertices.Add(VI2);
@@ -76,9 +77,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
       FVector2D V2 = End + Normal.GetRotated(-(180.0f / N) * (I + 1)) * Width / 2;
       FVector2D V3 = End + Normal.GetRotated(-(180.0f / N) * I) * Width / 2;
 
-      int VI1 = Vertices.Add(100 * FVector(V1.Y, V1.X, 0));
-      int VI2 = Vertices.Add(100 * FVector(V2.Y, V2.X, 0));
-      int VI3 = Vertices.Add(100 * FVector(V3.Y, V3.X, 0));
+      int VI1 = Vertices.Add(ToUE(V1));
+      int VI2 = Vertices.Add(ToUE(V2));
+      int VI3 = Vertices.Add(ToUE(V3));
       
       TriangleVertices.Add(VI1);
       TriangleVertices.Add(VI2);
@@ -116,6 +117,23 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
         Vertices[TriangleVertices[I + 2]]);
   }
 
+  MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, TriangleVertices, {}, {}, {}, {}, true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
+}
+
+
+FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
+  const FLane& Lane = LaneNetwork.Lanes[FMath::RandRange(0, LaneIDs.Num() - 1)];
+  boost::optional<float> StartMinOffset = LaneNetwork.GetLaneStartMinOffset(Lane);
+  boost::optional<float> EndMinOffset = LaneNetwork.GetLaneEndMinOffset(Lane);
+  
+  if (!StartMinOffset || !EndMinOffset) {
+    return RandomVehicleSpawnPoint();
+  }
+
+  FVector2D Start = LaneNetwork.GetLaneStart(Lane, *StartMinOffset);
+  FVector2D End = LaneNetwork.GetLaneEnd(Lane, *EndMinOffset);
+
+  return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
 }

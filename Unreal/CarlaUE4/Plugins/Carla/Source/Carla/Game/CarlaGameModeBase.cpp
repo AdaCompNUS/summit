@@ -247,3 +247,27 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
   // for large maps (NUS takes > 10GB).
   //RoadMap = FRoadMap(LaneNetworkActor->GetRoadTriangles(), 10, 100);
 }
+  
+void ACarlaGameModeBase::SpawnWalkers(int Num) {
+  const TArray<FActorDefinition>& ActorDefinitions = Episode->GetActorDefinitions();
+  TArray<const FActorDefinition*> WalkerActorDefinitions;
+  for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
+    if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
+      WalkerActorDefinitions.Add(&ActorDefinition);
+    }
+  }
+
+  for (int I = 0; I < Num; I++) {
+    FVector2D SpawnPoint = LaneNetworkActor->RandomVehicleSpawnPoint();
+    FTransform Transform(FVector(SpawnPoint, 300));
+    //FTransform Transform(FVector(11950, -3010, 260));
+    
+    const FActorDefinition& ActorDefinition = *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
+    FActorDescription ActorDescription;
+    ActorDescription.UId = ActorDefinition.UId;
+    ActorDescription.Id = ActorDefinition.Id;
+    ActorDescription.Class = ActorDefinition.Class;
+
+    AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
+  }
+}

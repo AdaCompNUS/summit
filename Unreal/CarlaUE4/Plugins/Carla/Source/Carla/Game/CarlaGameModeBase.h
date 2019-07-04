@@ -45,6 +45,9 @@ public:
   UFUNCTION(Exec)
   void LoadLaneNetwork(const FString& LaneNetworkPath);
 
+  UFUNCTION(Exec)
+  void SpawnWalkers(int Num);
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
