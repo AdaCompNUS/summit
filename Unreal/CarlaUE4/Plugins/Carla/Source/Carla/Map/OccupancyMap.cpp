@@ -27,16 +27,6 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
 
   // ===== Helper functions =====
   // Coordinates are flipped such that X is upward and Y is rightward on occupancy grid.
-  auto Point2DToPixel = [&Bounds, Resolution](const FVector2D& Point) -> FIntPoint {
-    return FIntPoint(
-      FMath::FloorToInt((Point.Y - Bounds.Min.Y) / Resolution),
-      FMath::FloorToInt(-(Point.X - Bounds.Max.X) / Resolution));
-  };
-  auto PixelToPoint2D = [&Bounds, Resolution](const FIntPoint& Pixel) -> FVector2D {
-    return FVector2D(
-        Bounds.Max.X - (Pixel.Y + 0.5) * Resolution,
-        Bounds.Min.Y + (Pixel.X + 0.5) * Resolution);
-  };
   FVector2D TopLeft(Bounds.Max.X, Bounds.Min.Y);
 
 
@@ -53,8 +43,8 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
     FBox TriBounds = OccupancyTriangle.GetBounds();
 
     // Calculate bounding pixels.
-    FIntPoint TriBoundsTopLeftPixel = Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));
-    FIntPoint TriBoundsBottomRightPixel = Point2DToPixel(FVector2D(TriBounds.Min.X, TriBounds.Max.Y));
+    FIntPoint TriBoundsTopLeftPixel = OccupancyArea.Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));
+    FIntPoint TriBoundsBottomRightPixel = OccupancyArea.Point2DToPixel(FVector2D(TriBounds.Min.X, TriBounds.Max.Y));
     
     // Loop through bounded pixels, and consider pixel bounds.
     for (int X = TriBoundsTopLeftPixel.X; X <= TriBoundsBottomRightPixel.X; X++) {
@@ -182,13 +172,12 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
       // ===== Edge half traversal. =====
       FIntPoint CurrentEdgeHalf = StartEdgeHalf;
       TArray<FVector2D>& OffroadPolygon = OccupancyArea.OffroadPolygons.Emplace_GetRef();
-      TArray<FIntPoint>& OffroadPolygon_Pixel = OccupancyArea.OffroadPolygons_Pixel.Emplace_GetRef();
       for (int I = 0;;I++) {
         EdgeHalfGrid(CurrentEdgeHalf) = false;
         if (I % OffroadPolygonEdgeInterval == 0) {
-          OffroadPolygon_Pixel.Emplace(Point2DToPixel(OffroadPolygon.Emplace_GetRef(
+          OccupancyArea.Point2DToPixel(OffroadPolygon.Emplace_GetRef(
               Bounds.Max.X - Resolution * (ObstacleBoundsMin.Y + CurrentEdgeHalf.Y * 0.5f), 
-              Bounds.Min.Y + Resolution * (ObstacleBoundsMin.X + CurrentEdgeHalf.X * 0.5f))));
+              Bounds.Min.Y + Resolution * (ObstacleBoundsMin.X + CurrentEdgeHalf.X * 0.5f)));
         }
 
         bool HasNext = false;

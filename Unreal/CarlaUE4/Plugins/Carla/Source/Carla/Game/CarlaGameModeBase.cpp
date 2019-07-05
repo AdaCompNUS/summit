@@ -251,10 +251,10 @@ void ACarlaGameModeBase::RenderOccupancyMap(const FString& FileName) const {
 
   draw.pen_width(9);
   draw.pen_color(255, 0, 0);
-  for (const TArray<FIntPoint>& Polygon_Pixel : OccupancyArea.OffroadPolygons_Pixel) {
-    for (int I = 0; I < Polygon_Pixel.Num(); I++) {
-      FIntPoint Start = Polygon_Pixel[I];
-      FIntPoint End = Polygon_Pixel[(I + 1) % Polygon_Pixel.Num()];
+  for (const TArray<FVector2D>& Polygon : OccupancyArea.OffroadPolygons) {
+    for (int I = 0; I < Polygon.Num(); I++) {
+      FIntPoint Start = OccupancyArea.Point2DToPixel(Polygon[I]);
+      FIntPoint End = OccupancyArea.Point2DToPixel(Polygon[(I + 1) % Polygon.Num()]);
       draw.line_segment(Start.X, Start.Y, End.X, End.Y);
     }
   }
