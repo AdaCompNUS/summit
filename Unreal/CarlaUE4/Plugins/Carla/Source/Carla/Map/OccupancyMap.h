@@ -21,5 +21,7 @@ public:
 private:
 
   TArray<FOccupancyTriangle> OccupancyTriangles;
+  aabb::Tree OccupancyTrianglesIndex;
   float Area;
+
 };

@@ -263,7 +263,7 @@ namespace aabb
             \param upperBound
                 The upper bound in each dimension.
          */
-        void insertParticle(unsigned int, std::vector<double>&, std::vector<double>&);
+        void insertParticle(unsigned int, const std::vector<double>&, const std::vector<double>&);
 
         /// Return the number of particles in the tree.
         unsigned int nParticles();

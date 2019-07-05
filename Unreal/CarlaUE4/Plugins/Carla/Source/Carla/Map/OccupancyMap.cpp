@@ -1,11 +1,20 @@
 #include "OccupancyMap.h"
-#include "Runtime/Engine/Public/GeomTools.h"
 #include "GeometryUtil.h"
-#include "Algo/Reverse.h"
+#include <vector>
 
 FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles) 
-    : OccupancyTriangles(OccupancyTriangles), Area(0) {
-  for (const FOccupancyTriangle& OccupancyTriangle : OccupancyTriangles) {
+    : OccupancyTriangles(OccupancyTriangles), 
+    OccupancyTrianglesIndex(2, 0),
+    Area(0) {
+  for (int I = 0; I < OccupancyTriangles.Num(); I++) {
+    const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[I];
+    FBox2D Bounds = OccupancyTriangle.GetBounds();
+
+    OccupancyTrianglesIndex.insertParticle(
+        I,
+        { Bounds.Min.X, Bounds.Min.Y },
+        { Bounds.Max.X, Bounds.Max.Y });
+
     Area += OccupancyTriangle.GetArea();
   }
 }
@@ -34,7 +43,12 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
       FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
       FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
-  for (const FOccupancyTriangle& OccupancyTriangle : OccupancyTriangles) {
+  std::vector<unsigned int> OverlappingTriangleIndices = OccupancyTrianglesIndex.query(aabb::AABB(
+      { Bounds.Min.X, Bounds.Min.Y },
+      { Bounds.Max.X, Bounds.Max.Y }));
+
+  for (int TriangleIndex : OverlappingTriangleIndices) {
+    const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[TriangleIndex];
     const FVector2D& V0 = OccupancyTriangle.V0;
     const FVector2D& V1 = OccupancyTriangle.V1;
     const FVector2D& V2 = OccupancyTriangle.V2; 
