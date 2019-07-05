@@ -1,15 +1,15 @@
 #pragma once
 
-#include "RoadTriangle.h"
+#include "OccupancyTriangle.h"
 #include "OccupancyGrid.h"
 
-class FRoadMap {
+class FOccupancyMap {
 
 public:
 
-  FRoadMap() : Area(0), Resolution(0), OffroadPolygonEdgeInterval(0) { }
-  FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval);
-  FRoadMap(const FBox& Bounds, const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval);
+  FOccupancyMap() : Area(0), Resolution(0), OffroadPolygonEdgeInterval(0) { }
+  FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval);
+  FOccupancyMap(const FBox& Bounds, const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval);
 
   FBox GetBounds() const { return Bounds; }
 
@@ -26,7 +26,7 @@ public:
 private:
 
   FBox Bounds;
-  TArray<FRoadTriangle> RoadTriangles;
+  TArray<FOccupancyTriangle> OccupancyTriangles;
   float Area;
   
   FOccupancyGrid OccupancyGrid;

@@ -20,16 +20,3 @@ private:
   
   FGeometryUtil() {}
 };
-
-/*
-bool FRoadPolygon::InPolygon(const FVector2D& Point) const {
-  bool C = 0;
-  for (int I = 0, J = Vertices.Num() - 1; I < Vertices.Num(); J = I++) {
-    if (((Vertices[I].Y > Point.Y) != (Vertices[J].Y > Point.Y)) &&
-        (Point.X < (Vertices[J].X - Vertices[I].X) * (Point.Y - Vertices[I].Y) / (Vertices[J].Y - Vertices[I].Y) + Vertices[I].X)) {
-      C = !C;
-    }
-  }
-  return C;
-}
-*/

@@ -2,7 +2,7 @@
 
 #include "LaneNetwork.h"
 #include "ProceduralMeshComponent.h"
-#include "Map/RoadTriangle.h"
+#include "Map/OccupancyTriangle.h"
 #include "Map/OccupancyGrid.h"
 #include "aabb/AABB.h"
 
@@ -24,7 +24,7 @@ public:
 
   FVector2D RandomVehicleSpawnPoint() const;
 
-  FRoadMap GetRoadMap(const FBox2D Bounds, float Resolution) const;
+  FOccupancyMap GetOccupancyMap(const FBox2D Bounds, float Resolution) const;
 
 private:
 
@@ -33,8 +33,8 @@ private:
 
   UMaterial* MeshMaterial;
 
-  TArray<FRoadTriangle> RoadTriangles;
-  aabb::Tree RoadTrianglesTree;
+  TArray<FOccupancyTriangle> OccupancyTriangles;
+  aabb::Tree OccupancyTrianglesTree;
 
   static FVector2D ToUE2D(const FVector2D& Position) { 
     return 100 * FVector2D(Position.Y, Position.X);

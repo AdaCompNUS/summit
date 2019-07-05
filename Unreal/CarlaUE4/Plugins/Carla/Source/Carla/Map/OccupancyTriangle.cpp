@@ -1,10 +1,10 @@
-#include "RoadTriangle.h"
+#include "OccupancyTriangle.h"
 
-double FRoadTriangle::GetArea() const {
+double FOccupancyTriangle::GetArea() const {
   return ((V1 - V0) ^ (V2 - V0)).Size() * 0.5f;
 }
 
-FBox FRoadTriangle::GetBounds() const {
+FBox FOccupancyTriangle::GetBounds() const {
   FBox Bounds;
   Bounds.Min.X = FMath::Min3(V0.X, V1.X, V2.X);
   Bounds.Min.Y = FMath::Min3(V0.Y, V1.Y, V2.Y);
@@ -15,7 +15,7 @@ FBox FRoadTriangle::GetBounds() const {
   return Bounds;
 }
 
-FVector FRoadTriangle::RandPoint() const {
+FVector FOccupancyTriangle::RandPoint() const {
   // https://math.stackexchange.com/questions/18686/uniform-random-point-in-triangle 
   float SqrtR1 = FMath::Sqrt(FMath::FRandRange(0, 1));
   float R2 = FMath::FRandRange(0, 1);

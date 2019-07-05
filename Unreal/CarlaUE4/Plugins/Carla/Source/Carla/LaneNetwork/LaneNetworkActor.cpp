@@ -102,10 +102,10 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
     AddLineSegment(Source, Destination, LaneNetwork.LaneWidth);
   }
 
-  RoadTriangles.Reset(TriangleVertices.Num() / 3);
-  RoadTrianglesTree = aabb::Tree(2, 0); // Dimension, inflation thickness.
+  OccupancyTriangles.Reset(TriangleVertices.Num() / 3);
+  OccupancyTrianglesTree = aabb::Tree(2, 0); // Dimension, inflation thickness.
   for (int I = 0; I < TriangleVertices.Num(); I += 3) {
-    RoadTriangles.Emplace(
+    OccupancyTriangles.Emplace(
         Vertices[TriangleVertices[I]],
         Vertices[TriangleVertices[I + 1]],
         Vertices[TriangleVertices[I + 2]]);
@@ -128,7 +128,7 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
 
     std::vector<double> LowerBound = { MinX, MinY };
     std::vector<double> UpperBound = { MaxX, MaxY };
-    RoadTrianglesTree.insertParticle(I / 3, LowerBound, UpperBound);
+    OccupancyTrianglesTree.insertParticle(I / 3, LowerBound, UpperBound);
   }
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
@@ -138,12 +138,12 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(
       LogTemp, 
       Display, 
-      TEXT("Loaded lane network. Nodes = %d, Roads = %d, Lanes = %d, LaneConnections = %d, Triangles = %d"), 
+      TEXT("Loaded lane network. Nodes = %d, Occupancys = %d, Lanes = %d, LaneConnections = %d, Triangles = %d"), 
       LaneNetwork.Nodes.Num(),
       LaneNetwork.Roads.Num(),
       LaneNetwork.Lanes.Num(),
       LaneNetwork.LaneConnections.Num(),
-      RoadTriangles.Num());
+      OccupancyTriangles.Num());
 }
 
 
@@ -162,14 +162,14 @@ FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
   return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
 }
 
-FRoadMap ALaneNetworkActor::GetRoadMap(const FBox2D Bounds, float Resolution) const {
+FOccupancyMap ALaneNetworkActor::GetOccupancyMap(const FBox2D Bounds, float Resolution) const {
   const std::vector<double> LowerBound = { Bounds.Min.X, Bounds.Min.Y };
   const std::vector<double> UpperBound = { Bounds.Max.X, Bounds.Max.Y };
   
-  TArray<FRoadTriangle> MapTriangles;
-  for (int I : RoadTrianglesTree.query(aabb::AABB(LowerBound, UpperBound))) {
-    MapTriangles.Add(RoadTriangles[I]);
+  TArray<FOccupancyTriangle> MapTriangles;
+  for (int I : OccupancyTrianglesTree.query(aabb::AABB(LowerBound, UpperBound))) {
+    MapTriangles.Add(OccupancyTriangles[I]);
   }
 
-  return FRoadMap(FBox(FVector(Bounds.Min, 0), FVector(Bounds.Max, 0)), MapTriangles, Resolution, 10);
+  return FOccupancyMap(FBox(FVector(Bounds.Min, 0), FVector(Bounds.Max, 0)), MapTriangles, Resolution, 10);
 }

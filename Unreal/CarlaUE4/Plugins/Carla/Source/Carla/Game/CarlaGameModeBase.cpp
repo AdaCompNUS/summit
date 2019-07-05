@@ -6,8 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
-#include "Map/RoadMap.h"
-#include "Map/RoadTriangle.h"
+#include "Map/OccupancyMap.h"
+#include "Map/OccupancyTriangle.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
 
@@ -91,7 +91,7 @@ void ACarlaGameModeBase::InitGame(
     LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
   } else {
     UE_LOG(LogCarla, Display, TEXT("Lane networks unavailable."));
-    CreateRoadMap();
+    CreateOccupancyMap();
     CreateWaypointMap(MapName);
   }
 
@@ -186,12 +186,12 @@ void ACarlaGameModeBase::SpawnActorFactories()
   }
 }
 
-void ACarlaGameModeBase::CreateRoadMap() {
+void ACarlaGameModeBase::CreateOccupancyMap() {
 
-  // Construct RoadMap.
-  TArray<FRoadTriangle> RoadTriangles;
+  // Construct OccupancyMap.
+  TArray<FOccupancyTriangle> OccupancyTriangles;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    if (ActorItr->ActorHasTag(TEXT("Road"))){
+    if (ActorItr->ActorHasTag(TEXT("Occupancy"))){
 
       // Written with reference to FStaticMeshSectionAreaWeightedTriangleSampler::GetWeights in
       // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
@@ -201,24 +201,24 @@ void ACarlaGameModeBase::CreateRoadMap() {
       const FPositionVertexBuffer& PositionVertexBuffer = LODResources->VertexBuffers.PositionVertexBuffer;
 
       for (int I = 0; I < Indices.Num(); I += 3) {
-        FRoadTriangle RoadTriangle(
+        FOccupancyTriangle OccupancyTriangle(
             ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I])),
             ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 1])),
             ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 2])));
 
         // Check for precision errors.
-        if (RoadTriangle.GetBounds().Min.X < -1000000) continue;
-        if (RoadTriangle.GetBounds().Min.Y < -1000000) continue;
-        if (RoadTriangle.GetBounds().Min.Z < -1000000) continue;
-        if (RoadTriangle.GetBounds().Max.X > 1000000) continue;
-        if (RoadTriangle.GetBounds().Max.Y > 1000000) continue;
-        if (RoadTriangle.GetBounds().Max.Z > 1000000) continue;
+        if (OccupancyTriangle.GetBounds().Min.X < -1000000) continue;
+        if (OccupancyTriangle.GetBounds().Min.Y < -1000000) continue;
+        if (OccupancyTriangle.GetBounds().Min.Z < -1000000) continue;
+        if (OccupancyTriangle.GetBounds().Max.X > 1000000) continue;
+        if (OccupancyTriangle.GetBounds().Max.Y > 1000000) continue;
+        if (OccupancyTriangle.GetBounds().Max.Z > 1000000) continue;
 
-        RoadTriangles.Emplace(RoadTriangle);
+        OccupancyTriangles.Emplace(OccupancyTriangle);
       }
     }
   }
-  RoadMap = FRoadMap(RoadTriangles, 10, 100);
+  OccupancyMap = FOccupancyMap(OccupancyTriangles, 10, 100);
 }
   
 void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
@@ -231,8 +231,8 @@ void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
   }
 }
 
-void ACarlaGameModeBase::RenderRoadMap(const FString& FileName) const {
-  RoadMap.RenderBitmap(FileName);  
+void ACarlaGameModeBase::RenderOccupancyMap(const FString& FileName) const {
+  OccupancyMap.RenderBitmap(FileName);  
 }
 
 void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
@@ -242,7 +242,7 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
   }
 
   LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
-  RoadMap = LaneNetworkActor->GetRoadMap(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)), 10);
+  OccupancyMap = LaneNetworkActor->GetOccupancyMap(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)), 10);
 }
   
 void ACarlaGameModeBase::SpawnWalkers(int Num) {

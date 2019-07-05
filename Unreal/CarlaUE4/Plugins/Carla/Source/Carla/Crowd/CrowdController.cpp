@@ -27,7 +27,7 @@ void ACrowdController::InitializeAtBeginPlay() {
       0.5f, // radius
       2.0f); // maxSpeed
 
-  for (const TArray<FVector2D>& OffroadPolygon : RoadMap->GetOffroadPolygons()) {
+  for (const TArray<FVector2D>& OffroadPolygon : OccupancyMap->GetOffroadPolygons()) {
     std::vector<RVO::Vector2> Obstacle;
     for (const FVector2D& Vertex : OffroadPolygon) {
       Obstacle.emplace_back(Vertex.X / 100.0f, Vertex.Y / 100.0f);
@@ -40,7 +40,7 @@ void ACrowdController::InitializeAtBeginPlay() {
 
 void ACrowdController::Tick(float DeltaSeconds) {
   while (Walkers.Num() < 5) {
-    FVector Point = RoadMap->RandPoint();
+    FVector Point = OccupancyMap->RandPoint();
     
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
     FActorDescription ActorDescription;

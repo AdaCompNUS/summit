@@ -1,33 +1,35 @@
-#include "RoadMap.h"
+#include "OccupancyMap.h"
 #include "Runtime/Engine/Public/GeomTools.h"
 #include "bitmap_image.hpp"
 #include "GeometryUtil.h"
 #include "Algo/Reverse.h"
 
-FRoadMap::FRoadMap(const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
-  : RoadTriangles(RoadTriangles), Resolution(Resolution), OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
+FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
+  : OccupancyTriangles(OccupancyTriangles), 
+  Resolution(Resolution), 
+  OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
 
-  Bounds = RoadTriangles[0].GetBounds();
-  Area = RoadTriangles[0].GetArea();
-  for (int I = 0; I < RoadTriangles.Num(); I++) {
-    const FRoadTriangle& RoadTriangle = RoadTriangles[I];
-    FBox TriBounds = RoadTriangle.GetBounds();
+  Bounds = OccupancyTriangles[0].GetBounds();
+  Area = OccupancyTriangles[0].GetArea();
+  for (int I = 0; I < OccupancyTriangles.Num(); I++) {
+    const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[I];
+    FBox TriBounds = OccupancyTriangle.GetBounds();
     Bounds.Min.X = FMath::Min(Bounds.Min.X, TriBounds.Min.X);
     Bounds.Min.Y = FMath::Min(Bounds.Min.Y, TriBounds.Min.Y);
     Bounds.Min.Z = FMath::Min(Bounds.Min.Z, TriBounds.Min.Z);
     Bounds.Max.X = FMath::Max(Bounds.Max.X, TriBounds.Max.X);
     Bounds.Max.Y = FMath::Max(Bounds.Max.Y, TriBounds.Max.Y);
     Bounds.Max.Z = FMath::Max(Bounds.Max.Z, TriBounds.Max.Z);
-    Area += RoadTriangle.GetArea();
+    Area += OccupancyTriangle.GetArea();
   }
 
   InitOccupancyGrid();
   InitOffroadPolygons();
 }
 
-FRoadMap::FRoadMap(const FBox& Bounds, const TArray<FRoadTriangle>& RoadTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
+FOccupancyMap::FOccupancyMap(const FBox& Bounds, const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
   : Bounds(Bounds),
-  RoadTriangles(RoadTriangles), 
+  OccupancyTriangles(OccupancyTriangles), 
   Resolution(Resolution), 
   OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
 
@@ -35,7 +37,7 @@ FRoadMap::FRoadMap(const FBox& Bounds, const TArray<FRoadTriangle>& RoadTriangle
   InitOffroadPolygons();
 }
 
-void FRoadMap::InitOccupancyGrid() {
+void FOccupancyMap::InitOccupancyGrid() {
   // Coordinates are flipped such that X is upward and Y is rightward on occupancy grid.
 
   FVector2D TopLeft(Bounds.Max.X, Bounds.Min.Y);
@@ -44,11 +46,11 @@ void FRoadMap::InitOccupancyGrid() {
       FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
       FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
-  for (const FRoadTriangle& RoadTriangle : RoadTriangles) {
-    FVector2D V0(RoadTriangle.V0.X, RoadTriangle.V0.Y);
-    FVector2D V1(RoadTriangle.V1.X, RoadTriangle.V1.Y);
-    FVector2D V2(RoadTriangle.V2.X, RoadTriangle.V2.Y); 
-    FBox TriBounds = RoadTriangle.GetBounds();
+  for (const FOccupancyTriangle& OccupancyTriangle : OccupancyTriangles) {
+    FVector2D V0(OccupancyTriangle.V0.X, OccupancyTriangle.V0.Y);
+    FVector2D V1(OccupancyTriangle.V1.X, OccupancyTriangle.V1.Y);
+    FVector2D V2(OccupancyTriangle.V2.X, OccupancyTriangle.V2.Y); 
+    FBox TriBounds = OccupancyTriangle.GetBounds();
 
     // Calculate bounding pixels.
     FIntPoint TriBoundsTopLeftPixel = Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));
@@ -88,7 +90,7 @@ void FRoadMap::InitOccupancyGrid() {
   }
 }
   
-void FRoadMap::InitOffroadPolygons() {
+void FOccupancyMap::InitOffroadPolygons() {
   FOccupancyGrid ProcessedGrid = FOccupancyGrid(
       OccupancyGrid.GetWidth(), 
       OccupancyGrid.GetHeight());
@@ -235,28 +237,28 @@ void FRoadMap::InitOffroadPolygons() {
 
 }
 
-FIntPoint FRoadMap::Point2DToPixel(const FVector2D& Point) const {
+FIntPoint FOccupancyMap::Point2DToPixel(const FVector2D& Point) const {
   return FIntPoint(
     FMath::FloorToInt((Point.Y - Bounds.Min.Y) / Resolution),
     FMath::FloorToInt(-(Point.X - Bounds.Max.X) / Resolution));
 }
   
-FVector2D FRoadMap::PixelToPoint2D(const FIntPoint& Pixel) const {
+FVector2D FOccupancyMap::PixelToPoint2D(const FIntPoint& Pixel) const {
   return FVector2D(
       Bounds.Max.X - (Pixel.Y + 0.5) * Resolution,
       Bounds.Min.Y + (Pixel.X + 0.5) * Resolution);
 }
 
-FVector FRoadMap::RandPoint() const {
+FVector FOccupancyMap::RandPoint() const {
   float V = FMath::FRandRange(0, Area);
   int I = 0;
-  for (; V > 0 && I < RoadTriangles.Num(); I++) {
-    V -= RoadTriangles[I].GetArea();
+  for (; V > 0 && I < OccupancyTriangles.Num(); I++) {
+    V -= OccupancyTriangles[I].GetArea();
   }
-  return RoadTriangles[I - 1].RandPoint();
+  return OccupancyTriangles[I - 1].RandPoint();
 }
   
-void FRoadMap::RenderBitmap(const FString& FileName) const {
+void FOccupancyMap::RenderBitmap(const FString& FileName) const {
 
   cartesian_canvas canvas(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
   canvas.image().clear(0);

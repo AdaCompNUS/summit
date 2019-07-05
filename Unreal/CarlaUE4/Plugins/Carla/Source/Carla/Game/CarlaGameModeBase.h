@@ -40,7 +40,7 @@ public:
   }
   
   UFUNCTION(Exec)
-  void RenderRoadMap(const FString& FileName) const;
+  void RenderOccupancyMap(const FString& FileName) const;
 
   UFUNCTION(Exec)
   void LoadLaneNetwork(const FString& LaneNetworkPath);
@@ -62,13 +62,13 @@ protected:
 
 private:
 
-  FRoadMap RoadMap;
+  FOccupancyMap OccupancyMap;
 
   boost::optional<carla::road::Map> WaypointMap;
 
   void SpawnActorFactories();
 
-  void CreateRoadMap();
+  void CreateOccupancyMap();
 
   void CreateWaypointMap(const FString& MapName);
 

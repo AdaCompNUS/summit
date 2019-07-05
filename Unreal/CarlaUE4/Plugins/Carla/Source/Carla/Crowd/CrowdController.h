@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Map/RoadMap.h"
+#include "Map/OccupancyMap.h"
 #include "Carla.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
@@ -21,7 +21,7 @@ public:
 
   void SetEpisode(UCarlaEpisode *InEpisode) { Episode = InEpisode; }
 
-  void SetRoadMap(const FRoadMap* InRoadMap) { RoadMap = InRoadMap; }
+  void SetOccupancyMap(const FOccupancyMap* InOccupancyMap) { OccupancyMap = InOccupancyMap; }
 
   void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
 
@@ -32,7 +32,7 @@ public:
 private:
 
   UCarlaEpisode* Episode = nullptr;
-  const FRoadMap* RoadMap;
+  const FOccupancyMap* OccupancyMap;
   carla::road::Map* WaypointMap;
   TArray<CrowdWalker> Walkers;
   RVO::RVOSimulator RVOSim;
