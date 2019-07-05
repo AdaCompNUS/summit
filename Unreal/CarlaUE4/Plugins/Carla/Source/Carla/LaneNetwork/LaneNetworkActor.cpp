@@ -1,6 +1,5 @@
 #include "LaneNetworkActor.h"
 #include "ConstructorHelpers.h"
-#include <vector>
 
 ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -17,8 +16,6 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(LogTemp, Display, TEXT("Loading lane network from: %s"), *LaneNetworkPath);
 
   LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
-  LaneIDs.Reset(LaneNetwork.Lanes.Num());
-  LaneNetwork.Lanes.GenerateKeyArray(LaneIDs);
   
   TArray<FVector> Vertices;
   TArray<int> TriangleVertices;
@@ -102,34 +99,15 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
     AddLineSegment(Source, Destination, LaneNetwork.LaneWidth);
   }
 
-  OccupancyTriangles.Reset(TriangleVertices.Num() / 3);
-  OccupancyTrianglesTree = aabb::Tree(2, 0); // Dimension, inflation thickness.
+  TArray<FOccupancyTriangle> OccupancyTriangles;
+  OccupancyTriangles.Reserve(TriangleVertices.Num() / 3);
   for (int I = 0; I < TriangleVertices.Num(); I += 3) {
     OccupancyTriangles.Emplace(
         Vertices[TriangleVertices[I]],
         Vertices[TriangleVertices[I + 1]],
         Vertices[TriangleVertices[I + 2]]);
-    float MinX = FMath::Min3(
-        Vertices[TriangleVertices[I]].X,
-        Vertices[TriangleVertices[I + 1]].X,
-        Vertices[TriangleVertices[I + 2]].X);
-    float MaxX = FMath::Max3(
-        Vertices[TriangleVertices[I]].X,
-        Vertices[TriangleVertices[I + 1]].X,
-        Vertices[TriangleVertices[I + 2]].X);
-    float MinY = FMath::Min3(
-        Vertices[TriangleVertices[I]].Y,
-        Vertices[TriangleVertices[I + 1]].Y,
-        Vertices[TriangleVertices[I + 2]].Y);
-    float MaxY = FMath::Max3(
-        Vertices[TriangleVertices[I]].Y,
-        Vertices[TriangleVertices[I + 1]].Y,
-        Vertices[TriangleVertices[I + 2]].Y);
-
-    std::vector<double> LowerBound = { MinX, MinY };
-    std::vector<double> UpperBound = { MaxX, MaxY };
-    OccupancyTrianglesTree.insertParticle(I / 3, LowerBound, UpperBound);
   }
+  OccupancyMap = FOccupancyMap(OccupancyTriangles);
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, TriangleVertices, {}, {}, {}, {}, true);
@@ -138,38 +116,10 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(
       LogTemp, 
       Display, 
-      TEXT("Loaded lane network. Nodes = %d, Occupancys = %d, Lanes = %d, LaneConnections = %d, Triangles = %d"), 
+      TEXT("Loaded lane network. Nodes = %d, Roads = %d, Lanes = %d, LaneConnections = %d, Triangles = %d"), 
       LaneNetwork.Nodes.Num(),
       LaneNetwork.Roads.Num(),
       LaneNetwork.Lanes.Num(),
       LaneNetwork.LaneConnections.Num(),
       OccupancyTriangles.Num());
-}
-
-
-FVector2D ALaneNetworkActor::RandomVehicleSpawnPoint() const {
-  const FLane& Lane = LaneNetwork.Lanes[FMath::RandRange(0, LaneIDs.Num() - 1)];
-  boost::optional<float> StartMinOffset = LaneNetwork.GetLaneStartMinOffset(Lane);
-  boost::optional<float> EndMinOffset = LaneNetwork.GetLaneEndMinOffset(Lane);
-  
-  if (!StartMinOffset || !EndMinOffset) {
-    return RandomVehicleSpawnPoint();
-  }
-
-  FVector2D Start = LaneNetwork.GetLaneStart(Lane, *StartMinOffset);
-  FVector2D End = LaneNetwork.GetLaneEnd(Lane, *EndMinOffset);
-
-  return ToUE2D(Start + FMath::RandRange(0.0f, 1.0f) * (End - Start));
-}
-
-FOccupancyMap ALaneNetworkActor::GetOccupancyMap(const FBox2D Bounds, float Resolution) const {
-  const std::vector<double> LowerBound = { Bounds.Min.X, Bounds.Min.Y };
-  const std::vector<double> UpperBound = { Bounds.Max.X, Bounds.Max.Y };
-  
-  TArray<FOccupancyTriangle> MapTriangles;
-  for (int I : OccupancyTrianglesTree.query(aabb::AABB(LowerBound, UpperBound))) {
-    MapTriangles.Add(OccupancyTriangles[I]);
-  }
-
-  return FOccupancyMap(FBox(FVector(Bounds.Min, 0), FVector(Bounds.Max, 0)), MapTriangles, Resolution, 10);
 }

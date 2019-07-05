@@ -62,15 +62,15 @@ protected:
 
 private:
 
-  FOccupancyMap OccupancyMap;
+  // Pointer to either occupancy map from CARLA or from lane network,
+  // depending on which is used.
+  const FOccupancyMap* OccupancyMap;
 
-  boost::optional<carla::road::Map> WaypointMap;
+  // Occupancy map lives either here or in LaneNetworkActor depending
+  // on whether CARLA map or lane network is used.
+  FOccupancyMap CarlaOccupancyMap;
 
-  void SpawnActorFactories();
-
-  void CreateOccupancyMap();
-
-  void CreateWaypointMap(const FString& MapName);
+  boost::optional<carla::road::Map> CarlaWaypointMap;
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -104,4 +104,10 @@ private:
 
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
+
+  void SpawnActorFactories();
+
+  void CreateCarlaOccupancyMap();
+
+  void CreateCarlaWaypointMap(const FString& MapName);
 };

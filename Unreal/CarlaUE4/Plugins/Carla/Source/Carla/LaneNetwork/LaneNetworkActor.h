@@ -4,7 +4,6 @@
 #include "ProceduralMeshComponent.h"
 #include "Map/OccupancyTriangle.h"
 #include "Map/OccupancyGrid.h"
-#include "aabb/AABB.h"
 
 #include "LaneNetworkActor.generated.h"
 
@@ -22,19 +21,13 @@ public:
 		
   void SetLaneNetwork(const FString& LaneNetworkPath);
 
-  FVector2D RandomVehicleSpawnPoint() const;
-
-  FOccupancyMap GetOccupancyMap(const FBox2D Bounds, float Resolution) const;
+  const FOccupancyMap& GetOccupancyMap() const { return OccupancyMap; }
 
 private:
 
   FLaneNetwork LaneNetwork;
-  TArray<long long> LaneIDs; // Lookup for random spawn points.
-
+  FOccupancyMap OccupancyMap;
   UMaterial* MeshMaterial;
-
-  TArray<FOccupancyTriangle> OccupancyTriangles;
-  aabb::Tree OccupancyTrianglesTree;
 
   static FVector2D ToUE2D(const FVector2D& Position) { 
     return 100 * FVector2D(Position.Y, Position.X);

@@ -10,6 +10,7 @@
 #include "Map/OccupancyTriangle.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
+#include "bitmap_image/bitmap_image.hpp"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -91,8 +92,8 @@ void ACarlaGameModeBase::InitGame(
     LaneNetworkActor = World->SpawnActor<ALaneNetworkActor>();
   } else {
     UE_LOG(LogCarla, Display, TEXT("Lane networks unavailable."));
-    CreateOccupancyMap();
-    CreateWaypointMap(MapName);
+    CreateCarlaOccupancyMap();
+    CreateCarlaWaypointMap(MapName);
   }
 
   GameInstance->NotifyInitGame();
@@ -186,7 +187,7 @@ void ACarlaGameModeBase::SpawnActorFactories()
   }
 }
 
-void ACarlaGameModeBase::CreateOccupancyMap() {
+void ACarlaGameModeBase::CreateCarlaOccupancyMap() {
 
   // Construct OccupancyMap.
   TArray<FOccupancyTriangle> OccupancyTriangles;
@@ -218,21 +219,47 @@ void ACarlaGameModeBase::CreateOccupancyMap() {
       }
     }
   }
-  OccupancyMap = FOccupancyMap(OccupancyTriangles, 10, 100);
+  CarlaOccupancyMap = FOccupancyMap(OccupancyTriangles);
 }
   
-void ACarlaGameModeBase::CreateWaypointMap(const FString& MapName) {
+void ACarlaGameModeBase::CreateCarlaWaypointMap(const FString& MapName) {
   FString Content = UOpenDrive::LoadXODR(MapName);
-  WaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(Content));
-  if (!WaypointMap)
+  CarlaWaypointMap = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromFString(Content));
+  if (!CarlaWaypointMap)
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to parse OpenDrive file."));
-    return;
   }
 }
 
 void ACarlaGameModeBase::RenderOccupancyMap(const FString& FileName) const {
-  OccupancyMap.RenderBitmap(FileName);  
+  FOccupancyArea OccupancyArea = OccupancyMap->GetOccupancyArea(
+      FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)),
+      10, 10);
+
+  cartesian_canvas canvas(OccupancyArea.OccupancyGrid.GetWidth(), OccupancyArea.OccupancyGrid.GetHeight());
+  canvas.image().clear(0);
+  image_drawer draw(canvas.image());
+
+  draw.pen_color(255, 255, 255);
+  for (int Y = 0; Y < OccupancyArea.OccupancyGrid.GetHeight(); Y++) {
+    for (int X = 0; X < OccupancyArea.OccupancyGrid.GetWidth(); X++) {
+      if (OccupancyArea.OccupancyGrid(X, Y)) {
+        draw.plot_pen_pixel(X, Y);
+      }
+    }
+  }
+
+  draw.pen_width(9);
+  draw.pen_color(255, 0, 0);
+  for (const TArray<FIntPoint>& Polygon_Pixel : OccupancyArea.OffroadPolygons_Pixel) {
+    for (int I = 0; I < Polygon_Pixel.Num(); I++) {
+      FIntPoint Start = Polygon_Pixel[I];
+      FIntPoint End = Polygon_Pixel[(I + 1) % Polygon_Pixel.Num()];
+      draw.line_segment(Start.X, Start.Y, End.X, End.Y);
+    }
+  }
+
+  canvas.image().save_image(TCHAR_TO_UTF8(*FileName));
 }
 
 void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
@@ -242,7 +269,7 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
   }
 
   LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
-  OccupancyMap = LaneNetworkActor->GetOccupancyMap(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)), 10);
+  OccupancyMap = &(LaneNetworkActor->GetOccupancyMap());
 }
   
 void ACarlaGameModeBase::SpawnWalkers(int Num) {
@@ -255,9 +282,9 @@ void ACarlaGameModeBase::SpawnWalkers(int Num) {
   }
 
   for (int I = 0; I < Num; I++) {
-    FVector2D SpawnPoint = LaneNetworkActor->RandomVehicleSpawnPoint();
-    FTransform Transform(FVector(SpawnPoint, 300));
-    //FTransform Transform(FVector(11950, -3010, 260));
+    FVector SpawnPoint = OccupancyMap->RandPoint();
+    SpawnPoint.Z = 300;
+    FTransform Transform(SpawnPoint);
     
     const FActorDefinition& ActorDefinition = *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
     FActorDescription ActorDescription;

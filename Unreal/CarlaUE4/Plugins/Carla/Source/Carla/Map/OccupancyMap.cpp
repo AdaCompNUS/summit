@@ -1,48 +1,48 @@
 #include "OccupancyMap.h"
 #include "Runtime/Engine/Public/GeomTools.h"
-#include "bitmap_image.hpp"
 #include "GeometryUtil.h"
 #include "Algo/Reverse.h"
 
-FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
-  : OccupancyTriangles(OccupancyTriangles), 
-  Resolution(Resolution), 
-  OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
-
-  Bounds = OccupancyTriangles[0].GetBounds();
-  Area = OccupancyTriangles[0].GetArea();
-  for (int I = 0; I < OccupancyTriangles.Num(); I++) {
-    const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[I];
-    FBox TriBounds = OccupancyTriangle.GetBounds();
-    Bounds.Min.X = FMath::Min(Bounds.Min.X, TriBounds.Min.X);
-    Bounds.Min.Y = FMath::Min(Bounds.Min.Y, TriBounds.Min.Y);
-    Bounds.Min.Z = FMath::Min(Bounds.Min.Z, TriBounds.Min.Z);
-    Bounds.Max.X = FMath::Max(Bounds.Max.X, TriBounds.Max.X);
-    Bounds.Max.Y = FMath::Max(Bounds.Max.Y, TriBounds.Max.Y);
-    Bounds.Max.Z = FMath::Max(Bounds.Max.Z, TriBounds.Max.Z);
+FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles) 
+    : OccupancyTriangles(OccupancyTriangles), Area(0) {
+  for (const FOccupancyTriangle& OccupancyTriangle : OccupancyTriangles) {
     Area += OccupancyTriangle.GetArea();
   }
-
-  InitOccupancyGrid();
-  InitOffroadPolygons();
 }
 
-FOccupancyMap::FOccupancyMap(const FBox& Bounds, const TArray<FOccupancyTriangle>& OccupancyTriangles, float Resolution, int OffroadPolygonEdgeInterval) 
-  : Bounds(Bounds),
-  OccupancyTriangles(OccupancyTriangles), 
-  Resolution(Resolution), 
-  OffroadPolygonEdgeInterval(OffroadPolygonEdgeInterval) {
-
-  InitOccupancyGrid();
-  InitOffroadPolygons();
+FVector FOccupancyMap::RandPoint() const {
+  float V = FMath::FRandRange(0, Area);
+  int I = 0;
+  for (; V > 0 && I < OccupancyTriangles.Num(); I++) {
+    V -= OccupancyTriangles[I].GetArea();
+  }
+  return OccupancyTriangles[I - 1].RandPoint();
 }
 
-void FOccupancyMap::InitOccupancyGrid() {
+FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resolution, int OffroadPolygonEdgeInterval) const {
+  FOccupancyArea OccupancyArea;
+  OccupancyArea.Bounds = Bounds;
+  OccupancyArea.Resolution = Resolution;
+  OccupancyArea.OffroadPolygonEdgeInterval = OffroadPolygonEdgeInterval;
+
+  // ===== Helper functions =====
   // Coordinates are flipped such that X is upward and Y is rightward on occupancy grid.
-
+  auto Point2DToPixel = [&Bounds, Resolution](const FVector2D& Point) -> FIntPoint {
+    return FIntPoint(
+      FMath::FloorToInt((Point.Y - Bounds.Min.Y) / Resolution),
+      FMath::FloorToInt(-(Point.X - Bounds.Max.X) / Resolution));
+  };
+  auto PixelToPoint2D = [&Bounds, Resolution](const FIntPoint& Pixel) -> FVector2D {
+    return FVector2D(
+        Bounds.Max.X - (Pixel.Y + 0.5) * Resolution,
+        Bounds.Min.Y + (Pixel.X + 0.5) * Resolution);
+  };
   FVector2D TopLeft(Bounds.Max.X, Bounds.Min.Y);
 
-  OccupancyGrid = FOccupancyGrid(
+
+
+  // ===== Occupancy grid calculation =====
+  OccupancyArea.OccupancyGrid = FOccupancyGrid(
       FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
       FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
@@ -58,9 +58,9 @@ void FOccupancyMap::InitOccupancyGrid() {
     
     // Loop through bounded pixels, and consider pixel bounds.
     for (int X = TriBoundsTopLeftPixel.X; X <= TriBoundsBottomRightPixel.X; X++) {
-      if (X < 0 || X >= OccupancyGrid.GetWidth()) continue;
+      if (X < 0 || X >= OccupancyArea.OccupancyGrid.GetWidth()) continue;
       for (int Y = TriBoundsTopLeftPixel.Y; Y <= TriBoundsBottomRightPixel.Y; Y++) {
-        if (Y < 0 || Y >= OccupancyGrid.GetHeight()) continue;
+        if (Y < 0 || Y >= OccupancyArea.OccupancyGrid.GetHeight()) continue;
 
         FVector2D P0(TopLeft.X - Y * Resolution, TopLeft.Y + X * Resolution);
         FVector2D P1(TopLeft.X - Y * Resolution, TopLeft.Y + (X + 1) * Resolution);
@@ -83,22 +83,23 @@ void FOccupancyMap::InitOccupancyGrid() {
         Intersects = Intersects || (V2.X <= P0.X && V2.X >= P3.X && V2.Y >= P0.Y && V2.Y <= P3.Y);
 
         if (Intersects) {
-          OccupancyGrid(X, Y) = true; 
+          OccupancyArea.OccupancyGrid(X, Y) = true; 
         }
       }
     }
   }
-}
+
+
   
-void FOccupancyMap::InitOffroadPolygons() {
+  // ===== Offroad polygons calculation =====
   FOccupancyGrid ProcessedGrid = FOccupancyGrid(
-      OccupancyGrid.GetWidth(), 
-      OccupancyGrid.GetHeight());
+      OccupancyArea.OccupancyGrid.GetWidth(), 
+      OccupancyArea.OccupancyGrid.GetHeight());
 
   for (int Y = 0; Y < ProcessedGrid.GetHeight(); Y++){
     for (int X = 0; X < ProcessedGrid.GetWidth(); X++) {
       if (ProcessedGrid(X, Y)) continue;
-      if (OccupancyGrid(X, Y)) continue;
+      if (OccupancyArea.OccupancyGrid(X, Y)) continue;
       
       TArray<FIntPoint> ObstaclePixels;
 
@@ -139,7 +140,7 @@ void FOccupancyMap::InitOffroadPolygons() {
           if (NextPixel.X >= ProcessedGrid.GetWidth()) continue;
           if (NextPixel.Y < 0) continue;
           if (NextPixel.Y >= ProcessedGrid.GetHeight()) continue;
-          if (OccupancyGrid(NextPixel)) continue;
+          if (OccupancyArea.OccupancyGrid(NextPixel)) continue;
           if (ProcessedGrid(NextPixel)) continue;
 
           Queue.Enqueue(NextPixel);
@@ -180,13 +181,14 @@ void FOccupancyMap::InitOffroadPolygons() {
 
       // ===== Edge half traversal. =====
       FIntPoint CurrentEdgeHalf = StartEdgeHalf;
-      TArray<FVector2D>& OffroadPolygon = OffroadPolygons.Emplace_GetRef();
+      TArray<FVector2D>& OffroadPolygon = OccupancyArea.OffroadPolygons.Emplace_GetRef();
+      TArray<FIntPoint>& OffroadPolygon_Pixel = OccupancyArea.OffroadPolygons_Pixel.Emplace_GetRef();
       for (int I = 0;;I++) {
         EdgeHalfGrid(CurrentEdgeHalf) = false;
         if (I % OffroadPolygonEdgeInterval == 0) {
-          OffroadPolygon.Emplace(
+          OffroadPolygon_Pixel.Emplace(Point2DToPixel(OffroadPolygon.Emplace_GetRef(
               Bounds.Max.X - Resolution * (ObstacleBoundsMin.Y + CurrentEdgeHalf.Y * 0.5f), 
-              Bounds.Min.Y + Resolution * (ObstacleBoundsMin.X + CurrentEdgeHalf.X * 0.5f));
+              Bounds.Min.Y + Resolution * (ObstacleBoundsMin.X + CurrentEdgeHalf.X * 0.5f))));
         }
 
         bool HasNext = false;
@@ -235,55 +237,5 @@ void FOccupancyMap::InitOffroadPolygons() {
     }
   }
 
-}
-
-FIntPoint FOccupancyMap::Point2DToPixel(const FVector2D& Point) const {
-  return FIntPoint(
-    FMath::FloorToInt((Point.Y - Bounds.Min.Y) / Resolution),
-    FMath::FloorToInt(-(Point.X - Bounds.Max.X) / Resolution));
-}
-  
-FVector2D FOccupancyMap::PixelToPoint2D(const FIntPoint& Pixel) const {
-  return FVector2D(
-      Bounds.Max.X - (Pixel.Y + 0.5) * Resolution,
-      Bounds.Min.Y + (Pixel.X + 0.5) * Resolution);
-}
-
-FVector FOccupancyMap::RandPoint() const {
-  float V = FMath::FRandRange(0, Area);
-  int I = 0;
-  for (; V > 0 && I < OccupancyTriangles.Num(); I++) {
-    V -= OccupancyTriangles[I].GetArea();
-  }
-  return OccupancyTriangles[I - 1].RandPoint();
-}
-  
-void FOccupancyMap::RenderBitmap(const FString& FileName) const {
-
-  cartesian_canvas canvas(OccupancyGrid.GetWidth(), OccupancyGrid.GetHeight());
-  canvas.image().clear(0);
-  image_drawer draw(canvas.image());
-
-  draw.pen_color(255, 255, 255);
-  for (int Y = 0; Y < OccupancyGrid.GetHeight(); Y++) {
-    for (int X = 0; X < OccupancyGrid.GetWidth(); X++) {
-      if (OccupancyGrid(X, Y)) {
-        draw.plot_pen_pixel(X, Y);
-      }
-    }
-  }
-
-  draw.pen_width(9);
-  draw.pen_color(255, 0, 0);
-  for (const TArray<FVector2D>& Polygon : OffroadPolygons) {
-    for (int I = 0; I < Polygon.Num(); I++) {
-      FIntPoint Start = Point2DToPixel(Polygon[I]);
-      FIntPoint End = Point2DToPixel(Polygon[(I + 1) % Polygon.Num()]);
-      draw.line_segment(Start.X, Start.Y, End.X, End.Y);
-    }
-  }
-  
-  canvas.image().save_image(TCHAR_TO_UTF8(*FileName));
-  
-  UE_LOG(LogCarla, Display, TEXT("Bitmap saved to %s"), *FileName);
+  return OccupancyArea;
 }
