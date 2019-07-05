@@ -93,6 +93,7 @@ void ACarlaGameModeBase::InitGame(
   } else {
     UE_LOG(LogCarla, Display, TEXT("Lane networks unavailable."));
     CreateCarlaOccupancyMap();
+    OccupancyMap = &CarlaOccupancyMap;
     CreateCarlaWaypointMap(MapName);
   }
 
@@ -192,7 +193,7 @@ void ACarlaGameModeBase::CreateCarlaOccupancyMap() {
   // Construct OccupancyMap.
   TArray<FOccupancyTriangle> OccupancyTriangles;
   for (TActorIterator<AStaticMeshActor> ActorItr(GetWorld()); ActorItr; ++ActorItr) {
-    if (ActorItr->ActorHasTag(TEXT("Occupancy"))){
+    if (ActorItr->ActorHasTag(TEXT("Road"))){
 
       // Written with reference to FStaticMeshSectionAreaWeightedTriangleSampler::GetWeights in
       // Runtime/Engine/Private/StaticMesh.cpp of UE 4.22.
@@ -202,18 +203,20 @@ void ACarlaGameModeBase::CreateCarlaOccupancyMap() {
       const FPositionVertexBuffer& PositionVertexBuffer = LODResources->VertexBuffers.PositionVertexBuffer;
 
       for (int I = 0; I < Indices.Num(); I += 3) {
+        FVector V0 = ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I]));
+        FVector V1 = ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 1]));
+        FVector V2 = ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 2]));
+
         FOccupancyTriangle OccupancyTriangle(
-            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I])),
-            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 1])),
-            ActorItr->GetActorLocation() + ActorItr->GetTransform().TransformVector(PositionVertexBuffer.VertexPosition(Indices[I + 2])));
+            FVector2D(V0.X, V0.Y),
+            FVector2D(V1.X, V1.Y),
+            FVector2D(V2.X, V2.Y));
 
         // Check for precision errors.
         if (OccupancyTriangle.GetBounds().Min.X < -1000000) continue;
         if (OccupancyTriangle.GetBounds().Min.Y < -1000000) continue;
-        if (OccupancyTriangle.GetBounds().Min.Z < -1000000) continue;
         if (OccupancyTriangle.GetBounds().Max.X > 1000000) continue;
         if (OccupancyTriangle.GetBounds().Max.Y > 1000000) continue;
-        if (OccupancyTriangle.GetBounds().Max.Z > 1000000) continue;
 
         OccupancyTriangles.Emplace(OccupancyTriangle);
       }
@@ -282,9 +285,8 @@ void ACarlaGameModeBase::SpawnWalkers(int Num) {
   }
 
   for (int I = 0; I < Num; I++) {
-    FVector SpawnPoint = OccupancyMap->RandPoint();
-    SpawnPoint.Z = 300;
-    FTransform Transform(SpawnPoint);
+    FVector2D SpawnPoint = OccupancyMap->RandPoint();
+    FTransform Transform(FVector(SpawnPoint.X, SpawnPoint.Y, 300));
     
     const FActorDefinition& ActorDefinition = *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
     FActorDescription ActorDescription;

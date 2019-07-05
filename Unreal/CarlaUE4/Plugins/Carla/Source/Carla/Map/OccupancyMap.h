@@ -13,7 +13,7 @@ public:
   FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles);
 
   // TODO Optimize using AABB trees.
-  FVector RandPoint() const;
+  FVector2D RandPoint() const;
 
   // TODO Optimize using AABB trees.
   FOccupancyArea GetOccupancyArea(const FBox2D& Bounds, float Resolution, int OffroadPolygonEdgeInterval) const;

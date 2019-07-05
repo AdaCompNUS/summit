@@ -4,16 +4,16 @@ class FOccupancyTriangle {
 
 public:
 
-  FVector V0;
-  FVector V1;
-  FVector V2;
+  FVector2D V0;
+  FVector2D V1;
+  FVector2D V2;
 
-  FOccupancyTriangle(const FVector& V0, const FVector& V1, const FVector& V2)
+  FOccupancyTriangle(const FVector2D& V0, const FVector2D& V1, const FVector2D& V2)
     : V0(V0), V1(V1), V2(V2) { }
 
   double GetArea() const;
 
-  FBox GetBounds() const;
+  FBox2D GetBounds() const;
 
-  FVector RandPoint() const;
+  FVector2D RandPoint() const;
 };

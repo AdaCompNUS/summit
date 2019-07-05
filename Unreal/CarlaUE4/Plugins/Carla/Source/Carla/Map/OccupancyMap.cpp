@@ -10,7 +10,7 @@ FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangle
   }
 }
 
-FVector FOccupancyMap::RandPoint() const {
+FVector2D FOccupancyMap::RandPoint() const {
   float V = FMath::FRandRange(0, Area);
   int I = 0;
   for (; V > 0 && I < OccupancyTriangles.Num(); I++) {
@@ -29,18 +29,16 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
   // Coordinates are flipped such that X is upward and Y is rightward on occupancy grid.
   FVector2D TopLeft(Bounds.Max.X, Bounds.Min.Y);
 
-
-
   // ===== Occupancy grid calculation =====
   OccupancyArea.OccupancyGrid = FOccupancyGrid(
       FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
       FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
   for (const FOccupancyTriangle& OccupancyTriangle : OccupancyTriangles) {
-    FVector2D V0(OccupancyTriangle.V0.X, OccupancyTriangle.V0.Y);
-    FVector2D V1(OccupancyTriangle.V1.X, OccupancyTriangle.V1.Y);
-    FVector2D V2(OccupancyTriangle.V2.X, OccupancyTriangle.V2.Y); 
-    FBox TriBounds = OccupancyTriangle.GetBounds();
+    const FVector2D& V0 = OccupancyTriangle.V0;
+    const FVector2D& V1 = OccupancyTriangle.V1;
+    const FVector2D& V2 = OccupancyTriangle.V2; 
+    FBox2D TriBounds = OccupancyTriangle.GetBounds();
 
     // Calculate bounding pixels.
     FIntPoint TriBoundsTopLeftPixel = OccupancyArea.Point2DToPixel(FVector2D(TriBounds.Max.X, TriBounds.Min.Y));

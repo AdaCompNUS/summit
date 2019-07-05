@@ -103,9 +103,9 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
   OccupancyTriangles.Reserve(TriangleVertices.Num() / 3);
   for (int I = 0; I < TriangleVertices.Num(); I += 3) {
     OccupancyTriangles.Emplace(
-        Vertices[TriangleVertices[I]],
-        Vertices[TriangleVertices[I + 1]],
-        Vertices[TriangleVertices[I + 2]]);
+        FVector2D(Vertices[TriangleVertices[I]]),
+        FVector2D(Vertices[TriangleVertices[I + 1]]),
+        FVector2D(Vertices[TriangleVertices[I + 2]]));
   }
   OccupancyMap = FOccupancyMap(OccupancyTriangles);
 

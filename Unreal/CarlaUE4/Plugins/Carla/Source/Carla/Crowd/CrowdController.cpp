@@ -40,7 +40,7 @@ void ACrowdController::InitializeAtBeginPlay() {
 
 void ACrowdController::Tick(float DeltaSeconds) {
   while (Walkers.Num() < 5) {
-    FVector Point = OccupancyMap->RandPoint();
+    FVector2D Point = OccupancyMap->RandPoint();
     
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
     FActorDescription ActorDescription;
@@ -54,7 +54,7 @@ void ACrowdController::Tick(float DeltaSeconds) {
     FVector Origin, BoxExtent;
     ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
 
-    FTransform Transform(FVector(Point.X, Point.Y, Point.Z + BoxExtent.Z + 10));
+    FTransform Transform(FVector(Point.X, Point.Y, BoxExtent.Z + 10));
 
     AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
     if (Actor) {
