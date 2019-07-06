@@ -14,6 +14,7 @@ public class Carla : ModuleRules
   public Carla(ReadOnlyTargetRules Target) : base(Target)
   {
     PrivatePCHHeaderFile = "Carla.h";
+    bEnableUndefinedIdentifierWarnings = false;
 
     if (IsWindows(Target))
     {
