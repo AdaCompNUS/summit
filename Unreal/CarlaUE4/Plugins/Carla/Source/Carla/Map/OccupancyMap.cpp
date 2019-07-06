@@ -5,16 +5,21 @@
 
 FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles) 
     : OccupancyTriangles(OccupancyTriangles), Area(0) {
+
+  std::vector<rt_value> IndexEntries;
+
   for (int I = 0; I < OccupancyTriangles.Num(); I++) {
     const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[I];
     FBox2D Bounds = OccupancyTriangle.GetBounds();
 
-    OccupancyTrianglesIndex.insert(std::make_pair(
+    IndexEntries.emplace_back(
           rt_box(rt_point(Bounds.Min.X, Bounds.Min.Y), rt_point(Bounds.Max.X, Bounds.Max.Y)),
-          I));
+          I);
 
     Area += OccupancyTriangle.GetArea();
   }
+
+  OccupancyTrianglesIndex = rt_tree(IndexEntries);
 }
 
 FVector2D FOccupancyMap::RandPoint() const {
