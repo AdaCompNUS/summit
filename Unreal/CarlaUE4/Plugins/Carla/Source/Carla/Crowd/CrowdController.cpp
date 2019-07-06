@@ -39,31 +39,31 @@ void ACrowdController::InitializeAtBeginPlay() {
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  while (Walkers.Num() < 5) {
-    FVector2D Point = OccupancyMap->RandPoint();
-    
-    const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
-    FActorDescription ActorDescription;
-    ActorDescription.UId = ActorDefinition.UId;
-    ActorDescription.Id = ActorDefinition.Id;
-    ActorDescription.Class = ActorDefinition.Class;
+  //while (Walkers.Num() < 5) {
+  //  FVector2D Point = OccupancyMap->RandPoint();
+  //  
+  //  const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
+  //  FActorDescription ActorDescription;
+  //  ActorDescription.UId = ActorDefinition.UId;
+  //  ActorDescription.Id = ActorDefinition.Id;
+  //  ActorDescription.Class = ActorDefinition.Class;
 
-    TSubclassOf<AActor> Class = ActorDefinition.Class;
-    AActor* ActorClass = Class.GetDefaultObject();
+  //  TSubclassOf<AActor> Class = ActorDefinition.Class;
+  //  AActor* ActorClass = Class.GetDefaultObject();
 
-    FVector Origin, BoxExtent;
-    ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
+  //  FVector Origin, BoxExtent;
+  //  ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
 
-    FTransform Transform(FVector(Point.X, Point.Y, BoxExtent.Z + 10));
+  //  FTransform Transform(FVector(Point.X, Point.Y, BoxExtent.Z + 10));
 
-    AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
-    if (Actor) {
-      float MaxSpeed = FMath::FRandRange(1.0, 5.0f);
-      Walkers.Emplace(WaypointMap, Actor, MaxSpeed);
-      int AgentIndex = RVOSim.addAgent(RVO::Vector2(Point.X / 100.0f, Point.Y / 100.0f));
-      //RVOSim.setAgentMaxSpeed(AgentIndex, MaxSpeed);
-    }
-  }
+  //  AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
+  //  if (Actor) {
+  //    float MaxSpeed = FMath::FRandRange(1.0, 5.0f);
+  //    Walkers.Emplace(WaypointMap, Actor, MaxSpeed);
+  //    int AgentIndex = RVOSim.addAgent(RVO::Vector2(Point.X / 100.0f, Point.Y / 100.0f));
+  //    //RVOSim.setAgentMaxSpeed(AgentIndex, MaxSpeed);
+  //  }
+  //}
 
   //for (int I = 0; I < Walkers.Num(); I++) {
   //  carla::geom::Location Location = Walkers[I].GetLocation();

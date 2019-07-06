@@ -1,19 +1,17 @@
 #include "OccupancyMap.h"
 #include "GeometryUtil.h"
 #include <vector>
+#include <iterator>
 
 FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles) 
-    : OccupancyTriangles(OccupancyTriangles), 
-    OccupancyTrianglesIndex(2, 0),
-    Area(0) {
+    : OccupancyTriangles(OccupancyTriangles), Area(0) {
   for (int I = 0; I < OccupancyTriangles.Num(); I++) {
     const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[I];
     FBox2D Bounds = OccupancyTriangle.GetBounds();
 
-    OccupancyTrianglesIndex.insertParticle(
-        I,
-        { Bounds.Min.X, Bounds.Min.Y },
-        { Bounds.Max.X, Bounds.Max.Y });
+    OccupancyTrianglesIndex.insert(std::make_pair(
+          rt_box(rt_point(Bounds.Min.X, Bounds.Min.Y), rt_point(Bounds.Max.X, Bounds.Max.Y)),
+          I));
 
     Area += OccupancyTriangle.GetArea();
   }
@@ -43,11 +41,14 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
       FMath::FloorToInt((Bounds.Max.Y - Bounds.Min.Y) / Resolution),
       FMath::FloorToInt((Bounds.Max.X - Bounds.Min.X) / Resolution));
 
-  std::vector<unsigned int> OverlappingTriangleIndices = OccupancyTrianglesIndex.query(aabb::AABB(
-      { Bounds.Min.X, Bounds.Min.Y },
-      { Bounds.Max.X, Bounds.Max.Y }));
+  std::vector<rt_value> IndexEntries;
+  OccupancyTrianglesIndex.query(
+      boost::geometry::index::intersects(rt_box(
+          rt_point(Bounds.Min.X, Bounds.Min.Y), rt_point(Bounds.Max.X, Bounds.Max.Y))),
+      std::back_inserter(IndexEntries));
 
-  for (int TriangleIndex : OverlappingTriangleIndices) {
+  for (const rt_value& IndexEntry : IndexEntries) {
+    int TriangleIndex = IndexEntry.second;
     const FOccupancyTriangle& OccupancyTriangle = OccupancyTriangles[TriangleIndex];
     const FVector2D& V0 = OccupancyTriangle.V0;
     const FVector2D& V1 = OccupancyTriangle.V1;
