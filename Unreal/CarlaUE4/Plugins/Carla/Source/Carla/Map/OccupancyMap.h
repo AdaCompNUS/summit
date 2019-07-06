@@ -14,7 +14,7 @@
 typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point;
 typedef boost::geometry::model::box<rt_point> rt_box;
 typedef std::pair<rt_box, int> rt_value;
-typedef bgi::rtree<rt_value, bgi::quadratic<16>> rt_tree;
+typedef bgi::rtree<rt_value, bgi::rstar<16>> rt_tree;
 
 class FOccupancyMap {
 
