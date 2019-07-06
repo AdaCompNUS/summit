@@ -271,7 +271,7 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
     return;
   }
 
-  LaneNetworkActor->SetLaneNetwork(LaneNetworkPath);
+  LaneNetworkActor->LoadLaneNetwork(LaneNetworkPath);
   OccupancyMap = &(LaneNetworkActor->GetOccupancyMap());
 }
   

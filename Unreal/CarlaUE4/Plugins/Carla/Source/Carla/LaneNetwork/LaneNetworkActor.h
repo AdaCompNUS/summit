@@ -19,14 +19,19 @@ public:
   
   ALaneNetworkActor(const FObjectInitializer& ObjectInitializer);
 		
-  void SetLaneNetwork(const FString& LaneNetworkPath);
+  void LoadLaneNetwork(const FString& LaneNetworkPath);
+
+  const FLaneNetwork& GetLaneNetwork() const { return LaneNetwork; }
 
   const FOccupancyMap& GetOccupancyMap() const { return OccupancyMap; }
+
+  const FLaneNetworkRouteMap& GetRouteMap() const { return RouteMap; }
 
 private:
 
   FLaneNetwork LaneNetwork;
   FOccupancyMap OccupancyMap;
+  FLaneNetworkRouteMap RouteMap;
   UMaterial* MeshMaterial;
 
   static FVector2D ToUE2D(const FVector2D& Position) { 

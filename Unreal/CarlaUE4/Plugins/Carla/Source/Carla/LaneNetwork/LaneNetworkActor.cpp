@@ -12,7 +12,7 @@ ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer
   MeshComponent->SetMaterial(0, MeshMaterial.Object);
 }
 
-void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
+void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
   UE_LOG(LogTemp, Display, TEXT("Loading lane network from: %s"), *LaneNetworkPath);
 
   LaneNetwork = FLaneNetwork::Load(LaneNetworkPath);
@@ -108,6 +108,8 @@ void ALaneNetworkActor::SetLaneNetwork(const FString& LaneNetworkPath) {
         FVector2D(Vertices[TriangleVertices[I + 2]]));
   }
   OccupancyMap = FOccupancyMap(OccupancyTriangles);
+
+  RouteMap = FLaneNetworkRouteMap(&LaneNetwork);
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(0, Vertices, TriangleVertices, {}, {}, {}, {}, true);
