@@ -1,6 +1,5 @@
 #include "LaneNetwork.h"
 #include "PlatformFilemanager.h"
-#include <algorithm>
 
 FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
@@ -32,8 +31,8 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   };
   auto ReadInt = [&U, FileHandle]() -> boost::optional<int32> {
     if (FileHandle->Read(U.buffer, 4)) {
-      std::swap(U.buffer[0], U.buffer[3]);
-      std::swap(U.buffer[1], U.buffer[2]);
+      Swap(U.buffer[0], U.buffer[3]);
+      Swap(U.buffer[1], U.buffer[2]);
       return boost::optional<int32>(U.i);
     } else {
       return boost::optional<int32>();
@@ -41,10 +40,10 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   };
   auto ReadLong = [&U, FileHandle]() -> boost::optional<int64> {
     if (FileHandle->Read(U.buffer, 8)) {
-      std::swap(U.buffer[0], U.buffer[7]);
-      std::swap(U.buffer[1], U.buffer[6]);
-      std::swap(U.buffer[2], U.buffer[5]);
-      std::swap(U.buffer[3], U.buffer[4]);
+      Swap(U.buffer[0], U.buffer[7]);
+      Swap(U.buffer[1], U.buffer[6]);
+      Swap(U.buffer[2], U.buffer[5]);
+      Swap(U.buffer[3], U.buffer[4]);
       return boost::optional<int64>(U.l);
     } else {
       return boost::optional<int64>();
@@ -52,10 +51,10 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   };
   auto ReadDouble = [&U, FileHandle]() -> boost::optional<double> {
     if (FileHandle->Read(U.buffer, 8)) {
-      std::swap(U.buffer[0], U.buffer[7]);
-      std::swap(U.buffer[1], U.buffer[6]);
-      std::swap(U.buffer[2], U.buffer[5]);
-      std::swap(U.buffer[3], U.buffer[4]);
+      Swap(U.buffer[0], U.buffer[7]);
+      Swap(U.buffer[1], U.buffer[6]);
+      Swap(U.buffer[2], U.buffer[5]);
+      Swap(U.buffer[3], U.buffer[4]);
       return boost::optional<double>(U.d);
     } else {
       return boost::optional<double>();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Map/OccupancyMap.h"
+#include "OccupancyMap/OccupancyMap.h"
 #include "Carla.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>

@@ -1,7 +1,18 @@
 #include "OccupancyMap.h"
-#include "GeometryUtil.h"
 #include <vector>
 #include <iterator>
+  
+bool PointInTriangle(const FVector2D& Point, const FVector2D& V0, const FVector2D& V1, const FVector2D& V2) {
+
+  // https://stackoverflow.com/a/14382692
+
+  float A = 0.5f * (-V1.Y * V2.X + V0.Y * (-V1.X + V2.X) + V0.X * (V1.Y - V2.Y) + V1.X * V2.Y);
+  int sign = A < 0 ? -1 : 1;
+  float s = (V0.Y * V2.X - V0.X * V2.Y + (V2.Y - V0.Y) * Point.X + (V0.X - V2.X) * Point.Y) * sign;
+  float t = (V0.X * V1.Y - V0.Y * V1.X + (V0.Y - V1.Y) * Point.X + (V1.X - V0.X) * Point.Y) * sign;
+    
+  return s > 0 && t > 0 && (s + t) < 2 * A * sign;
+}
 
 FOccupancyMap::FOccupancyMap(const TArray<FOccupancyTriangle>& OccupancyTriangles) 
     : OccupancyTriangles(OccupancyTriangles), Area(0) {
@@ -80,10 +91,10 @@ FOccupancyArea FOccupancyMap::GetOccupancyArea(const FBox2D& Bounds, float Resol
         bool Intersects = false;
         
         // Pixel vertices in triangle.
-        Intersects = Intersects || FGeometryUtil::PointInTriangle(P0, V0, V1, V2);
-        Intersects = Intersects || FGeometryUtil::PointInTriangle(P1, V0, V1, V2);
-        Intersects = Intersects || FGeometryUtil::PointInTriangle(P2, V0, V1, V2);
-        Intersects = Intersects || FGeometryUtil::PointInTriangle(P3, V0, V1, V2);
+        Intersects = Intersects || PointInTriangle(P0, V0, V1, V2);
+        Intersects = Intersects || PointInTriangle(P1, V0, V1, V2);
+        Intersects = Intersects || PointInTriangle(P2, V0, V1, V2);
+        Intersects = Intersects || PointInTriangle(P3, V0, V1, V2);
         
         // Triangle vertices in pixel.
         Intersects = Intersects || (V0.X <= P0.X && V0.X >= P3.X && V0.Y >= P0.Y && V0.Y <= P3.Y);

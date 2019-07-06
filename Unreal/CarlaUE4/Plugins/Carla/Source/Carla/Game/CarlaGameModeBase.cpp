@@ -6,8 +6,8 @@
 
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
-#include "Map/OccupancyMap.h"
-#include "Map/OccupancyTriangle.h"
+#include "OccupancyMap/OccupancyMap.h"
+#include "OccupancyMap/OccupancyTriangle.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include "bitmap_image/bitmap_image.hpp"

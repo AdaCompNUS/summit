@@ -2,8 +2,8 @@
 
 #include "LaneNetwork.h"
 #include "ProceduralMeshComponent.h"
-#include "Map/OccupancyTriangle.h"
-#include "Map/OccupancyGrid.h"
+#include "OccupancyMap/OccupancyGrid.h"
+#include "LaneNetworkRouteMap.h"
 
 #include "LaneNetworkActor.generated.h"
 
