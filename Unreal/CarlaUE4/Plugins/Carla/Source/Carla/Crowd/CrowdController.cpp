@@ -38,8 +38,10 @@ void ACrowdController::StartCrowd(int NumWalkers) {
   OccupancyArea = OccupancyMap->GetOccupancyArea(Bounds, 10, 10);
 
   for (int I = 0; I < NumWalkers; I++) {
-    FVector2D Point = OccupancyArea.RandPoint();
-    
+    FVector2D Position = OccupancyArea.RandPoint();
+    FRoutePoint RoutePoint = RouteMap->GetNearestRoutePoint(Position); // Project to lane center.
+    Position = RoutePoint.GetPosition();
+
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
     FActorDescription ActorDescription;
     ActorDescription.UId = ActorDefinition.UId;
@@ -52,7 +54,7 @@ void ACrowdController::StartCrowd(int NumWalkers) {
     FVector Origin, BoxExtent;
     ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
 
-    FTransform Transform(FVector(Point.X, Point.Y, BoxExtent.Z + 10));
+    FTransform Transform(FVector(Position.X, Position.Y, BoxExtent.Z + 10));
 
     AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
     if (Actor) {

@@ -276,6 +276,7 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
   OccupancyMap = &(LaneNetworkActor->GetOccupancyMap());
   CrowdController->SetBounds(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)));
   CrowdController->SetOccupancyMap(OccupancyMap);
+  CrowdController->SetRouteMap(&(LaneNetworkActor->GetRouteMap()));
 }
   
 void ACarlaGameModeBase::StartCrowd(int NumWalkers) {

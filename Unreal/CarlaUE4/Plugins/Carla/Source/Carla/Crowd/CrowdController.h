@@ -1,11 +1,12 @@
 #pragma once
 
 #include "OccupancyMap/OccupancyMap.h"
+#include "RouteMap/RouteMap.h"
 #include "Carla.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 #include "CrowdWalker.h"
-#include "RVO//RVO.h"
+#include "RVO/RVO.h"
 
 #include "CrowdController.generated.h"
 
@@ -23,6 +24,8 @@ public:
 
   void SetOccupancyMap(const FOccupancyMap* InOccupancyMap) { OccupancyMap = InOccupancyMap; }
 
+  void SetRouteMap(const FRouteMap* InRouteMap) { RouteMap = InRouteMap; }
+
   void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
 
   void SetBounds(const FBox2D& InBounds) { Bounds = InBounds; }
@@ -38,6 +41,7 @@ private:
   UCarlaEpisode* Episode = nullptr;
   
   const FOccupancyMap* OccupancyMap;
+  const FRouteMap* RouteMap;
   carla::road::Map* WaypointMap;
   FBox2D Bounds;
 

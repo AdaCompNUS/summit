@@ -15,9 +15,9 @@ public:
 
   FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork);
 
-  FRoutePoint GetNearestRoutePoint(const FVector2D& Position) override;
+  FRoutePoint GetNearestRoutePoint(const FVector2D& Position) const override;
 
-  TArray<FRoutePoint> GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) override;
+  TArray<FRoutePoint> GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) const override;
 
 private:
   
@@ -31,4 +31,12 @@ private:
 
   TArray<lane_segment> Segments;
   rt_tree LanesIndex;
+  
+  static FVector2D ToUE2D(const FVector2D& Position) { 
+    return 100.0f * FVector2D(Position.Y, Position.X);
+  }
+
+  static FVector2D FromUE2D(const FVector2D& Position) {
+    return FVector2D(Position.Y, Position.X) / 100.0f;
+  }
 };
