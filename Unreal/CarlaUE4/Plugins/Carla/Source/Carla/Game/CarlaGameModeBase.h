@@ -46,7 +46,7 @@ public:
   void LoadLaneNetwork(const FString& LaneNetworkPath);
 
   UFUNCTION(Exec)
-  void SpawnWalkers(int Num);
+  void StartCrowd(int NumWalkers);
 
 protected:
 

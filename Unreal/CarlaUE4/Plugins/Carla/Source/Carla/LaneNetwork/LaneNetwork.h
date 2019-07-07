@@ -78,9 +78,9 @@ public:
 
   FVector2D GetLaneEnd(const FLane& Lane, float Offset=0) const;
 
-  boost::optional<float> GetLaneStartMinOffset(const FLane& Lane) const;
+  float GetLaneStartMinOffset(const FLane& Lane) const;
 
-  boost::optional<float> GetLaneEndMinOffset(const FLane& Lane) const;
+  float GetLaneEndMinOffset(const FLane& Lane) const;
 
 private:
   // To keep track of lane connections related to each lane.

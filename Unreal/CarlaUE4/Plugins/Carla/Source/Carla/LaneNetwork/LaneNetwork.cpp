@@ -174,7 +174,7 @@ FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
   return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
 }
 
-boost::optional<float> FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
+float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
   boost::optional<float> MinOffset;
   const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
   if (LaneConnectionIDs) {
@@ -187,10 +187,10 @@ boost::optional<float> FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) co
       }
     }
   }
-  return MinOffset;
+  return MinOffset.get_value_or(0);
 }
 
-boost::optional<float> FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
+float FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
   boost::optional<float> MinOffset;
   const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
   if (LaneConnectionIDs) {
@@ -203,5 +203,5 @@ boost::optional<float> FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) cons
       }
     }
   }
-  return MinOffset;
+  return MinOffset.get_value_or(0);
 }

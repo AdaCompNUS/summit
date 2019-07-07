@@ -11,11 +11,6 @@
 #include <boost/geometry/index/rtree.hpp>
 #include <compiler/enable-ue4-macros.h>
 
-typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point;
-typedef boost::geometry::model::box<rt_point> rt_box;
-typedef std::pair<rt_box, int> rt_value;
-typedef bgi::rtree<rt_value, bgi::rstar<16>> rt_tree;
-
 class FOccupancyMap {
 
 public:
@@ -29,6 +24,11 @@ public:
   FOccupancyArea GetOccupancyArea(const FBox2D& Bounds, float Resolution, int OffroadPolygonEdgeInterval) const;
 
 private:
+
+  typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point;
+  typedef boost::geometry::model::box<rt_point> rt_box;
+  typedef std::pair<rt_box, int> rt_value;
+  typedef boost::geometry::index::rtree<rt_value, boost::geometry::index::rstar<16>> rt_tree;
 
   TArray<FOccupancyTriangle> OccupancyTriangles;
   rt_tree OccupancyTrianglesIndex;

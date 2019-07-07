@@ -104,6 +104,7 @@ void ACarlaGameModeBase::InitGame(
   // Dependency injection.
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
+  CrowdController->SetEpisode(Episode);
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -127,7 +128,6 @@ void ACarlaGameModeBase::BeginPlay()
   }
 
   Episode->InitializeAtBeginPlay();
-  //CrowdController->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);
 
   if (Episode->Weather != nullptr)
@@ -149,7 +149,8 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
   if (Recorder) Recorder->Tick(DeltaSeconds);
-  //if (CrowdController) CrowdController->Tick(DeltaSeconds);
+  if (CrowdController) CrowdController->Tick(DeltaSeconds);
+
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -273,27 +274,10 @@ void ACarlaGameModeBase::LoadLaneNetwork(const FString& LaneNetworkPath) {
 
   LaneNetworkActor->LoadLaneNetwork(LaneNetworkPath);
   OccupancyMap = &(LaneNetworkActor->GetOccupancyMap());
+  CrowdController->SetBounds(FBox2D(FVector2D(-20000, -20000), FVector2D(20000, 20000)));
+  CrowdController->SetOccupancyMap(OccupancyMap);
 }
   
-void ACarlaGameModeBase::SpawnWalkers(int Num) {
-  const TArray<FActorDefinition>& ActorDefinitions = Episode->GetActorDefinitions();
-  TArray<const FActorDefinition*> WalkerActorDefinitions;
-  for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
-    if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
-      WalkerActorDefinitions.Add(&ActorDefinition);
-    }
-  }
-
-  for (int I = 0; I < Num; I++) {
-    FVector2D SpawnPoint = OccupancyMap->RandPoint();
-    FTransform Transform(FVector(SpawnPoint.X, SpawnPoint.Y, 300));
-    
-    const FActorDefinition& ActorDefinition = *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
-    FActorDescription ActorDescription;
-    ActorDescription.UId = ActorDefinition.UId;
-    ActorDescription.Id = ActorDefinition.Id;
-    ActorDescription.Class = ActorDefinition.Class;
-
-    AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
-  }
+void ACarlaGameModeBase::StartCrowd(int NumWalkers) {
+  CrowdController->StartCrowd(NumWalkers);
 }

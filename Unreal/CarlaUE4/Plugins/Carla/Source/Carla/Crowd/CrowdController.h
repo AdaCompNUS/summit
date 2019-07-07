@@ -25,15 +25,24 @@ public:
 
   void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
 
-  void InitializeAtBeginPlay();
+  void SetBounds(const FBox2D& InBounds) { Bounds = InBounds; }
 
   void Tick(float DeltaSeconds) final;
+
+  void StartCrowd(int NumWalkers);
+
+  void StopCrowd();
 
 private:
 
   UCarlaEpisode* Episode = nullptr;
+  
   const FOccupancyMap* OccupancyMap;
   carla::road::Map* WaypointMap;
+  FBox2D Bounds;
+
+  FOccupancyArea OccupancyArea;
+
   TArray<CrowdWalker> Walkers;
   RVO::RVOSimulator RVOSim;
   
