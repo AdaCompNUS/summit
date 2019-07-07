@@ -195,7 +195,7 @@ TArray<long long> FLaneNetwork::GetOutgoingLaneConnectionIDs(const FLane& Lane) 
   const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
   if (LaneConnectionIDs) {
     for (int LaneConnectionID : *LaneConnectionIDs) {
-      if ( LaneConnections[LaneConnectionID].SourceLaneID == Lane.ID) {
+      if (LaneConnections[LaneConnectionID].SourceLaneID == Lane.ID) {
         OutgoingLaneConnectionIDs.Emplace(LaneConnectionID);
       }
     }

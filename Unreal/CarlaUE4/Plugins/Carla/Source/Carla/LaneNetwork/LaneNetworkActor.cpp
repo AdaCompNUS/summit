@@ -90,7 +90,7 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
 
   for (const auto& LaneConnectionEntry : LaneNetwork.LaneConnections) {
     const FLaneConnection& LaneConnection = LaneConnectionEntry.Value;
-    FVector2D Source = LaneNetwork.GetLaneStart(
+    FVector2D Source = LaneNetwork.GetLaneEnd(
         LaneNetwork.Lanes[LaneConnection.SourceLaneID], 
         LaneConnection.SourceOffset);
     FVector2D Destination = LaneNetwork.GetLaneStart(

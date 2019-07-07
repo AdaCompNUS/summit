@@ -14,6 +14,8 @@ public:
   FLaneNetworkRouteMap() { }
 
   FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork);
+  
+  FVector2D GetPosition(const FRoutePoint& RoutePoint) const override;
 
   FRoutePoint GetNearestRoutePoint(const FVector2D& Position) const override;
 

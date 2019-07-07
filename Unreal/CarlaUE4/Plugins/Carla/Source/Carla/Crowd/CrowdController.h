@@ -26,8 +26,6 @@ public:
 
   void SetRouteMap(const FRouteMap* InRouteMap) { RouteMap = InRouteMap; }
 
-  void SetWaypointMap(carla::road::Map* InWaypointMap) { WaypointMap = InWaypointMap; }
-
   void SetBounds(const FBox2D& InBounds) { Bounds = InBounds; }
 
   void Tick(float DeltaSeconds) final;
@@ -42,12 +40,11 @@ private:
   
   const FOccupancyMap* OccupancyMap;
   const FRouteMap* RouteMap;
-  carla::road::Map* WaypointMap;
   FBox2D Bounds;
 
   FOccupancyArea OccupancyArea;
 
-  TArray<CrowdWalker> Walkers;
+  TArray<FCrowdWalker> Walkers;
   RVO::RVOSimulator RVOSim;
   
   const FActorDefinition& RandWalkerActorDefinition() const;

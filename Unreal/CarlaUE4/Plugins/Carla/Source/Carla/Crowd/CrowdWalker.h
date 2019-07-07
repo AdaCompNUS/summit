@@ -1,32 +1,32 @@
 #pragma once
 
-#include <carla/geom/Vector2D.h>
-#include <carla/geom/Location.h>
-#include <carla/road/element/Waypoint.h>
+#include "RouteMap/RouteMap.h"
 
-class CrowdWalker {
+// TODO Change to actor.
+class FCrowdWalker {
 
 public:
   
-  CrowdWalker(carla::road::Map* InWaypointMap, AActor* InActor, float InMaxSpeed)
-      : WaypointMap(InWaypointMap), Actor(InActor), MaxSpeed(InMaxSpeed) { }
+  FCrowdWalker(const FRouteMap* InRouteMap, AActor* InActor, float InMaxSpeed)
+      : RouteMap(InRouteMap), Actor(InActor), MaxSpeed(InMaxSpeed) { }
   
-  carla::geom::Location GetLocation() const;
+  FVector GetPosition() const;
 
-  carla::geom::Vector2D GetLocation2D() const;
+  FVector2D GetPosition2D() const;
 
-  boost::optional<carla::geom::Vector2D> GetPreferredVelocity();
+  boost::optional<FVector2D> GetPreferredVelocity();
 
-  void SetVelocity(const carla::geom::Vector2D& Velocity);
+  void SetVelocity(const FVector2D& Velocity);
 
 private:
-  
-  carla::road::Map* WaypointMap;
+ 
+  const FRouteMap* RouteMap;
   AActor* Actor;
   float MaxSpeed;
-  TArray<carla::road::element::Waypoint> PathWaypoints;
-  TArray<carla::geom::Location> PathLocations;
 
-  void AddClosestWaypointToPath();
+  TArray<FRoutePoint> PathRoutePoints;
+
+  void AddClosestRoutePointToPath();
+
   bool ExtendPath();
 };

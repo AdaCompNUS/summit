@@ -13,11 +13,14 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
   PrimaryActorTick.bCanEverTick = true; 
   PrimaryActorTick.TickGroup = TG_PrePhysics;
-  PrimaryActorTick.TickInterval = 0.1f;
+  PrimaryActorTick.TickInterval = 1.0f;
   bAllowTickBeforeBeginPlay = false;
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
+  for (FCrowdWalker& Walker : Walkers) {
+    Walker.SetVelocity(Walker.GetPreferredVelocity().get_value_or(FVector2D(0, 0)));
+  }
 }
 
 const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
@@ -40,7 +43,7 @@ void ACrowdController::StartCrowd(int NumWalkers) {
   for (int I = 0; I < NumWalkers; I++) {
     FVector2D Position = OccupancyArea.RandPoint();
     FRoutePoint RoutePoint = RouteMap->GetNearestRoutePoint(Position); // Project to lane center.
-    Position = RoutePoint.GetPosition();
+    Position = RouteMap->GetPosition(RoutePoint);
 
     const FActorDefinition& ActorDefinition = RandWalkerActorDefinition();
     FActorDescription ActorDescription;
@@ -54,12 +57,12 @@ void ACrowdController::StartCrowd(int NumWalkers) {
     FVector Origin, BoxExtent;
     ActorDefinition.Class.GetDefaultObject()->GetActorBounds(true, Origin, BoxExtent);
 
-    FTransform Transform(FVector(Position.X, Position.Y, BoxExtent.Z + 10));
+    FTransform Transform(FVector(Position.X, Position.Y, BoxExtent.Z + 200));
 
     AActor* Actor= Episode->SpawnActor(Transform, ActorDescription);
     if (Actor) {
       float MaxSpeed = FMath::FRandRange(1.0, 5.0f);
-      Walkers.Emplace(WaypointMap, Actor, MaxSpeed);
+      Walkers.Emplace(RouteMap, Actor, MaxSpeed);
     }
   }
 }
