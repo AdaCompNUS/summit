@@ -91,6 +91,7 @@ FRoutePoint FLaneNetworkRouteMap::GetNearestRoutePoint(const FVector2D& Position
 }
 
 TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) const {
+  UE_LOG(LogCarla, Display, TEXT("START"));
   TArray<FRoutePoint> NextRoutePoints;
 
   TQueue<TPair<FRoutePoint, float>> Queue;
@@ -106,7 +107,7 @@ TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& 
 
     if (CurrentSegment.first) { // Segment is lane.
       const FLane& Lane = LaneNetwork->Lanes[CurrentSegment.second];
-    
+      
       FVector2D Start = ToUE2D(LaneNetwork->GetLaneStart(
           Lane, 
           LaneNetwork->GetLaneStartMinOffset(Lane)));
@@ -114,23 +115,33 @@ TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& 
           Lane, 
           LaneNetwork->GetLaneEndMinOffset(Lane)));
       FVector2D Direction = (End - Start).GetSafeNormal();
+      
+      UE_LOG(LogCarla, Display, TEXT("Lane %f / %f, %f"), Offset, (Start - End).Size(), Distance);
 
       if (Offset + Distance <= (End - Start).Size()) {
-        NextRoutePoints.Emplace(CurrentSegment.second, Offset + Distance);
+        UE_LOG(LogCarla, Display, TEXT("Lane Point %f / %f"), Offset + Distance, (Start - End).Size());
+        NextRoutePoints.Emplace(CurrentRoutePoint.GetID(), Offset + Distance);
       }
 
       for (long long OutgoingLaneConnectionID : LaneNetwork->GetOutgoingLaneConnectionIDs(Lane)) {
         const FLaneConnection& OutgoingLaneConnection = LaneNetwork->LaneConnections[OutgoingLaneConnectionID];
 
-        float OutgoingOffset = (End - Start).Size() - ToUE(
-            OutgoingLaneConnection.SourceOffset - LaneNetwork->GetLaneEndMinOffset(Lane));
+        float OutgoingOffset = (ToUE2D(LaneNetwork->GetLaneEnd(
+            Lane,
+            OutgoingLaneConnection.SourceOffset)) - Start).Size();
+        
+        // TODO Why does this not work?
+        //float OutgoingOffset = (End - Start).Size() - ToUE(
+        //    OutgoingLaneConnection.SourceOffset - LaneNetwork->GetLaneEndMinOffset(Lane));
 
-        UE_LOG(LogCarla, Display, TEXT("Lane Connection : %f %f %f"), Offset, OutgoingOffset, Distance);
+
+        UE_LOG(LogCarla, Display, TEXT("Lane Connection %f %f %f"), Offset, OutgoingOffset, Distance);
 
         if (OutgoingOffset >= Offset && OutgoingOffset - Offset < Distance) {
+          UE_LOG(LogCarla, Display, TEXT("Enqueue"));
           Queue.Enqueue(TPair<FRoutePoint, float>(
               FRoutePoint(LaneConnectionIDToSegmentIDMap[OutgoingLaneConnection.ID], 0.0f),
-              Distance - (Offset - OutgoingOffset)));
+              Distance - (OutgoingOffset - Offset)));
         }
       }
     } else { // Segment is lane connection.
@@ -143,15 +154,21 @@ TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& 
           LaneNetwork->Lanes[LaneConnection.DestinationLaneID],
           LaneConnection.DestinationOffset));
       
+      UE_LOG(LogCarla, Display, TEXT("Lane Connection %f / %f, %f"), Offset, (Destination - Source).Size(), Distance);
+      
       if (Offset + Distance <= (Destination - Source).Size()) {
-        NextRoutePoints.Emplace(CurrentSegment.second, Offset + Distance);
+        UE_LOG(LogCarla, Display, TEXT("Lane Connection Point %f %f / %f"), Offset + Distance, (Destination - Source).Size());
+        NextRoutePoints.Emplace(CurrentRoutePoint.GetID(), Offset + Distance);
       } else {
+        UE_LOG(LogCarla, Display, TEXT("Enqueue"));
         Queue.Enqueue(TPair<FRoutePoint, float>(
             FRoutePoint(LaneIDToSegmentIDMap[LaneConnection.DestinationLaneID], 0.0f),
             Distance - ((Destination - Source).Size() - Offset)));
       }
     }
   }
+
+  UE_LOG(LogCarla, Display, TEXT("END"));
 
   return NextRoutePoints;
 }

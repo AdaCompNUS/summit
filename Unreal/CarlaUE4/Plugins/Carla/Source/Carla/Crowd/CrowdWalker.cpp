@@ -16,7 +16,7 @@ void FCrowdWalker::AddClosestRoutePointToPath() {
 }
 
 bool FCrowdWalker::ExtendPath() {
-  TArray<FRoutePoint> NextRoutePoints = RouteMap->GetNextRoutePoints(PathRoutePoints.Last(), 10.0f);
+  TArray<FRoutePoint> NextRoutePoints = RouteMap->GetNextRoutePoints(PathRoutePoints.Last(), 100.0f);
 
   if (NextRoutePoints.Num() == 0) return false;
 
@@ -30,8 +30,8 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
 
   // Extend local path.
   if (PathRoutePoints.Num() == 0) AddClosestRoutePointToPath();
-  while (PathRoutePoints.Num() < 500 && ExtendPath());
-  if (PathRoutePoints.Num() < 500) return boost::none;
+  while (PathRoutePoints.Num() < 50 && ExtendPath());
+  if (PathRoutePoints.Num() < 50) return boost::none;
 
   // Calculate nearest location.
   int I = 0;
@@ -39,7 +39,7 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
     if ((Position - RouteMap->GetPosition(PathRoutePoints[I])).SizeSquared() < (Position - RouteMap->GetPosition(PathRoutePoints[I + 1])).SizeSquared()) break;
     I++;
   }
-  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[I + 20]);
+  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[I + 3]);
 
   // Shorten path.
   TArray<FRoutePoint> NewPathRoutePoints;
@@ -55,7 +55,7 @@ void FCrowdWalker::SetVelocity(const FVector2D& Velocity) {
   auto Controller = Cast<AWalkerController>(Cast<APawn>(Actor)->GetController());
   FWalkerControl Control;
   Control.Direction = FVector(Velocity, 0);
-  Control.Speed = 100.0f;
+  Control.Speed = 300.0f;
   Control.Jump = false;
   Controller->ApplyWalkerControl(Control);
 }
