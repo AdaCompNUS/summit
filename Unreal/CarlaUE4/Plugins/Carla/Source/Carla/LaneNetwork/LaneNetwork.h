@@ -78,6 +78,10 @@ public:
 
   FVector2D GetLaneEnd(const FLane& Lane, float Offset=0) const;
 
+  TArray<long long> GetIncomingLaneConnectionIDs(const FLane& Lane) const;
+  
+  TArray<long long> GetOutgoingLaneConnectionIDs(const FLane& Lane) const;
+
   float GetLaneStartMinOffset(const FLane& Lane) const;
 
   float GetLaneEndMinOffset(const FLane& Lane) const;

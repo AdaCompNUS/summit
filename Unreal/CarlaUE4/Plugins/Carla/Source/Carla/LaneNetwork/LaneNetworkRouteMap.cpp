@@ -13,10 +13,12 @@ FLaneNetworkRouteMap::FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork)
     FVector2D End = ToUE2D(LaneNetwork->GetLaneEnd(
         LaneEntry.Value, 
         LaneNetwork->GetLaneEndMinOffset(LaneEntry.Value)));
-    
+   
+    int SegmentID = Segments.Emplace(true, LaneEntry.Key);
     IndexEntries.emplace_back(
         rt_segment(rt_point(Start.X, Start.Y), rt_point(End.X, End.Y)),
-        Segments.Emplace(true, LaneEntry.Key));
+        SegmentID);
+    LaneIDToSegmentIDMap.Emplace(LaneEntry.Key, SegmentID);
   }
 
   for (const TPair<long long, FLaneConnection>& LaneConnectionEntry : LaneNetwork->LaneConnections) {
@@ -27,17 +29,19 @@ FLaneNetworkRouteMap::FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork)
         LaneNetwork->Lanes[LaneConnectionEntry.Value.DestinationLaneID], 
         LaneConnectionEntry.Value.DestinationOffset));
 
+    int SegmentID = Segments.Emplace(false, LaneConnectionEntry.Key);
     IndexEntries.emplace_back(
         rt_segment(rt_point(Source.X, Source.Y), rt_point(Destination.X, Destination.Y)),
-        Segments.Emplace(false, LaneConnectionEntry.Key));
+        SegmentID);
+    LaneConnectionIDToSegmentIDMap.Emplace(LaneConnectionEntry.Key, SegmentID);
   }
 
-  LanesIndex = rt_tree(IndexEntries);
+  SegmentsIndex = rt_tree(IndexEntries);
 }
 
 FRoutePoint FLaneNetworkRouteMap::GetNearestRoutePoint(const FVector2D& Position) const {
   std::vector<rt_value> results;
-  LanesIndex.query(boost::geometry::index::nearest(rt_point(Position.X, Position.Y), 1), std::back_inserter(results));
+  SegmentsIndex.query(boost::geometry::index::nearest(rt_point(Position.X, Position.Y), 1), std::back_inserter(results));
   rt_value& result = results[0];
   
   FVector2D SegmentStart(
@@ -57,5 +61,70 @@ FRoutePoint FLaneNetworkRouteMap::GetNearestRoutePoint(const FVector2D& Position
 }
 
 TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) const {
+  TArray<FRoutePoint> NextRoutePoints;
+
+  TQueue<TPair<FRoutePoint, float>> Queue;
+  Queue.Enqueue(TPair<FRoutePoint, float>(RoutePoint, LookaheadDistance));
+
+  TPair<FRoutePoint, float> QueueItem;
+  while (Queue.Dequeue(QueueItem)) {
+    const FRoutePoint& CurrentRoutePoint = QueueItem.Key;
+    network_segment CurrentSegment = Segments[CurrentRoutePoint.GetID()];
+    float CurrentDistance = QueueItem.Value;
+    
+    FVector2D NetworkPosition = ToNetwork(CurrentRoutePoint.GetPosition());
+    float NetworkDistance = ToNetwork(CurrentDistance);
+
+    if (CurrentSegment.first) { // Segment is lane.
+      const FLane& Lane = LaneNetwork->Lanes[CurrentSegment.second];
+      
+      FVector2D Start = LaneNetwork->GetLaneStart(Lane, 0);
+      FVector2D End = LaneNetwork->GetLaneEnd(Lane, 0);
+      FVector2D Direction = (End - Start).GetSafeNormal();
+      float EndMinOffset = LaneNetwork->GetLaneEndMinOffset(Lane);
+      float ProjectionEndOffset = FVector2D::DotProduct(NetworkPosition - End, -Direction);
+      FVector2D Projection = End + ProjectionEndOffset * (-Direction);
+
+      if (ProjectionEndOffset - EndMinOffset <= NetworkDistance) {
+        NextRoutePoints.Emplace(
+            CurrentSegment.first,
+            ToUE2D(Projection + NetworkDistance * Direction));
+      }
+
+      for (long long LaneConnectionID : LaneNetwork->GetOutgoingLaneConnectionIDs(Lane)) {
+        const FLaneConnection& LaneConnection = LaneNetwork->LaneConnections[LaneConnectionID];
+        if (LaneConnection.SourceOffset > ProjectionEndOffset) continue;
+        if (ProjectionEndOffset - LaneConnection.SourceOffset <= NetworkDistance) continue;
+
+        Queue.Enqueue(TPair<FRoutePoint, float>(
+              FRoutePoint(
+                  LaneConnectionIDToSegmentIDMap[LaneConnection.ID], 
+                  ToUE2D(End + LaneConnection.SourceOffset * (-Direction))),
+              ToUE(NetworkDistance - (ProjectionEndOffset - LaneConnection.SourceOffset))));
+      }
+    } else { // Segment is lane connection.
+      const FLaneConnection& LaneConnection = LaneNetwork->LaneConnections[CurrentSegment.second];
+    
+      FVector2D Source = LaneNetwork->GetLaneStart(
+          LaneNetwork->Lanes[LaneConnection.SourceLaneID], 
+          LaneConnection.SourceOffset);
+      FVector2D Destination = LaneNetwork->GetLaneStart(
+          LaneNetwork->Lanes[LaneConnection.DestinationLaneID], 
+          LaneConnection.DestinationOffset);
+      FVector2D Direction = (Destination - Source).GetSafeNormal();
+      FVector2D Projection = Source + FVector2D::DotProduct(NetworkPosition - Source, Direction) * Direction;
+
+      if (NetworkDistance <= (Destination - Projection).Size()) { // Lookahead ends at lane connection.
+        NextRoutePoints.Emplace(
+            CurrentSegment.first,
+            ToUE2D(Projection + NetworkDistance * (Destination - Projection).GetSafeNormal()));
+      } else {
+        Queue.Enqueue(TPair<FRoutePoint, float>(
+              FRoutePoint(LaneIDToSegmentIDMap[LaneConnection.DestinationLaneID], ToUE2D(Destination)),
+              ToUE(NetworkDistance - (Destination - Projection).Size())));
+      }
+    }
+  }
+
   return TArray<FRoutePoint>();
 }

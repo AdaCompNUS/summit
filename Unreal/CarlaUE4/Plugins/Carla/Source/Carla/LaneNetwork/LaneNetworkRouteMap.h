@@ -21,7 +21,7 @@ public:
 
 private:
   
-  typedef std::pair<bool, long long> lane_segment;
+  typedef std::pair<bool, long long> network_segment;
   typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point;
   typedef boost::geometry::model::segment<rt_point> rt_segment;
   typedef std::pair<rt_segment, int> rt_value;
@@ -29,14 +29,24 @@ private:
 
   const FLaneNetwork* LaneNetwork;
 
-  TArray<lane_segment> Segments;
-  rt_tree LanesIndex;
+  TArray<network_segment> Segments;
+  TMap<long long, int> LaneIDToSegmentIDMap;
+  TMap<long long, int> LaneConnectionIDToSegmentIDMap;
+  rt_tree SegmentsIndex;
   
   static FVector2D ToUE2D(const FVector2D& Position) { 
     return 100.0f * FVector2D(Position.Y, Position.X);
   }
 
-  static FVector2D FromUE2D(const FVector2D& Position) {
+  static FVector2D ToNetwork(const FVector2D& Position) {
     return FVector2D(Position.Y, Position.X) / 100.0f;
+  }
+
+  static float ToUE(float Distance) {
+    return 100.0f;
+  }
+
+  static float ToNetwork(float Distance) {
+    return Distance / 100.0f;
   }
 };

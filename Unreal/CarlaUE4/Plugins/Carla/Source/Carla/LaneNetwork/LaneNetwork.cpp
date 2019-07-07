@@ -174,17 +174,42 @@ FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
   return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
 }
 
-float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
-  boost::optional<float> MinOffset;
+TArray<long long> FLaneNetwork::GetIncomingLaneConnectionIDs(const FLane& Lane) const {
+  TArray<long long> IncomingLaneConnectionIDs;
+
+  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
+  if (LaneConnectionIDs) {
+    for (long long LaneConnectionID : *LaneConnectionIDs) {
+      if (LaneConnections[LaneConnectionID].DestinationLaneID == Lane.ID) {
+        IncomingLaneConnectionIDs.Emplace(LaneConnectionID);
+      }
+    }
+  }
+
+  return IncomingLaneConnectionIDs;
+}
+  
+TArray<long long> FLaneNetwork::GetOutgoingLaneConnectionIDs(const FLane& Lane) const {
+  TArray<long long> OutgoingLaneConnectionIDs;
+
   const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
   if (LaneConnectionIDs) {
     for (int LaneConnectionID : *LaneConnectionIDs) {
-      const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
-      if (LaneConnection.DestinationLaneID == Lane.ID) {
-        if (!MinOffset || *MinOffset > LaneConnection.DestinationOffset) {
-          MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
-        }
+      if ( LaneConnections[LaneConnectionID].SourceLaneID == Lane.ID) {
+        OutgoingLaneConnectionIDs.Emplace(LaneConnectionID);
       }
+    }
+  }
+
+  return OutgoingLaneConnectionIDs;
+}
+
+float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
+  boost::optional<float> MinOffset;
+  for (long long LaneConnectionID : GetIncomingLaneConnectionIDs(Lane)) {
+    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+    if (!MinOffset || *MinOffset > LaneConnection.DestinationOffset) {
+      MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
     }
   }
   return MinOffset.get_value_or(0);
@@ -192,15 +217,10 @@ float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
 
 float FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
   boost::optional<float> MinOffset;
-  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
-  if (LaneConnectionIDs) {
-    for (int LaneConnectionID : *LaneConnectionIDs) {
-      const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
-      if (LaneConnection.SourceLaneID == Lane.ID) {
-        if (!MinOffset || *MinOffset > LaneConnection.SourceOffset) {
-          MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
-        }
-      }
+  for (long long LaneConnectionID : GetOutgoingLaneConnectionIDs(Lane)) {
+    const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
+    if (!MinOffset || *MinOffset > LaneConnection.SourceOffset) {
+      MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
     }
   }
   return MinOffset.get_value_or(0);
