@@ -91,7 +91,7 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
         GetWorld(), 
         FVector(ToUE2D(Start), 10),
         FVector(ToUE2D(End), 10),
-        FColor(0, 128, 255), 
+        FColor(255, 255, 0), 
         true, -1.0f, 0, 
         5.0f
       );
@@ -103,7 +103,7 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
         GetWorld(), 
         FVector(ToUE2D(Mid - 0.2f * Direction + 0.2f * Normal), 10),
         FVector(ToUE2D(Mid + 0.2f * Direction), 10),
-        FColor(0, 128, 255), 
+        FColor(255, 255, 0), 
         true, -1.0f, 0, 
         5.0f
       );
@@ -111,7 +111,7 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
         GetWorld(), 
         FVector(ToUE2D(Mid - 0.2f * Direction - 0.2f * Normal), 10),
         FVector(ToUE2D(Mid + 0.2f * Direction), 10),
-        FColor(0, 128, 255), 
+        FColor(255, 255, 0), 
         true, -1.0f, 0, 
         5.0f
       );
