@@ -18,29 +18,18 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
-  for (FCrowdWalker& Walker : Walkers) {
-    Walker.SetVelocity(Walker.GetPreferredVelocity().get_value_or(FVector2D(0, 0)));
-  }
-}
-
-const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
-  const TArray<FActorDefinition>& ActorDefinitions = Episode->GetActorDefinitions();
-  TArray<const FActorDefinition*> WalkerActorDefinitions;
-  
-  for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
-    if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
-      WalkerActorDefinitions.Add(&ActorDefinition);
+  for (int I = 0; I < Walkers.Num(); I++) {
+    FVector2D Position = Walkers[I].GetPosition2D();
+    boost::optional<FVector2D> PreferredVelocity = Walkers[I].GetPreferredVelocity();
+    if (!Bounds.IsInside(Position) || !PreferredVelocity) {
+      Walkers[I].GetActor()->Destroy();
+      Walkers.RemoveAt(I);      
+    } else {
+      Walkers[I].SetVelocity(*PreferredVelocity);
     }
   }
 
-  return *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
-}
-
-void ACrowdController::StartCrowd(int NumWalkers) {
-  // Create occupancy area from occupancy map.
-  OccupancyArea = OccupancyMap->GetOccupancyArea(Bounds, 10, 10);
-
-  for (int I = 0; I < NumWalkers; I++) {
+  while (Walkers.Num() < NumWalkers) {
     FVector2D Position = OccupancyArea.RandPoint();
     FRoutePoint RoutePoint = RouteMap->GetNearestRoutePoint(Position); // Project to lane center.
     Position = RouteMap->GetPosition(RoutePoint);
@@ -65,6 +54,25 @@ void ACrowdController::StartCrowd(int NumWalkers) {
       Walkers.Emplace(RouteMap, Actor, MaxSpeed);
     }
   }
+}
+
+const FActorDefinition& ACrowdController::RandWalkerActorDefinition() const {
+  const TArray<FActorDefinition>& ActorDefinitions = Episode->GetActorDefinitions();
+  TArray<const FActorDefinition*> WalkerActorDefinitions;
+  
+  for (const FActorDefinition& ActorDefinition : ActorDefinitions) {
+    if (FRegexMatcher(FRegexPattern(TEXT("(|.*,)walker(|,.*)")), ActorDefinition.Tags).FindNext()) {
+      WalkerActorDefinitions.Add(&ActorDefinition);
+    }
+  }
+
+  return *WalkerActorDefinitions[FMath::RandRange(0, WalkerActorDefinitions.Num() - 1)];
+}
+
+void ACrowdController::StartCrowd(int InNumWalkers) {
+  // Create occupancy area from occupancy map.
+  OccupancyArea = OccupancyMap->GetOccupancyArea(Bounds, 10, 10);
+  NumWalkers = InNumWalkers;
 }
 
 void ACrowdController::StopCrowd() {

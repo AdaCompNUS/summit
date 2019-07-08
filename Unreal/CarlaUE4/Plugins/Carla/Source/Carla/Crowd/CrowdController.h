@@ -30,14 +30,15 @@ public:
 
   void Tick(float DeltaSeconds) final;
 
-  void StartCrowd(int NumWalkers);
+  void StartCrowd(int InNumWalkers);
 
   void StopCrowd();
 
 private:
 
   UCarlaEpisode* Episode = nullptr;
-  
+
+  int NumWalkers;
   const FOccupancyMap* OccupancyMap;
   const FRouteMap* RouteMap;
   FBox2D Bounds;

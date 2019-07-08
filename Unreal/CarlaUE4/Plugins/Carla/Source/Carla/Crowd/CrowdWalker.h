@@ -10,6 +10,8 @@ public:
   FCrowdWalker(const FRouteMap* InRouteMap, AActor* InActor, float InMaxSpeed)
       : RouteMap(InRouteMap), Actor(InActor), MaxSpeed(InMaxSpeed) { }
   
+  AActor* GetActor() { return Actor; }
+
   FVector GetPosition() const;
 
   FVector2D GetPosition2D() const;
