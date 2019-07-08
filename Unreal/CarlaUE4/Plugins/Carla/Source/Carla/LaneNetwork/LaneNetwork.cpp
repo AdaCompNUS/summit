@@ -62,7 +62,6 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
   };
 
   FLaneNetwork LaneNetwork(*ReadDouble());
-
   boost::optional<uint8> ElementType = ReadByte();
   while (ElementType) {
     switch(*ElementType) {
@@ -117,7 +116,18 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
 
 
   // Lookup optimizations.
+  for (const TPair<long long, FRoad>& RoadEntry : LaneNetwork.Roads) {
+    LaneNetwork.RoadDirectionMap.Emplace(
+        RoadEntry.Key,
+        LaneNetwork.GetRoadDirection(RoadEntry.Value));
+  }
   for (const TPair<long long, FLane>& LaneEntry : LaneNetwork.Lanes) {
+    LaneNetwork.LaneStartMap.Emplace(
+        LaneEntry.Key,
+        LaneNetwork.GetLaneStart(LaneEntry.Value, 0));
+    LaneNetwork.LaneEndMap.Emplace(
+        LaneEntry.Key,
+        LaneNetwork.GetLaneEnd(LaneEntry.Value, 0));
     LaneNetwork.LaneStartMinOffsetMap.Emplace(
         LaneEntry.Key, 
         LaneNetwork.GetLaneStartMinOffset(LaneEntry.Value));
@@ -134,6 +144,9 @@ float FLaneNetwork::GetRoadLength(const FRoad& Road) const {
 }
 
 FVector2D FLaneNetwork::GetRoadDirection(const FRoad& Road) const {
+  const FVector2D* MapValue = RoadDirectionMap.Find(Road.ID);
+  if (MapValue) return *MapValue;
+
   FVector2D Direction = Nodes[Road.DestinationNodeID].Position - Nodes[Road.SourceNodeID].Position;
   Direction.Normalize();
   return Direction;
@@ -147,45 +160,55 @@ FVector2D FLaneNetwork::GetLaneDirection(const FLane& Lane) const {
 }
 
 FVector2D FLaneNetwork::GetLaneStart(const FLane& Lane, float Offset) const {
-  const FRoad& Road = Roads[Lane.RoadID];
-  FVector2D Direction = GetRoadDirection(Road);
-  FVector2D Normal = Direction.GetRotated(90);
-  
-  FVector2D Center;
-  int Index;
-
-  if (Lane.IsForward) {
-    Center = Nodes[Road.SourceNodeID].Position + Offset * Direction;
-    Index = Lane.Index + Road.BackwardLaneIDs.Num();
+  const FVector2D* MapValue = LaneStartMap.Find(Lane.ID);
+  if (MapValue) {
+    return *MapValue + Offset * GetLaneDirection(Lane);
   } else {
-    Center = Nodes[Road.DestinationNodeID].Position - Offset * Direction;
-    Index = Road.BackwardLaneIDs.Num() - 1 - Lane.Index;
+    const FRoad& Road = Roads[Lane.RoadID];
+    FVector2D Direction = GetRoadDirection(Road);
+    FVector2D Normal = Direction.GetRotated(90);
+    
+    FVector2D Center;
+    int Index;
+
+    if (Lane.IsForward) {
+      Center = Nodes[Road.SourceNodeID].Position + Offset * Direction;
+      Index = Lane.Index + Road.BackwardLaneIDs.Num();
+    } else {
+      Center = Nodes[Road.DestinationNodeID].Position - Offset * Direction;
+      Index = Road.BackwardLaneIDs.Num() - 1 - Lane.Index;
+    }
+
+    int NumLanes = Road.ForwardLaneIDs.Num() + Road.BackwardLaneIDs.Num();
+
+    return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
   }
-
-  int NumLanes = Road.ForwardLaneIDs.Num() + Road.BackwardLaneIDs.Num();
-
-  return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
 }
 
 FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
-  const FRoad& Road = Roads[Lane.RoadID];
-  FVector2D Direction = GetRoadDirection(Road);
-  FVector2D Normal = Direction.GetRotated(90);
-
-  FVector2D Center;
-  int Index;
-
-  if (Lane.IsForward) {
-    Center = Nodes[Road.DestinationNodeID].Position - Offset * Direction;
-    Index = Lane.Index + Road.BackwardLaneIDs.Num();
+  const FVector2D* MapValue = LaneEndMap.Find(Lane.ID);
+  if (MapValue) {
+    return *MapValue + Offset * (-GetLaneDirection(Lane));
   } else {
-    Center = Nodes[Road.SourceNodeID].Position + Offset * Direction;
-    Index = Road.BackwardLaneIDs.Num() - 1 - Lane.Index;
+    const FRoad& Road = Roads[Lane.RoadID];
+    FVector2D Direction = GetRoadDirection(Road);
+    FVector2D Normal = Direction.GetRotated(90);
+
+    FVector2D Center;
+    int Index;
+
+    if (Lane.IsForward) {
+      Center = Nodes[Road.DestinationNodeID].Position - Offset * Direction;
+      Index = Lane.Index + Road.BackwardLaneIDs.Num();
+    } else {
+      Center = Nodes[Road.SourceNodeID].Position + Offset * Direction;
+      Index = Road.BackwardLaneIDs.Num() - 1 - Lane.Index;
+    }
+
+    int NumLanes = Road.ForwardLaneIDs.Num() + Road.BackwardLaneIDs.Num();
+
+    return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
   }
-
-  int NumLanes = Road.ForwardLaneIDs.Num() + Road.BackwardLaneIDs.Num();
-
-  return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
 }
 
 const TArray<long long>& FLaneNetwork::GetIncomingLaneConnectionIDs(const FLane& Lane) const {

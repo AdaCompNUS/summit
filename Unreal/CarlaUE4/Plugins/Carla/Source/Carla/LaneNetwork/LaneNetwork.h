@@ -89,7 +89,13 @@ public:
 private:
   
   // Lookup optimizations.
-  
+
+  TMap<long long, FVector2D> RoadDirectionMap;
+
+  TMap<long long, FVector2D> LaneStartMap;
+
+  TMap<long long, FVector2D> LaneEndMap;
+
   TMap<long long, TArray<long long>> IncomingLaneConnectionIDsMap;
   
   TMap<long long, TArray<long long>> OutgoingLaneConnectionIDsMap;
