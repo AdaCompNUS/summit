@@ -91,5 +91,10 @@ private:
   // Lookup optimizations.
   
   TMap<long long, TArray<long long>> IncomingLaneConnectionIDsMap;
+  
   TMap<long long, TArray<long long>> OutgoingLaneConnectionIDsMap;
+
+  TMap<long long, float> LaneStartMinOffsetMap;
+
+  TMap<long long, float> LaneEndMinOffsetMap;
 };

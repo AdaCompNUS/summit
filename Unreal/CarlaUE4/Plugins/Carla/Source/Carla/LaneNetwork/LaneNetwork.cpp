@@ -114,6 +114,18 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
     ElementType = ReadByte();
   }
 
+
+
+  // Lookup optimizations.
+  for (const TPair<long long, FLane>& LaneEntry : LaneNetwork.Lanes) {
+    LaneNetwork.LaneStartMinOffsetMap.Emplace(
+        LaneEntry.Key, 
+        LaneNetwork.GetLaneStartMinOffset(LaneEntry.Value));
+    LaneNetwork.LaneEndMinOffsetMap.Emplace(
+        LaneEntry.Key, 
+        LaneNetwork.GetLaneEndMinOffset(LaneEntry.Value));
+  }
+
   return LaneNetwork;
 }
   
@@ -185,6 +197,9 @@ const TArray<long long>& FLaneNetwork::GetOutgoingLaneConnectionIDs(const FLane&
 }
 
 float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
+  const float* MapValue = LaneStartMinOffsetMap.Find(Lane.ID);
+  if (MapValue) return *MapValue;
+
   boost::optional<float> MinOffset;
   for (long long LaneConnectionID : GetIncomingLaneConnectionIDs(Lane)) {
     const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
@@ -196,6 +211,9 @@ float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
 }
 
 float FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
+  const float* MapValue = LaneEndMinOffsetMap.Find(Lane.ID);
+  if (MapValue) return *MapValue;
+
   boost::optional<float> MinOffset;
   for (long long LaneConnectionID : GetOutgoingLaneConnectionIDs(Lane)) {
     const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
