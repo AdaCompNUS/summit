@@ -78,15 +78,18 @@ public:
 
   FVector2D GetLaneEnd(const FLane& Lane, float Offset=0) const;
 
-  TArray<long long> GetIncomingLaneConnectionIDs(const FLane& Lane) const;
+  const TArray<long long>& GetIncomingLaneConnectionIDs(const FLane& Lane) const;
   
-  TArray<long long> GetOutgoingLaneConnectionIDs(const FLane& Lane) const;
+  const TArray<long long>& GetOutgoingLaneConnectionIDs(const FLane& Lane) const;
 
   float GetLaneStartMinOffset(const FLane& Lane) const;
 
   float GetLaneEndMinOffset(const FLane& Lane) const;
 
 private:
-  // To keep track of lane connections related to each lane.
-  TMap<long long, TArray<long long>> LaneConnectionsMap;
+  
+  // Lookup optimizations.
+  
+  TMap<long long, TArray<long long>> IncomingLaneConnectionIDsMap;
+  TMap<long long, TArray<long long>> OutgoingLaneConnectionIDsMap;
 };

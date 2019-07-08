@@ -95,6 +95,8 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
         bool IsForward = *ReadBool();
         int32 Index = *ReadInt();
         LaneNetwork.Lanes.Emplace(ID, FLane(ID, RoadID, IsForward, Index));
+        LaneNetwork.IncomingLaneConnectionIDsMap.Emplace(ID);
+        LaneNetwork.OutgoingLaneConnectionIDsMap.Emplace(ID);
         break;
       }
       case 4: { // Lane Connection
@@ -104,8 +106,8 @@ FLaneNetwork FLaneNetwork::Load(const FString& Path) {
         float SourceOffset = (float)(*ReadDouble());
         float DestinationOffset = (float)(*ReadDouble());
         LaneNetwork.LaneConnections.Emplace(ID, FLaneConnection(ID, SourceLaneID, DestinationLaneID, SourceOffset, DestinationOffset));
-        LaneNetwork.LaneConnectionsMap.FindOrAdd(SourceLaneID).Add(ID);
-        LaneNetwork.LaneConnectionsMap.FindOrAdd(DestinationLaneID).Add(ID);
+        LaneNetwork.IncomingLaneConnectionIDsMap.FindOrAdd(DestinationLaneID).Add(ID);
+        LaneNetwork.OutgoingLaneConnectionIDsMap.FindOrAdd(SourceLaneID).Add(ID);
         break;
       }
     }
@@ -174,34 +176,12 @@ FVector2D FLaneNetwork::GetLaneEnd(const FLane& Lane, float Offset) const {
   return Center + LaneWidth * (Index - 0.5 * (NumLanes - 1)) * Normal;
 }
 
-TArray<long long> FLaneNetwork::GetIncomingLaneConnectionIDs(const FLane& Lane) const {
-  TArray<long long> IncomingLaneConnectionIDs;
-
-  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
-  if (LaneConnectionIDs) {
-    for (long long LaneConnectionID : *LaneConnectionIDs) {
-      if (LaneConnections[LaneConnectionID].DestinationLaneID == Lane.ID) {
-        IncomingLaneConnectionIDs.Emplace(LaneConnectionID);
-      }
-    }
-  }
-
-  return IncomingLaneConnectionIDs;
+const TArray<long long>& FLaneNetwork::GetIncomingLaneConnectionIDs(const FLane& Lane) const {
+  return IncomingLaneConnectionIDsMap[Lane.ID];
 }
   
-TArray<long long> FLaneNetwork::GetOutgoingLaneConnectionIDs(const FLane& Lane) const {
-  TArray<long long> OutgoingLaneConnectionIDs;
-
-  const TArray<long long>* LaneConnectionIDs = LaneConnectionsMap.Find(Lane.ID);
-  if (LaneConnectionIDs) {
-    for (int LaneConnectionID : *LaneConnectionIDs) {
-      if (LaneConnections[LaneConnectionID].SourceLaneID == Lane.ID) {
-        OutgoingLaneConnectionIDs.Emplace(LaneConnectionID);
-      }
-    }
-  }
-
-  return OutgoingLaneConnectionIDs;
+const TArray<long long>& FLaneNetwork::GetOutgoingLaneConnectionIDs(const FLane& Lane) const {
+  return OutgoingLaneConnectionIDsMap[Lane.ID];
 }
 
 float FLaneNetwork::GetLaneStartMinOffset(const FLane& Lane) const {
