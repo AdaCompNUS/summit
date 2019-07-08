@@ -14,7 +14,7 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer) {
   PrimaryActorTick.bCanEverTick = true; 
   PrimaryActorTick.TickGroup = TG_PrePhysics;
-  PrimaryActorTick.TickInterval = 1.0f;
+  PrimaryActorTick.TickInterval = 0.5f;
   bAllowTickBeforeBeginPlay = false;
 }
 
@@ -23,8 +23,9 @@ void ACrowdController::Tick(float DeltaSeconds) {
     FVector2D Position = Walkers[I].GetPosition2D();
     boost::optional<FVector2D> PreferredVelocity = Walkers[I].GetPreferredVelocity();
     if (!Bounds.IsInside(Position) || !PreferredVelocity) {
-      Walkers[I].GetActor()->Destroy();
+      Episode->DestroyActor(Walkers[I].GetActor());
       Walkers.RemoveAt(I);      
+      I--;
     }  
   }
 
@@ -98,7 +99,7 @@ void ACrowdController::StartCrowd(int InNumWalkers) {
       1000.0f, // neighborDist
       20, // maxNeighbors
       2.0f, // timeHorizon
-      0.3f, // timeHorizonObst
+      0.5f, // timeHorizonObst
       40.0f, // radius
       300.0f); // maxSpeed
 

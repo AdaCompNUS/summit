@@ -34,29 +34,39 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
   while (PathRoutePoints.Num() < 20 && ExtendPath());
   if (PathRoutePoints.Num() < 20) return boost::none;
 
-  // Calculate nearest location.
-  int I = 0;
-  while (I < PathRoutePoints.Num() - 1) {
-    if ((Position - RouteMap->GetPosition(PathRoutePoints[I])).SizeSquared() < (Position - RouteMap->GetPosition(PathRoutePoints[I + 1])).SizeSquared()) break;
-    I++;
+  // Cut nearby route points.
+  int CutIndex = 0;
+  for (int I = 0; I < PathRoutePoints.Num() / 2; I++) {
+    if ((Position - RouteMap->GetPosition(PathRoutePoints[I])).Size() < 100.0f) {
+      CutIndex = I + 1;
+    }
   }
-  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[I + 2]);
 
   // Shorten path.
   TArray<FRoutePoint> NewPathRoutePoints;
-  for (int J = I; J < PathRoutePoints.Num(); J++) {
+  for (int J = CutIndex; J < PathRoutePoints.Num(); J++) {
     NewPathRoutePoints.Add(PathRoutePoints[J]);
   }
   PathRoutePoints = NewPathRoutePoints;
+  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[0]);
+    
+  DrawDebugLine(
+    Actor->GetWorld(), 
+    FVector(Position, 10),
+    FVector(RouteMap->GetPosition(PathRoutePoints[0]), 10),
+    FColor(255, 0, 0), 
+    false, 2.0, 1, 
+    5.0f
+  );
 
   for (int J = 0; J < PathRoutePoints.Num() - 1; J++) {
     DrawDebugLine(
       Actor->GetWorld(), 
       FVector(RouteMap->GetPosition(PathRoutePoints[J]), 10),
       FVector(RouteMap->GetPosition(PathRoutePoints[J + 1]), 10),
-      FColor(255,0,0), 
+      FColor(255, 0, 0), 
       false, 2.0, 1, 
-      10.0f
+      5.0f
     );
   }
 
