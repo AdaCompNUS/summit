@@ -45,7 +45,7 @@ private:
   }
 
   static float ToUE(float Distance) {
-    return 100.0f;
+    return 100.0f * Distance;
   }
 
   static float ToNetwork(float Distance) {

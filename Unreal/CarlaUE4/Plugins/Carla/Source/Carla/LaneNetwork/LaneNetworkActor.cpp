@@ -1,5 +1,6 @@
 #include "LaneNetworkActor.h"
 #include "ConstructorHelpers.h"
+#include "DrawDebugHelpers.h"
 
 ALaneNetworkActor::ALaneNetworkActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -85,6 +86,35 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
       FVector2D Start = LaneNetwork.GetLaneStart(Lane, *StartMinOffset);
       FVector2D End = LaneNetwork.GetLaneEnd(Lane, *EndMinOffset);
       AddLineSegment(Start, End, LaneNetwork.LaneWidth);
+    
+      DrawDebugLine(
+        GetWorld(), 
+        FVector(ToUE2D(Start), 10),
+        FVector(ToUE2D(End), 10),
+        FColor(0, 128, 255), 
+        true, -1.0f, 0, 
+        5.0f
+      );
+      
+      FVector2D Mid = (End + Start) / 2;
+      FVector2D Direction = (End - Start).GetSafeNormal();
+      FVector2D Normal = Direction.GetRotated(90);
+      DrawDebugLine(
+        GetWorld(), 
+        FVector(ToUE2D(Mid - 0.2f * Direction + 0.2f * Normal), 10),
+        FVector(ToUE2D(Mid + 0.2f * Direction), 10),
+        FColor(0, 128, 255), 
+        true, -1.0f, 0, 
+        5.0f
+      );
+      DrawDebugLine(
+        GetWorld(), 
+        FVector(ToUE2D(Mid - 0.2f * Direction - 0.2f * Normal), 10),
+        FVector(ToUE2D(Mid + 0.2f * Direction), 10),
+        FColor(0, 128, 255), 
+        true, -1.0f, 0, 
+        5.0f
+      );
     }
   }
 
@@ -97,6 +127,35 @@ void ALaneNetworkActor::LoadLaneNetwork(const FString& LaneNetworkPath) {
         LaneNetwork.Lanes[LaneConnection.DestinationLaneID], 
         LaneConnection.DestinationOffset);
     AddLineSegment(Source, Destination, LaneNetwork.LaneWidth);
+      
+    DrawDebugLine(
+        GetWorld(), 
+        FVector(ToUE2D(Source), 10),
+        FVector(ToUE2D(Destination), 10),
+        FColor(0, 255, 0), 
+        true, -1.0f, 0, 
+        5.0f
+    );
+      
+    FVector2D Mid = (Destination + Source) / 2;
+    FVector2D Direction = (Destination - Source).GetSafeNormal();
+    FVector2D Normal = Direction.GetRotated(90);
+    DrawDebugLine(
+      GetWorld(), 
+      FVector(ToUE2D(Mid - 0.2f * Direction + 0.2f * Normal), 10),
+      FVector(ToUE2D(Mid + 0.2f * Direction), 10),
+      FColor(0, 255, 0), 
+      true, -1.0f, 0, 
+      5.0f
+    );
+    DrawDebugLine(
+      GetWorld(), 
+      FVector(ToUE2D(Mid - 0.2f * Direction - 0.2f * Normal), 10),
+      FVector(ToUE2D(Mid + 0.2f * Direction), 10),
+      FColor(0, 255, 0), 
+      true, -1.0f, 0, 
+      5.0f
+    );
   }
 
   TArray<FOccupancyTriangle> OccupancyTriangles;

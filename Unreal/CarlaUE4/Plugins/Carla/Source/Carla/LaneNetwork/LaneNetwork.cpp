@@ -220,7 +220,7 @@ float FLaneNetwork::GetLaneEndMinOffset(const FLane& Lane) const {
   for (long long LaneConnectionID : GetOutgoingLaneConnectionIDs(Lane)) {
     const FLaneConnection& LaneConnection = LaneConnections[LaneConnectionID];
     if (!MinOffset || *MinOffset > LaneConnection.SourceOffset) {
-      MinOffset = boost::optional<float>(LaneConnection.DestinationOffset);
+      MinOffset = boost::optional<float>(LaneConnection.SourceOffset);
     }
   }
   return MinOffset.get_value_or(0);

@@ -1,6 +1,7 @@
 #include "CrowdWalker.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerControl.h"
+#include "DrawDebugHelpers.h"
 #include <vector>
 
 FVector FCrowdWalker::GetPosition() const {
@@ -30,8 +31,8 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
 
   // Extend local path.
   if (PathRoutePoints.Num() == 0) AddClosestRoutePointToPath();
-  while (PathRoutePoints.Num() < 50 && ExtendPath());
-  if (PathRoutePoints.Num() < 50) return boost::none;
+  while (PathRoutePoints.Num() < 20 && ExtendPath());
+  if (PathRoutePoints.Num() < 20) return boost::none;
 
   // Calculate nearest location.
   int I = 0;
@@ -39,7 +40,7 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
     if ((Position - RouteMap->GetPosition(PathRoutePoints[I])).SizeSquared() < (Position - RouteMap->GetPosition(PathRoutePoints[I + 1])).SizeSquared()) break;
     I++;
   }
-  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[I + 3]);
+  FVector2D TargetPosition = RouteMap->GetPosition(PathRoutePoints[I + 2]);
 
   // Shorten path.
   TArray<FRoutePoint> NewPathRoutePoints;
@@ -47,6 +48,17 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
     NewPathRoutePoints.Add(PathRoutePoints[J]);
   }
   PathRoutePoints = NewPathRoutePoints;
+
+  for (int J = 0; J < PathRoutePoints.Num() - 1; J++) {
+    DrawDebugLine(
+      Actor->GetWorld(), 
+      FVector(RouteMap->GetPosition(PathRoutePoints[J]), 10),
+      FVector(RouteMap->GetPosition(PathRoutePoints[J + 1]), 10),
+      FColor(255,0,0), 
+      false, 2.0, 0, 
+      10.0f
+    );
+  }
 
   return (TargetPosition - Position).GetSafeNormal();
 }
