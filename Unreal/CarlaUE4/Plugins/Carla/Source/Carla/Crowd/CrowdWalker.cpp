@@ -55,7 +55,7 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
       FVector(RouteMap->GetPosition(PathRoutePoints[J]), 10),
       FVector(RouteMap->GetPosition(PathRoutePoints[J + 1]), 10),
       FColor(255,0,0), 
-      false, 2.0, 0, 
+      false, 2.0, 1, 
       10.0f
     );
   }

@@ -159,7 +159,9 @@ TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& 
       } else {
         //UE_LOG(LogCarla, Display, TEXT("Enqueue"));
         Queue.Enqueue(TPair<FRoutePoint, float>(
-            FRoutePoint(LaneIDToSegmentIDMap[LaneConnection.DestinationLaneID], 0.0f),
+            FRoutePoint(
+                LaneIDToSegmentIDMap[LaneConnection.DestinationLaneID],
+                ToUE(LaneConnection.DestinationOffset - LaneNetwork->GetLaneStartMinOffset(LaneNetwork->Lanes[LaneConnection.DestinationLaneID]))),
             Distance - ((Destination - Source).Size() - Offset)));
       }
     }
