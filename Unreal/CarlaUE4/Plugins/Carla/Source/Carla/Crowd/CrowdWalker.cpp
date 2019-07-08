@@ -60,14 +60,14 @@ boost::optional<FVector2D> FCrowdWalker::GetPreferredVelocity() {
     );
   }
 
-  return (TargetPosition - Position).GetSafeNormal();
+  return MaxSpeed * (TargetPosition - Position).GetSafeNormal();
 }
 
 void FCrowdWalker::SetVelocity(const FVector2D& Velocity) {
   auto Controller = Cast<AWalkerController>(Cast<APawn>(Actor)->GetController());
   FWalkerControl Control;
   Control.Direction = FVector(Velocity, 0);
-  Control.Speed = 300.0f;
+  Control.Speed = 1.0f;
   Control.Jump = false;
   Controller->ApplyWalkerControl(Control);
 }
