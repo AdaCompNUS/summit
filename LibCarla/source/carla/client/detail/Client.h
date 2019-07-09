@@ -79,6 +79,8 @@ namespace detail {
 
     std::vector<std::string> GetAvailableMaps();
 
+    void SpawnMesh(const std::vector<geom::Vector3D>& triangles);
+
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
     rpc::Actor GetSpectator();

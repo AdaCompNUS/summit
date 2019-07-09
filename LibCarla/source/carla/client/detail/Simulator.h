@@ -101,6 +101,10 @@ namespace detail {
       return _client.GetAvailableMaps();
     }
 
+    void SpawnMesh(const std::vector<geom::Vector3D> &triangles) {
+      _client.SpawnMesh(triangles);
+    }
+
     /// @}
     // =========================================================================
     /// @name Garbage collection policy

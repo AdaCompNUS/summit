@@ -11,6 +11,7 @@
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Triangle.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -73,6 +74,13 @@ namespace geom {
     out << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
         << ", longitude=" << std::to_string(geo_location.longitude)
         << ", altitude=" << std::to_string(geo_location.altitude) << ')';
+    return out;
+  }
+  
+  std::ostream &operator<<(std::ostream &out, const Triangle &triangle) {
+    out << "Triangle(v0=" << triangle.v0
+        << ", v1=" << triangle.v1
+        << ", v2=" << triangle.v2 << ')';
     return out;
   }
 
@@ -193,6 +201,19 @@ void export_geom() {
     .def_readwrite("altitude", &cg::GeoLocation::altitude)
     .def("__eq__", &cg::GeoLocation::operator==)
     .def("__ne__", &cg::GeoLocation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+
+  class_<std::vector<cg::Triangle>>("vector_of_triangle")
+    .def(boost::python::vector_indexing_suite<std::vector<cg::Triangle>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+  class_<cg::Triangle>("Triangle")
+    .def(init<cg::Vector2D, cg::Vector2D, cg::Vector2D>(
+          (arg("v0")=cg::Vector2D(), arg("v1")=cg::Vector2D(), arg("v2")=cg::Vector2D())))
+    .def("__eq__", &cg::Triangle::operator==)
+    .def("__ne__", &cg::Triangle::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 }

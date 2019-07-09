@@ -140,6 +140,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
+  void Client::SpawnMesh(const std::vector<geom::Vector3D>& triangles) {
+    _pimpl->AsyncCall("spawn_mesh", triangles);
+  }
+
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
     return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }

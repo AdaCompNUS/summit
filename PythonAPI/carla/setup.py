@@ -44,7 +44,7 @@ def get_libcarla_extensions():
                 '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
                 '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
-                '-Wconversion', '-Wfloat-overflow-conversion',
+                '-Wconversion', '-Wfloat-overflow-conversion', '-Wsign-conversion',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
@@ -116,7 +116,7 @@ setup(
     name='carla',
     version='0.9.5',
     package_dir={'': 'source'},
-    packages=['carla'],
+    packages=['carla', 'adacomp'],
     ext_modules=get_libcarla_extensions(),
     license='MIT License',
     description='Python API for communicating with the CARLA server.',

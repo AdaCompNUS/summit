@@ -36,6 +36,10 @@ namespace client {
   void World::ApplySettings(const rpc::EpisodeSettings &settings) {
     _episode.Lock()->SetEpisodeSettings(settings);
   }
+    
+  void World::SpawnMesh(const std::vector<geom::Vector3D> &triangles) {
+    _episode.Lock()->SpawnMesh(triangles);
+  }
 
   rpc::WeatherParameters World::GetWeather() const {
     return _episode.Lock()->GetWeatherParameters();

@@ -59,6 +59,9 @@ namespace client {
 
     void ApplySettings(const rpc::EpisodeSettings &settings);
 
+    // Spawns a mesh in the world.
+    void SpawnMesh(const std::vector<geom::Vector3D> &triangles);
+
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;
 

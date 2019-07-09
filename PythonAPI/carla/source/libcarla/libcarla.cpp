@@ -155,6 +155,7 @@ static auto MakeCallback(boost::python::object callback) {
 }
 
 #include "Geom.cpp"
+#include "Index.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
@@ -173,6 +174,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   PyEval_InitThreads();
   scope().attr("__path__") = "libcarla";
   export_geom();
+  export_index();
   export_control();
   export_blueprint();
   export_actor();
