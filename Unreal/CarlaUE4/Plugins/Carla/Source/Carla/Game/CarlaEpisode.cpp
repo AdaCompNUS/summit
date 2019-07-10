@@ -16,6 +16,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
+#include "DynamicMeshActor.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {
@@ -133,6 +134,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
     UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
   }
   return Actor;
+}
+
+void UCarlaEpisode::SpawnMesh(const TArray<FVector>& Triangles)
+{
+  ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
+  DynamicMeshActor->SetTriangles(Triangles);
 }
 
 void UCarlaEpisode::AttachActors(

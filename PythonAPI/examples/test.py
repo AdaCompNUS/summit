@@ -37,27 +37,31 @@ def from_segment(start, end, width):
         yield (v1, v2, v3)
 
 if __name__ == '__main__':
-    #client = carla.Client('127.0.0.1', 2000)
-    #client.set_timeout(2.0)
-    #world = client.get_world();
-    #world.spawn_mesh([])
-
     lane_network = LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
 
     triangles = []
-
     for lane in lane_network.lanes.values():
         triangles.extend(from_segment(
             lane_network.get_lane_start(lane, 0),
             lane_network.get_lane_end(lane, 0),
             lane_network.lane_width))
-    
-    triangles = [carla.Triangle(*[carla.Vector2D(v[0], v[1]) for v in t]) for t in triangles]
 
-    print('Creating index...')
-    triangle_index = carla.TriangleIndex(triangles)
-    print(len(triangle_index))
+    triangles = [[carla.Vector2D(v[1], v[0]) for v in t] for t in triangles]
+    triangles = [carla.Triangle(*t) for t in triangles]
+   
+    triangles_index = carla.TriangleIndex(triangles)
 
-    print('In bounds = ')
-    results = triangle_index.query_intersect(carla.Vector2D(-100, -100), carla.Vector2D(100, 100))
-    print(len(results))
+    triangles = triangles_index.query_intersect(
+            carla.Vector2D(-200, -200), 
+            carla.Vector2D(200, 200))
+
+    vertices = []
+    for t in triangles:
+        for v in [t.v0, t.v1, t.v2]:
+            vertices += [carla.Vector3D(v.x, v.y, 0)]
+
+    client = carla.Client('127.0.0.1', 2000)
+    client.set_timeout(2.0)
+    world = client.get_world();
+
+    world.spawn_mesh(vertices)

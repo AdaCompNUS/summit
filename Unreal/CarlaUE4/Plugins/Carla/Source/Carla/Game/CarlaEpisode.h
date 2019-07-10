@@ -211,6 +211,8 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
+  void SpawnMesh(const TArray<FVector>& Triangles);
+
   /// Attach @a Child to @a Parent.
   ///
   /// @pre Actors cannot be null.

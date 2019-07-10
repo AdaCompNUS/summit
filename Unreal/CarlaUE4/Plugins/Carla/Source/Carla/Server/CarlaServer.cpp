@@ -224,7 +224,11 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(spawn_mesh) << [this](const std::vector<cg::Vector3D> &triangles) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    UE_LOG(LogCarla, Display, TEXT("Spawn Mesh with %d triangles"), triangles.size());
+    TArray<FVector> Triangles;
+    for (const cg::Vector3D& triangle : triangles) {
+      Triangles.Emplace(triangle.x * 100.0f, triangle.y * 100.0f, triangle.z * 100.0f);
+    }
+    Episode->SpawnMesh(Triangles);
     return R<void>::Success();
   };
 

@@ -214,6 +214,9 @@ void export_geom() {
           (arg("v0")=cg::Vector2D(), arg("v1")=cg::Vector2D(), arg("v2")=cg::Vector2D())))
     .def("__eq__", &cg::Triangle::operator==)
     .def("__ne__", &cg::Triangle::operator!=)
+    .def_readwrite("v0", &cg::Triangle::v0)
+    .def_readwrite("v1", &cg::Triangle::v1)
+    .def_readwrite("v2", &cg::Triangle::v2)
     .def(self_ns::str(self_ns::self))
   ;
 }
