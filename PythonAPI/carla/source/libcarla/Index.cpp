@@ -1,20 +1,20 @@
-#include <carla/geom/Triangle.h>
-#include <carla/index/TriangleIndex.h>
+#include <carla/geom/Triangle2D.h>
+#include <carla/index/Triangle2DIndex.h>
 
-static auto MakeTriangleIndex(const boost::python::list& triangles) {
-  std::vector<carla::geom::Triangle> _triangles{
-      boost::python::stl_input_iterator<carla::geom::Triangle>(triangles),
-      boost::python::stl_input_iterator<carla::geom::Triangle>()};
-  return boost::shared_ptr<carla::index::TriangleIndex>(
-      new carla::index::TriangleIndex(_triangles));
+static auto MakeTriangle2DIndex(const boost::python::list& triangles) {
+  std::vector<carla::geom::Triangle2D> _triangles{
+      boost::python::stl_input_iterator<carla::geom::Triangle2D>(triangles),
+      boost::python::stl_input_iterator<carla::geom::Triangle2D>()};
+  return boost::shared_ptr<carla::index::Triangle2DIndex>(
+      new carla::index::Triangle2DIndex(_triangles));
 }
 
 void export_index() {
   using namespace boost::python;
 
-  class_<carla::index::TriangleIndex>("TriangleIndex", no_init)
-    .def("__init__", make_constructor(&MakeTriangleIndex))
-    .def("__len__", &carla::index::TriangleIndex::Size)
-    .def("query_intersect", &carla::index::TriangleIndex::QueryIntersect)
+  class_<carla::index::Triangle2DIndex>("Triangle2DIndex", no_init)
+    .def("__init__", make_constructor(&MakeTriangle2DIndex))
+    .def("__len__", &carla::index::Triangle2DIndex::Size)
+    .def("query_intersect", &carla::index::Triangle2DIndex::QueryIntersect)
   ;
 }

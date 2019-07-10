@@ -11,7 +11,7 @@
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
-#include <carla/geom/Triangle.h>
+#include <carla/geom/Triangle2D.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -77,8 +77,8 @@ namespace geom {
     return out;
   }
   
-  std::ostream &operator<<(std::ostream &out, const Triangle &triangle) {
-    out << "Triangle(v0=" << triangle.v0
+  std::ostream &operator<<(std::ostream &out, const Triangle2D &triangle) {
+    out << "Triangle2D(v0=" << triangle.v0
         << ", v1=" << triangle.v1
         << ", v2=" << triangle.v2 << ')';
     return out;
@@ -205,18 +205,18 @@ void export_geom() {
   ;
 
 
-  class_<std::vector<cg::Triangle>>("vector_of_triangle")
-    .def(boost::python::vector_indexing_suite<std::vector<cg::Triangle>>())
+  class_<std::vector<cg::Triangle2D>>("vector_of_triangle2D")
+    .def(boost::python::vector_indexing_suite<std::vector<cg::Triangle2D>>())
     .def(self_ns::str(self_ns::self))
   ;
-  class_<cg::Triangle>("Triangle")
+  class_<cg::Triangle2D>("Triangle2D")
     .def(init<cg::Vector2D, cg::Vector2D, cg::Vector2D>(
           (arg("v0")=cg::Vector2D(), arg("v1")=cg::Vector2D(), arg("v2")=cg::Vector2D())))
-    .def("__eq__", &cg::Triangle::operator==)
-    .def("__ne__", &cg::Triangle::operator!=)
-    .def_readwrite("v0", &cg::Triangle::v0)
-    .def_readwrite("v1", &cg::Triangle::v1)
-    .def_readwrite("v2", &cg::Triangle::v2)
+    .def("__eq__", &cg::Triangle2D::operator==)
+    .def("__ne__", &cg::Triangle2D::operator!=)
+    .def_readwrite("v0", &cg::Triangle2D::v0)
+    .def_readwrite("v1", &cg::Triangle2D::v1)
+    .def_readwrite("v2", &cg::Triangle2D::v2)
     .def(self_ns::str(self_ns::self))
   ;
 }
