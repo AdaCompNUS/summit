@@ -47,9 +47,9 @@ if __name__ == '__main__':
             lane_network.lane_width))
 
     triangles = [[carla.Vector2D(v[1], v[0]) for v in t] for t in triangles]
-    triangles = [carla.Triangle(*t) for t in triangles]
+    triangles = [carla.Triangle2D(*t) for t in triangles]
    
-    triangles_index = carla.TriangleIndex(triangles)
+    triangles_index = carla.Triangle2DIndex(triangles)
 
     triangles = triangles_index.query_intersect(
             carla.Vector2D(-200, -200), 
