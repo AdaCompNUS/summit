@@ -11,15 +11,16 @@ link_directories(
     ${RPCLIB_LIB_PATH}
     ${GTEST_LIB_PATH})
 
-file(GLOB libcarla_test_sources
-    "${libcarla_source_path}/carla/profiler/*.cpp"
-    "${libcarla_source_path}/carla/profiler/*.h"
-    "${libcarla_source_path}/test/*.cpp"
-    "${libcarla_source_path}/test/*.h"
-    "${libcarla_source_path}/test/${carla_config}/*.cpp"
-    "${libcarla_source_path}/test/${carla_config}/*.h"
-    "${libcarla_source_path}/test/common/*.cpp"
-    "${libcarla_source_path}/test/common/*.h")
+if (CMAKE_BUILD_TYPE STREQUAL "Client")
+  file(GLOB libcarla_test_sources
+      "${libcarla_source_path}/test/*.cpp"
+      "${libcarla_source_path}/test/*.h"
+      "${libcarla_source_path}/test/client/test_lanenetwork.cpp")
+elseif (CMAKE_BUILD_TYPE STREQUAL "Server")
+  file(GLOB libcarla_test_sources
+      "${libcarla_source_path}/test/*.cpp"
+      "${libcarla_source_path}/test/*.h")
+endif()
 
 file(GLOB libcarla_test_client_sources "")
 

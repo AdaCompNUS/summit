@@ -53,6 +53,12 @@ namespace geom {
       const float k = 1.0f / len;
       return Vector2D(x * k, y * k);
     }
+  
+    Vector2D Rotate(float angle) {
+      const float s = std::sin(angle);
+      const float c = std::cos(angle);
+      return Vector2D(x * c - y * s, x * s + y * c);
+    }
 
     // =========================================================================
     // -- Arithmetic operators -------------------------------------------------
@@ -67,6 +73,10 @@ namespace geom {
     friend Vector2D operator+(Vector2D lhs, const Vector2D &rhs) {
       lhs += rhs;
       return lhs;
+    }
+
+    Vector2D operator-() {
+      return Vector2D(-x, -y);
     }
 
     Vector2D &operator-=(const Vector2D &rhs) {

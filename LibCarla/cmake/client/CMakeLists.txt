@@ -66,6 +66,12 @@ file(GLOB libcarla_carla_index_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_index_sources}")
 install(FILES ${libcarla_carla_index_sources} DESTINATION include/carla/index)
 
+file(GLOB libcarla_carla_lanenetwork_sources
+    "${libcarla_source_path}/carla/lanenetwork/*.cpp"
+    "${libcarla_source_path}/carla/lanenetwork/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_lanenetwork_sources}")
+install(FILES ${libcarla_carla_lanenetwork_sources} DESTINATION include/carla/lanenetwork)
+
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
     "${libcarla_source_path}/carla/opendrive/*.h")

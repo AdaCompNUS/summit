@@ -109,7 +109,7 @@ namespace geom {
     const float c = std::cos(angle);
     return Vector3D(p.x * c - p.y * s, p.x * s + p.y * c, 0.0f);
   }
-
+  
   Vector3D Math::GetForwardVector(const Rotation &rotation) {
     const float cp = std::cos(ToRadians(rotation.pitch));
     const float sp = std::sin(ToRadians(rotation.pitch));
