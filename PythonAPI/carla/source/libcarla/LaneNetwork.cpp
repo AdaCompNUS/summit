@@ -1,6 +1,7 @@
 #include <carla/lanenetwork/LaneNetwork.h>
 #include <carla/geom/Vector2D.h>
 #include <cstdint>
+#include <unordered_map>
 #include "unordered_map_indexing_suite.hpp"
 
 namespace carla {
@@ -73,9 +74,10 @@ void export_lane_network() {
     .def(self_ns::str(self_ns::self))
   ;
   
-  class_<std::unordered_map<int64_t, carla::lanenetwork::Node>>("map_of_node")
-       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Node>>());
-  
+  class_<std::unordered_map<int64_t, carla::lanenetwork::Node>>("unordered_map_of_node")
+       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Node>>())
+  ;
+
   class_<carla::lanenetwork::Road>("Road", 
       init<int64_t, int64_t, int64_t>(
         (arg("id"), arg("source_node_id"), arg("destination_node_id"))))
@@ -88,8 +90,9 @@ void export_lane_network() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::unordered_map<int64_t, carla::lanenetwork::Road>>("map_of_road")
-       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Road>>());
+  class_<std::unordered_map<int64_t, carla::lanenetwork::Road>>("unordered_map_of_road")
+       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Road>>())
+  ;
 
   class_<carla::lanenetwork::Lane>("Lane", 
       init<int64_t, int64_t, bool, uint32_t>(
@@ -102,8 +105,9 @@ void export_lane_network() {
     .def(self_ns::str(self_ns::self))
   ;
   
-  class_<std::unordered_map<int64_t, carla::lanenetwork::Lane>>("map_of_lane")
-       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Lane>>());
+  class_<std::unordered_map<int64_t, carla::lanenetwork::Lane>>("unordered_map_of_lane")
+    .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::Lane>>())
+  ;
   
   class_<carla::lanenetwork::LaneConnection>("LaneConnection", 
       init<int64_t, int64_t, int64_t, float, float>(
@@ -117,8 +121,9 @@ void export_lane_network() {
     .def(self_ns::str(self_ns::self))
   ;
   
-  class_<std::unordered_map<int64_t, carla::lanenetwork::LaneConnection>>("map_of_lane_connection")
-       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::LaneConnection>>());
+  class_<std::unordered_map<int64_t, carla::lanenetwork::LaneConnection>>("unordered_map_of_lane_connection")
+       .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::LaneConnection>>())
+  ;
   
   class_<carla::lanenetwork::LaneNetwork>("LaneNetwork", 
       init<float>(
@@ -126,11 +131,13 @@ void export_lane_network() {
     .def(init<const carla::lanenetwork::LaneNetwork &>((arg("rhs"))))
     .def("load", STATIC_CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, Load, const std::string), (arg("path"))) 
     .staticmethod("load")
+    .def("lane_width",
+        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, LaneWidth))
     .def("nodes", 
         CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Nodes))
-    .def("lanes", 
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Roads))
     .def("roads", 
+        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Roads))
+    .def("lanes", 
         CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Lanes))
     .def("lane_connections", 
         CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, LaneConnections))
