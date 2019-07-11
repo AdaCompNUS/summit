@@ -45,6 +45,21 @@
 // Convenient for const requests without arguments.
 #define CONST_CALL_WITHOUT_GIL(cls, fn) CALL_WITHOUT_GIL(const cls, fn)
 #define CONST_CALL_WITHOUT_GIL_1(cls, fn, T1_) CALL_WITHOUT_GIL_1(const cls, fn, T1_)
+#define CONST_CALL_WITHOUT_GIL_2(cls, fn, T1_, T2_) CALL_WITHOUT_GIL_2(const cls, fn, T1_, T2_)
+#define CONST_CALL_WITHOUT_GIL_3(cls, fn, T1_, T2_, T3_) CALL_WITHOUT_GIL_3(const cls, fn, T1_, T2_, T3_)
+#define CONST_CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) CALL_WITHOUT_GIL_4(const cls, fn, T1_, T2_, T3_, T4_)
+
+// Convenient for static requests without arguments.
+#define STATIC_CALL_WITHOUT_GIL(cls, fn) +[]() { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return cls::fn(); \
+    }
+
+// Convenient for static requests with 1 argument.
+#define STATIC_CALL_WITHOUT_GIL_1(cls, fn, T1_) +[](T1_ t1) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return cls::fn(std::forward<T1_>(t1)); \
+    }
 
 // Convenient for const requests that need to make a copy of the returned value.
 #define CALL_RETURNING_COPY(cls, fn) +[](const cls &self) \
@@ -156,6 +171,7 @@ static auto MakeCallback(boost::python::object callback) {
 
 #include "Geom.cpp"
 #include "Index.cpp"
+#include "LaneNetwork.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
@@ -175,6 +191,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   scope().attr("__path__") = "libcarla";
   export_geom();
   export_index();
+  export_lane_network();
   export_control();
   export_blueprint();
   export_actor();

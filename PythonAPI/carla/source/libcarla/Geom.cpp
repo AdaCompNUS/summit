@@ -209,8 +209,9 @@ void export_geom() {
     .def(boost::python::vector_indexing_suite<std::vector<cg::Triangle2D>>())
     .def(self_ns::str(self_ns::self))
   ;
+
   class_<cg::Triangle2D>("Triangle2D")
-    .def(init<cg::Vector2D, cg::Vector2D, cg::Vector2D>(
+    .def(init<const cg::Vector2D&, const cg::Vector2D&, const cg::Vector2D&>(
           (arg("v0")=cg::Vector2D(), arg("v1")=cg::Vector2D(), arg("v2")=cg::Vector2D())))
     .def("__eq__", &cg::Triangle2D::operator==)
     .def("__ne__", &cg::Triangle2D::operator!=)

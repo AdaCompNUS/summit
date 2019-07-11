@@ -45,6 +45,7 @@ def get_libcarla_extensions():
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
                 '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
                 '-Wconversion', '-Wfloat-overflow-conversion', '-Wsign-conversion',
+                '-Wno-unused-parameter',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':

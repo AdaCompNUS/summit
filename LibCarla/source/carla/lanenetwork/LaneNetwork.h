@@ -14,6 +14,8 @@ struct Node {
   int64_t id;
   geom::Vector2D position;
 
+  Node() = default;
+
   Node(int64_t id, const geom::Vector2D& position) 
     : id(id), position(position) { }
 };
@@ -25,6 +27,8 @@ struct Road {
 
   std::vector<int64_t> forward_lane_ids;
   std::vector<int64_t> backward_lane_ids;
+
+  Road() = default;
 
   Road(int64_t id, int64_t source_node_id, int64_t destination_node_id, 
       const std::vector<int64_t>& forward_lane_ids = std::vector<int64_t>(),
@@ -42,6 +46,8 @@ struct Lane {
   bool is_forward;
   uint32_t index;
 
+  Lane() = default;
+  
   Lane(int64_t id, int64_t road_id, bool is_forward, uint32_t index)
     : id(id),
     road_id(road_id),
@@ -56,6 +62,8 @@ struct LaneConnection {
   float source_offset;
   float destination_offset;
 
+  LaneConnection() = default;
+
   LaneConnection(int64_t id, int64_t source_lane_id, int64_t destination_lane_id, float source_offset = 0, float destination_offset = 0) 
     : id(id),
     source_lane_id(source_lane_id),
@@ -69,15 +77,17 @@ public:
 
   LaneNetwork(float lane_width=3) : _lane_width(lane_width) { }
 
-  const std::unordered_map<int64_t, Node>& Nodes() { return _nodes; }
-  
-  const std::unordered_map<int64_t, Road>& Roads() { return _roads; }
-  
-  const std::unordered_map<int64_t, Lane>& Lanes() { return _lanes; }
-  
-  const std::unordered_map<int64_t, LaneConnection>& LaneConnections() { return _lane_connections; }
-
   static LaneNetwork Load(const std::string& path);
+
+  float LaneWidth() const { return _lane_width; }
+
+  const std::unordered_map<int64_t, Node>& Nodes() const { return _nodes; }
+  
+  const std::unordered_map<int64_t, Road>& Roads() const { return _roads; }
+  
+  const std::unordered_map<int64_t, Lane>& Lanes() const { return _lanes; }
+  
+  const std::unordered_map<int64_t, LaneConnection>& LaneConnections() const { return _lane_connections; }
   
   float GetRoadLength(const Road& road) const;
 
@@ -85,9 +95,9 @@ public:
 
   geom::Vector2D GetLaneDirection(const Lane& lane) const;
 
-  geom::Vector2D GetLaneStart(const Lane& lane, float offset=0) const;
+  geom::Vector2D GetLaneStart(const Lane& lane, float offset=0.0f) const;
 
-  geom::Vector2D GetLaneEnd(const Lane& lane, float offset=0) const;
+  geom::Vector2D GetLaneEnd(const Lane& lane, float offset=0.0f) const;
 
   const std::vector<int64_t>& GetIncomingLaneConnectionIds(const Lane& lane) const;
   
