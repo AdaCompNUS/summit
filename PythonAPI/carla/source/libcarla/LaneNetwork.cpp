@@ -129,44 +129,52 @@ void export_lane_network() {
       init<float>(
         (arg("lane_width") = 3.0f)))
     .def(init<const carla::lanenetwork::LaneNetwork &>((arg("rhs"))))
-    .def("load", STATIC_CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, Load, const std::string), (arg("path"))) 
+    .def("load", 
+        &carla::lanenetwork::LaneNetwork::Load, 
+        (arg("path")))
     .staticmethod("load")
-    .def("lane_width",
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, LaneWidth))
+    .def("lane_width", 
+        &carla::lanenetwork::LaneNetwork::LaneWidth)
     .def("nodes", 
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Nodes))
+        &carla::lanenetwork::LaneNetwork::Nodes,
+        return_value_policy<reference_existing_object>())
     .def("roads", 
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Roads))
+        &carla::lanenetwork::LaneNetwork::Roads,
+        return_value_policy<reference_existing_object>())
     .def("lanes", 
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, Lanes))
+        &carla::lanenetwork::LaneNetwork::Lanes,
+        return_value_policy<reference_existing_object>())
     .def("lane_connections", 
-        CONST_CALL_WITHOUT_GIL(carla::lanenetwork::LaneNetwork, LaneConnections))
+        &carla::lanenetwork::LaneNetwork::LaneConnections,
+        return_value_policy<reference_existing_object>())
     .def("get_road_length", 
-        CONST_CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetRoadLength, const carla::lanenetwork::Road &), 
+        &carla::lanenetwork::LaneNetwork::GetRoadLength, 
         (arg("road")))
     .def("get_road_direction", 
-        CONST_CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetRoadDirection, const carla::lanenetwork::Road &), 
+        &carla::lanenetwork::LaneNetwork::GetRoadDirection, 
         (arg("road")))
     .def("get_lane_direction", 
-        CONST_CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetLaneDirection, const carla::lanenetwork::Lane &), 
+        &carla::lanenetwork::LaneNetwork::GetLaneDirection, 
         (arg("lane")))
     .def("get_lane_start", 
-        CONST_CALL_WITHOUT_GIL_2(carla::lanenetwork::LaneNetwork, GetLaneStart, const carla::lanenetwork::Lane &, float), 
+        &carla::lanenetwork::LaneNetwork::GetLaneStart, 
         (arg("lane"), arg("offset") = 0.0f))
     .def("get_lane_end", 
-        CALL_WITHOUT_GIL_2(carla::lanenetwork::LaneNetwork, GetLaneEnd, const carla::lanenetwork::Lane &, float), 
+        &carla::lanenetwork::LaneNetwork::GetLaneEnd, 
         (arg("lane"), arg("offset") = 0.0f))
     .def("get_incoming_lane_connection_ids", 
-        CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetIncomingLaneConnectionIds, const carla::lanenetwork::Lane &), 
-        (arg("lane")))
+        &carla::lanenetwork::LaneNetwork::GetIncomingLaneConnectionIds, 
+        (arg("lane")),
+        return_value_policy<reference_existing_object>())
     .def("get_outgoing_lane_connection_ids", 
-        CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetOutgoingLaneConnectionIds, const carla::lanenetwork::Lane &), 
-        (arg("lane")))
+        &carla::lanenetwork::LaneNetwork::GetOutgoingLaneConnectionIds, 
+        (arg("lane")),
+        return_value_policy<reference_existing_object>())
     .def("get_lane_start_min_offset", 
-        CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetLaneStartMinOffset, const carla::lanenetwork::Lane &), 
+        &carla::lanenetwork::LaneNetwork::GetLaneStartMinOffset,
         (arg("lane")))
     .def("get_lane_end_min_offset", 
-        CALL_WITHOUT_GIL_1(carla::lanenetwork::LaneNetwork, GetLaneEndMinOffset, const carla::lanenetwork::Lane &), 
+        &carla::lanenetwork::LaneNetwork::GetLaneEndMinOffset, 
         (arg("lane")))
     .def(self_ns::str(self_ns::self))
   ;
