@@ -24,19 +24,19 @@ def from_segment(start, end, width):
     v2 = start - normal * width / 2.0
     v3 = end + normal * width / 2.0
     v4 = end - normal * width / 2.0
-    yield (v1, v2, v3)
-    yield (v4, v3, v2)
+    yield (v3, v2, v1)
+    yield (v2, v3, v4)
 
     for i in range(16):
         v1 = start
         v2 = start + rotate(normal, math.pi / 16.0 * i) * width / 2.0
         v3 = start + rotate(normal, math.pi / 16.0 * (i + 1)) * width / 2.0
-        yield (v1, v2, v3)
+        yield (v3, v2, v1)
 
         v1 = end
         v2 = end + rotate(normal, -math.pi / 16.0 * (i + 1)) * width / 2.0
         v3 = end + rotate(normal, -math.pi / 16.0 * i) * width / 2.0
-        yield (v1, v2, v3)
+        yield (v3, v2, v1)
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             lane_network.get_lane_end(lane, 0),
             lane_network.lane_width()))
 
-    triangles = [[carla.Vector2D(v.y, v.x) for v in t] for t in triangles]
+    triangles = [[carla.Vector2D(v.x, v.y) for v in t] for t in triangles]
     triangles = [carla.Triangle2D(*t) for t in triangles]
    
     triangles_index = carla.Triangle2DIndex(triangles)

@@ -72,6 +72,7 @@ LaneNetwork LaneNetwork::Load(const std::string& path) {
       case 1: { // Node
         int64_t id = *read_int64();
         geom::Vector2D position(static_cast<float>((*read_double())), static_cast<float>((*read_double())));
+        std::swap(position.x, position.y); // TODO change conversion to match.
         lane_network._nodes.emplace(id, Node(id, position));
         break;
       }
