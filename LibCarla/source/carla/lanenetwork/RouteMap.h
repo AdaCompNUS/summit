@@ -49,7 +49,7 @@ public:
 
 private:
   
-  typedef std::pair<bool, int64_t> network_segment_t;
+  typedef std::tuple<bool, int64_t, geom::Vector2D, geom::Vector2D> network_segment_t;
   typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;
   typedef boost::geometry::model::segment<rt_point_t> rt_segment_t;
   typedef std::pair<rt_segment_t, int> rt_value_t;

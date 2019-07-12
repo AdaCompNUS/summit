@@ -18,7 +18,7 @@ RouteMap::RouteMap(const LaneNetwork* lane_network)
         _lane_network->GetLaneEndMinOffset(entry.second));
 
     size_t segment_id = _segments.size();
-    _segments.emplace_back(true, entry.first);
+    _segments.emplace_back(true, entry.first, start, end);
 
     index_entries.emplace_back(
         rt_segment_t(rt_point_t(start.x, start.y), rt_point_t(end.x, end.y)),
@@ -35,7 +35,7 @@ RouteMap::RouteMap(const LaneNetwork* lane_network)
         entry.second.destination_offset);
 
     size_t segment_id = _segments.size();
-    _segments.emplace_back(false, entry.first);
+    _segments.emplace_back(false, entry.first, source, destination);
     index_entries.emplace_back(
         rt_segment_t(rt_point_t(source.x, source.y), rt_point_t(destination.x, destination.y)),
         segment_id);
@@ -47,65 +47,16 @@ RouteMap::RouteMap(const LaneNetwork* lane_network)
 
 geom::Vector2D RouteMap::GetPosition(const RoutePoint& route_point) const {
   const network_segment_t& segment = _segments[static_cast<size_t>(route_point.segment_id)];
-
-  if (segment.first) {
-    const Lane& lane = _lane_network->Lanes().at(segment.second);
-
-    geom::Vector2D start = _lane_network->GetLaneStart(
-        lane,
-        _lane_network->GetLaneStartMinOffset(lane));
-    geom::Vector2D end = _lane_network->GetLaneEnd(
-        lane,
-        _lane_network->GetLaneEndMinOffset(lane));
-    geom::Vector2D direction = (end - start).MakeUnitVector();
-
-    return start + route_point.offset * direction;
-  } else {
-    const LaneConnection& lane_connection = _lane_network->LaneConnections().at(segment.second);
-
-    geom::Vector2D source = _lane_network->GetLaneEnd(
-        _lane_network->Lanes().at(lane_connection.source_lane_id),
-        lane_connection.source_offset);
-    geom::Vector2D destination = _lane_network->GetLaneStart(
-        _lane_network->Lanes().at(lane_connection.destination_lane_id),
-        lane_connection.destination_offset);
-    geom::Vector2D direction = (destination - source).MakeUnitVector();
-
-    return source + route_point.offset * direction;
-  }
+  return std::get<2>(segment) + route_point.offset * (std::get<3>(segment) - std::get<2>(segment)).MakeUnitVector();
 }
   
 RoutePoint RouteMap::RandRoutePoint() {
   size_t segment_id = std::uniform_int_distribution<size_t>(0, _segments.size() - 1)(_rng);
   const network_segment_t& segment = _segments[static_cast<size_t>(segment_id)];
 
-  if (segment.first) {
-    const Lane& lane = _lane_network->Lanes().at(segment.second);
-
-    geom::Vector2D start = _lane_network->GetLaneStart(
-        lane,
-        _lane_network->GetLaneStartMinOffset(lane));
-    geom::Vector2D end = _lane_network->GetLaneEnd(
-        lane,
-        _lane_network->GetLaneEndMinOffset(lane));
-
-    return RoutePoint(
-        static_cast<int64_t>(segment_id), 
-        std::uniform_real_distribution<float>(0.0f, (end - start).Length())(_rng));
-  } else {
-    const LaneConnection& lane_connection = _lane_network->LaneConnections().at(segment.second);
-
-    geom::Vector2D source = _lane_network->GetLaneEnd(
-        _lane_network->Lanes().at(lane_connection.source_lane_id),
-        lane_connection.source_offset);
-    geom::Vector2D destination = _lane_network->GetLaneStart(
-        _lane_network->Lanes().at(lane_connection.destination_lane_id),
-        lane_connection.destination_offset);
-
-    return RoutePoint(
-        static_cast<int64_t>(segment_id), 
-        std::uniform_real_distribution<float>(0.0f, (destination - source).Length())(_rng));
-  }
+  return RoutePoint(
+      static_cast<int64_t>(segment_id),
+      std::uniform_real_distribution<float>(0.0, (std::get<3>(segment) - std::get<2>(segment)).Length())(_rng));
 }
 
 RoutePoint RouteMap::GetNearestRoutePoint(const geom::Vector2D& position) const {
@@ -145,15 +96,11 @@ std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_poi
     float offset = current_route_point.offset;
     float distance = queue_item.second;
 
-    if (current_segment.first) { // Segment is lane.
-      const Lane& lane = _lane_network->Lanes().at(current_segment.second);
+    if (std::get<0>(current_segment)) { // Segment is lane.
+      const Lane& lane = _lane_network->Lanes().at(std::get<1>(current_segment));
 
-      geom::Vector2D start = _lane_network->GetLaneStart(
-          lane,
-          _lane_network->GetLaneStartMinOffset(lane));
-      geom::Vector2D end = _lane_network->GetLaneEnd(
-          lane,
-          _lane_network->GetLaneEndMinOffset(lane));
+      const geom::Vector2D& start = std::get<2>(current_segment);
+      const geom::Vector2D& end = std::get<3>(current_segment);
 
       if (offset + distance <= (end - start).Length()) {
         next_route_points.emplace_back(current_route_point.segment_id, offset + distance);
@@ -173,14 +120,10 @@ std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_poi
         }
       }
     } else {
-      const LaneConnection& lane_connection = _lane_network->LaneConnections().at(current_segment.second);
+      const LaneConnection& lane_connection = _lane_network->LaneConnections().at(std::get<1>(current_segment));
 
-      geom::Vector2D source = _lane_network->GetLaneEnd(
-          _lane_network->Lanes().at(lane_connection.source_lane_id),
-          lane_connection.source_offset);
-      geom::Vector2D destination = _lane_network->GetLaneStart(
-          _lane_network->Lanes().at(lane_connection.destination_lane_id),
-          lane_connection.destination_offset);
+      geom::Vector2D source = std::get<2>(current_segment);
+      geom::Vector2D destination = std::get<3>(current_segment);
 
       if (offset + distance <= (destination - source).Length()) {
         next_route_points.emplace_back(current_route_point.segment_id, offset + distance);
