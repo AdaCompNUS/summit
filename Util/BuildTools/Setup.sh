@@ -222,6 +222,112 @@ fi
 unset RPCLIB_BASENAME
 
 # ==============================================================================
+# -- Get opencv and compile it with libc++ and libstdc++ -----------------------
+# ==============================================================================
+
+OPENCV_VERSION=4.1.0
+OPENCV_BASENAME=opencv-${OPENCV_VERSION}-${CXX_TAG}
+
+OPENCV_LIBCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libcxx-install/include
+OPENCV_LIBCXX_LIBPATH=${PWD}/${OPENCV_BASENAME}-libcxx-install/lib
+OPENCV_LIBSTDCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/include
+OPENCV_LIBSTDCXX_LIBPATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib
+
+if [[ -d "${OPENCV_BASENAME}-libcxx-install" && -d "${OPENCV_BASENAME}-libstdcxx-install" ]] ; then
+  log "${OPENCV_BASENAME} already installed."
+else
+  rm -Rf \
+      ${OPENCV_BASENAME}-source \
+      ${OPENCV_BASENAME}-libcxx-build ${OPENCV_BASENAME}-libstdcxx-build \
+      ${OPENCV_BASENAME}-libcxx-install ${OPENCV_BASENAME}-libstdcxx-install
+
+  log "Retrieving opencv."
+
+  git clone -b ${OPENCV_VERSION} https://github.com/opencv/opencv.git ${OPENCV_BASENAME}-source
+
+  log "Building opencv with libc++."
+
+  mkdir -p ${OPENCV_BASENAME}-libcxx-build
+  
+  pushd ${OPENCV_BASENAME}-libcxx-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
+      -DCMAKE_INSTALL_PREFIX="../${OPENCV_BASENAME}-libcxx-install" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_DOCS=OFF \
+      -DBUILD_PERF_TESTS=OFF \
+      -DBUILD_TESTS=OFF \
+      -DBUILD_opencv_java=OFF \
+      -DBUILD_opencv_python2=OFF \
+      -DBUILD_opencv_python3=OFF \
+      -DWITH_TBB=ON \
+      -DWITH_OPENMP=ON \
+      -DWITH_IPP=ON \
+      -DWITH_CSTRIPES=ON \
+      -DWITH_GTK=OFF \
+      -DWITH_VTK=OFF \
+      -DWITH_1394=OFF \
+      -DWITH_V4L=OFF \
+      -DWITH_FFMPEG=OFF \
+      -DWITH_ITT=OFF \
+      -DWITH_GSTREAMER=OFF \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DWITH_OPENCL=ON \
+      ../${OPENCV_BASENAME}-source
+
+  ninja
+
+  ninja install
+  
+  popd >/dev/null
+
+  log "Building rpclib with libstdc++."
+
+  mkdir -p ${OPENCV_BASENAME}-libstdcxx-build
+
+  pushd ${OPENCV_BASENAME}-libstdcxx-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+      -DCMAKE_INSTALL_PREFIX="../${OPENCV_BASENAME}-libstdcxx-install" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_DOCS=OFF \
+      -DBUILD_PERF_TESTS=OFF \
+      -DBUILD_TESTS=OFF \
+      -DBUILD_opencv_java=OFF \
+      -DBUILD_opencv_python2=OFF \
+      -DBUILD_opencv_python3=OFF \
+      -DWITH_TBB=ON \
+      -DWITH_OPENMP=ON \
+      -DWITH_IPP=ON \
+      -DWITH_CSTRIPES=ON \
+      -DWITH_GTK=OFF \
+      -DWITH_VTK=OFF \
+      -DWITH_1394=OFF \
+      -DWITH_V4L=OFF \
+      -DWITH_FFMPEG=OFF \
+      -DWITH_ITT=OFF \
+      -DWITH_GSTREAMER=OFF \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DWITH_OPENCL=ON \
+      ../${OPENCV_BASENAME}-source
+
+  ninja
+
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${OPENCV_BASENAME}-source ${OPENCV_BASENAME}-libcxx-build ${OPENCV_BASENAME}-libstdcxx-build
+
+fi
+
+unset RPCLIB_BASENAME
+
+# ==============================================================================
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
@@ -369,12 +475,16 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
+  set(OPENCV_INCLUDE_PATH "${OPENCV_LIBCXX_INCLUDE}")
+  set(OPENCV_LIB_PATH "${OPENCV_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   # Here libraries linking libstdc++.
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBSTDCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
+  set(OPENCV_INCLUDE_PATH "${OPENCV_LIBSTDCXX_INCLUDE}")
+  set(OPENCV_LIB_PATH "${OPENCV_LIBSTDCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
