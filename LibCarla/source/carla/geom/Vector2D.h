@@ -60,6 +60,10 @@ namespace geom {
       return Vector2D(x * c - y * s, x * s + y * c);
     }
 
+    static float DotProduct(const Vector2D& a, const Vector2D& b) {
+      return a.x * b.x + a.y * b.y;
+    }
+
     // =========================================================================
     // -- Arithmetic operators -------------------------------------------------
     // =========================================================================

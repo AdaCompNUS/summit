@@ -1,173 +1,168 @@
-#include "LaneNetworkRouteMap.h"
-#include <vector>
-  
-FLaneNetworkRouteMap::FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork)
-    : LaneNetwork(LaneNetwork) { 
+#include "RouteMap.h"
+#include "queue"
 
-  std::vector<rt_value> IndexEntries; 
+namespace carla {
+namespace lanenetwork {
+
+RouteMap::RouteMap(const LaneNetwork* lane_network)
+  : _lane_network(lane_network) {
   
-  for (const TPair<long long, FLane>& LaneEntry : LaneNetwork->Lanes) {
-    FVector2D Start = ToUE2D(LaneNetwork->GetLaneStart(
-        LaneEntry.Value, 
-        LaneNetwork->GetLaneStartMinOffset(LaneEntry.Value)));
-    FVector2D End = ToUE2D(LaneNetwork->GetLaneEnd(
-        LaneEntry.Value, 
-        LaneNetwork->GetLaneEndMinOffset(LaneEntry.Value)));
-   
-    int SegmentID = Segments.Emplace(true, LaneEntry.Key);
-    IndexEntries.emplace_back(
-        rt_segment(rt_point(Start.X, Start.Y), rt_point(End.X, End.Y)),
-        SegmentID);
-    LaneIDToSegmentIDMap.Emplace(LaneEntry.Key, SegmentID);
+  std::vector<rt_value_t> index_entries; 
+  
+  for (const auto& entry : _lane_network->Lanes()) {
+    geom::Vector2D start = _lane_network->GetLaneStart(
+        entry.second,
+        _lane_network->GetLaneStartMinOffset(entry.second));
+    geom::Vector2D end = _lane_network->GetLaneEnd(
+        entry.second,
+        _lane_network->GetLaneEndMinOffset(entry.second));
+
+    size_t segment_id = _segments.size();
+    _segments.emplace_back(true, entry.first);
+
+    index_entries.emplace_back(
+        rt_segment_t(rt_point_t(start.x, start.y), rt_point_t(end.x, end.y)),
+        segment_id);
+    _lane_id_to_segment_id_map.emplace(entry.first, static_cast<int64_t>(segment_id));
   }
 
-  for (const TPair<long long, FLaneConnection>& LaneConnectionEntry : LaneNetwork->LaneConnections) {
-    FVector2D Source = ToUE2D(LaneNetwork->GetLaneEnd(
-        LaneNetwork->Lanes[LaneConnectionEntry.Value.SourceLaneID], 
-        LaneConnectionEntry.Value.SourceOffset));
-    FVector2D Destination = ToUE2D(LaneNetwork->GetLaneStart(
-        LaneNetwork->Lanes[LaneConnectionEntry.Value.DestinationLaneID], 
-        LaneConnectionEntry.Value.DestinationOffset));
+  for (const auto& entry : _lane_network->LaneConnections()) {
+    geom::Vector2D source = _lane_network->GetLaneEnd(
+        _lane_network->Lanes().at(entry.second.source_lane_id),
+        entry.second.source_offset);
+    geom::Vector2D destination = _lane_network->GetLaneStart(
+        _lane_network->Lanes().at(entry.second.destination_lane_id),
+        entry.second.destination_offset);
 
-    int SegmentID = Segments.Emplace(false, LaneConnectionEntry.Key);
-    IndexEntries.emplace_back(
-        rt_segment(rt_point(Source.X, Source.Y), rt_point(Destination.X, Destination.Y)),
-        SegmentID);
-    LaneConnectionIDToSegmentIDMap.Emplace(LaneConnectionEntry.Key, SegmentID);
+    size_t segment_id = _segments.size();
+    _segments.emplace_back(false, entry.first);
+    index_entries.emplace_back(
+        rt_segment_t(rt_point_t(source.x, source.y), rt_point_t(destination.x, destination.y)),
+        segment_id);
+    _lane_connection_id_to_segment_id_map.emplace(entry.first, static_cast<int64_t>(segment_id));
   }
 
-  SegmentsIndex = rt_tree(IndexEntries);
+  _segments_index = rt_tree_t(index_entries);
 }
 
-FVector2D FLaneNetworkRouteMap::GetPosition(const FRoutePoint& RoutePoint) const {
-  const network_segment& Segment = Segments[RoutePoint.GetID()];
-  
-  if (Segment.first) {
-    const FLane& Lane = LaneNetwork->Lanes[Segment.second];
+geom::Vector2D RouteMap::GetPosition(const RoutePoint& route_point) const {
+  const network_segment_t& segment = _segments[static_cast<size_t>(route_point.id)];
 
-    FVector2D Start = ToUE2D(LaneNetwork->GetLaneStart(
-        Lane, 
-        LaneNetwork->GetLaneStartMinOffset(Lane)));
-    FVector2D End = ToUE2D(LaneNetwork->GetLaneEnd(
-        Lane, 
-        LaneNetwork->GetLaneEndMinOffset(Lane)));
-    FVector2D Direction = (End - Start).GetSafeNormal();
+  if (segment.first) {
+    const Lane& lane = _lane_network->Lanes().at(segment.second);
 
-    return Start + RoutePoint.GetOffset() * Direction;
+    geom::Vector2D start = _lane_network->GetLaneStart(
+        lane,
+        _lane_network->GetLaneStartMinOffset(lane));
+    geom::Vector2D end = _lane_network->GetLaneEnd(
+        lane,
+        _lane_network->GetLaneEndMinOffset(lane));
+    geom::Vector2D direction = (end - start).MakeUnitVector();
+
+    return start + route_point.offset * direction;
   } else {
-    const FLaneConnection& LaneConnection = LaneNetwork->LaneConnections[Segment.second];
+    const LaneConnection& lane_connection = _lane_network->LaneConnections().at(segment.second);
 
-    FVector2D Source = ToUE2D(LaneNetwork->GetLaneEnd(
-        LaneNetwork->Lanes[LaneConnection.SourceLaneID], 
-        LaneConnection.SourceOffset));
-    FVector2D Destination = ToUE2D(LaneNetwork->GetLaneStart(
-        LaneNetwork->Lanes[LaneConnection.DestinationLaneID], 
-        LaneConnection.DestinationOffset));
-    FVector2D Direction = (Destination - Source).GetSafeNormal();
+    geom::Vector2D source = _lane_network->GetLaneEnd(
+        _lane_network->Lanes().at(lane_connection.source_lane_id),
+        lane_connection.source_offset);
+    geom::Vector2D destination = _lane_network->GetLaneStart(
+        _lane_network->Lanes().at(lane_connection.destination_lane_id),
+        lane_connection.destination_offset);
+    geom::Vector2D direction = (destination - source).MakeUnitVector();
 
-    return Source + RoutePoint.GetOffset() * Direction;
+    return source + route_point.offset * direction;
   }
 }
 
-FRoutePoint FLaneNetworkRouteMap::GetNearestRoutePoint(const FVector2D& Position) const {
-  std::vector<rt_value> results;
-  SegmentsIndex.query(boost::geometry::index::nearest(rt_point(Position.X, Position.Y), 1), std::back_inserter(results));
-  rt_value& result = results[0];
+RoutePoint RouteMap::GetNearestRoutePoint(const geom::Vector2D& position) const {
+  std::vector<rt_value_t> results;
+  _segments_index.query(boost::geometry::index::nearest(rt_point_t(position.x, position.y), 1), std::back_inserter(results));
+  rt_value_t& result = results[0];
   
-  FVector2D SegmentStart(
+  geom::Vector2D segment_start(
       boost::geometry::get<0, 0>(result.first),
       boost::geometry::get<0, 1>(result.first));
-  FVector2D SegmentEnd(
+  geom::Vector2D segment_end(
       boost::geometry::get<1, 0>(result.first),
       boost::geometry::get<1, 1>(result.first));
-  FVector2D Direction = (SegmentEnd - SegmentStart).GetSafeNormal();
+  geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
 
-  float T = FVector2D::DotProduct(
-      Position - SegmentStart,
-      Direction);
-  T = FMath::Max(0.0f, FMath::Min((SegmentEnd - SegmentStart).Size(), T));
+  float t = geom::Vector2D::DotProduct(
+      position - segment_start,
+      direction);
+  t = std::max(0.0f, std::min((segment_end - segment_start).Length(), t));
 
-  return FRoutePoint(result.second, T);
+  return RoutePoint(static_cast<int64_t>(result.second), t);
 }
 
-TArray<FRoutePoint> FLaneNetworkRouteMap::GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) const {
-  //UE_LOG(LogCarla, Display, TEXT("START"));
-  TArray<FRoutePoint> NextRoutePoints;
+std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_point, float lookahead_distance) const {
+  std::vector<RoutePoint> next_route_points;
 
-  TQueue<TPair<FRoutePoint, float>> Queue;
-  Queue.Enqueue(TPair<FRoutePoint, float>(RoutePoint, LookaheadDistance));
+  std::queue<std::pair<RoutePoint, float>> queue;
+  queue.push(std::pair<RoutePoint, float>(route_point, lookahead_distance));
 
-  TPair<FRoutePoint, float> QueueItem;
-  while (Queue.Dequeue(QueueItem)) {
-    const FRoutePoint& CurrentRoutePoint = QueueItem.Key;
-    network_segment CurrentSegment = Segments[CurrentRoutePoint.GetID()];
-   
-    float Offset = CurrentRoutePoint.GetOffset();
-    float Distance = QueueItem.Value;
+  while (!queue.empty()) {
+    std::pair<RoutePoint, float> queue_item = queue.front();
+    queue.pop();
 
-    if (CurrentSegment.first) { // Segment is lane.
-      const FLane& Lane = LaneNetwork->Lanes[CurrentSegment.second];
-      
-      FVector2D Start = ToUE2D(LaneNetwork->GetLaneStart(
-          Lane, 
-          LaneNetwork->GetLaneStartMinOffset(Lane)));
-      FVector2D End = ToUE2D(LaneNetwork->GetLaneEnd(
-          Lane, 
-          LaneNetwork->GetLaneEndMinOffset(Lane)));
-      FVector2D Direction = (End - Start).GetSafeNormal();
-      
-      //UE_LOG(LogCarla, Display, TEXT("Lane %f / %f, %f"), Offset, (Start - End).Size(), Distance);
-      //UE_LOG(LogCarla, Display, TEXT("Lane Min Start, End = %f %f"),
-      //    LaneNetwork->GetLaneStartMinOffset(Lane),
-      //    LaneNetwork->GetLaneEndMinOffset(Lane));
-      if (Offset + Distance <= (End - Start).Size()) {
-        //UE_LOG(LogCarla, Display, TEXT("Lane Point %f / %f"), Offset + Distance, (Start - End).Size());
-        NextRoutePoints.Emplace(CurrentRoutePoint.GetID(), Offset + Distance);
+    const RoutePoint& current_route_point = queue_item.first;
+    network_segment_t current_segment = _segments[static_cast<size_t>(current_route_point.id)];
+
+    float offset = current_route_point.offset;
+    float distance = queue_item.second;
+
+    if (current_segment.first) { // Segment is lane.
+      const Lane& lane = _lane_network->Lanes().at(current_segment.second);
+
+      geom::Vector2D start = _lane_network->GetLaneStart(
+          lane,
+          _lane_network->GetLaneStartMinOffset(lane));
+      geom::Vector2D end = _lane_network->GetLaneEnd(
+          lane,
+          _lane_network->GetLaneEndMinOffset(lane));
+
+      if (offset + distance <= (end - start).Length()) {
+        next_route_points.emplace_back(current_route_point.id, offset + distance);
       }
 
-      for (long long OutgoingLaneConnectionID : LaneNetwork->GetOutgoingLaneConnectionIDs(Lane)) {
-        const FLaneConnection& OutgoingLaneConnection = LaneNetwork->LaneConnections[OutgoingLaneConnectionID];
-       
-        float OutgoingOffset = (End - Start).Size() - ToUE(
-            OutgoingLaneConnection.SourceOffset - LaneNetwork->GetLaneEndMinOffset(Lane));
+      for (int64_t outgoing_lane_connection_id : _lane_network->GetOutgoingLaneConnectionIds(lane)) {
+        const LaneConnection& outgoing_lane_connection = _lane_network->LaneConnections().at(outgoing_lane_connection_id);
 
-        //UE_LOG(LogCarla, Display, TEXT("Lane Connection %f %f %f"), Offset, OutgoingOffset, Distance);
-        //UE_LOG(LogCarla, Display, TEXT("Lane Connection End %f"), OutgoingLaneConnection.SourceOffset);
+        float outgoing_offset = (end - start).Length() - outgoing_lane_connection.source_offset - _lane_network->GetLaneEndMinOffset(lane);
 
-        if (OutgoingOffset >= Offset && OutgoingOffset - Offset < Distance) {
-          //UE_LOG(LogCarla, Display, TEXT("Enqueue"));
-          Queue.Enqueue(TPair<FRoutePoint, float>(
-              FRoutePoint(LaneConnectionIDToSegmentIDMap[OutgoingLaneConnection.ID], 0.0f),
-              Distance - (OutgoingOffset - Offset)));
+        if (outgoing_offset >= offset && outgoing_offset - offset < distance) {
+          queue.push(std::pair<RoutePoint, float>(
+                RoutePoint(
+                  static_cast<int64_t>(_lane_connection_id_to_segment_id_map.at(outgoing_lane_connection_id)), 
+                  0.0f),
+                distance - (outgoing_offset - offset)));
         }
       }
-    } else { // Segment is lane connection.
-      const FLaneConnection& LaneConnection = LaneNetwork->LaneConnections[CurrentSegment.second];
-      
-      FVector2D Source = ToUE2D(LaneNetwork->GetLaneEnd(
-          LaneNetwork->Lanes[LaneConnection.SourceLaneID],
-          LaneConnection.SourceOffset));
-      FVector2D Destination = ToUE2D(LaneNetwork->GetLaneStart(
-          LaneNetwork->Lanes[LaneConnection.DestinationLaneID],
-          LaneConnection.DestinationOffset));
-      
-      //UE_LOG(LogCarla, Display, TEXT("Lane Connection %f / %f, %f"), Offset, (Destination - Source).Size(), Distance);
-      
-      if (Offset + Distance <= (Destination - Source).Size()) {
-        //UE_LOG(LogCarla, Display, TEXT("Lane Connection Point %f %f / %f"), Offset + Distance, (Destination - Source).Size());
-        NextRoutePoints.Emplace(CurrentRoutePoint.GetID(), Offset + Distance);
+    } else {
+      const LaneConnection& lane_connection = _lane_network->LaneConnections().at(current_segment.second);
+
+      geom::Vector2D source = _lane_network->GetLaneEnd(
+          _lane_network->Lanes().at(lane_connection.source_lane_id),
+          lane_connection.source_offset);
+      geom::Vector2D destination = _lane_network->GetLaneStart(
+          _lane_network->Lanes().at(lane_connection.destination_lane_id),
+          lane_connection.destination_offset);
+
+      if (offset + distance <= (destination - source).Length()) {
+        next_route_points.emplace_back(current_route_point.id, offset + distance);
       } else {
-        //UE_LOG(LogCarla, Display, TEXT("Enqueue"));
-        Queue.Enqueue(TPair<FRoutePoint, float>(
-            FRoutePoint(
-                LaneIDToSegmentIDMap[LaneConnection.DestinationLaneID],
-                ToUE(LaneConnection.DestinationOffset - LaneNetwork->GetLaneStartMinOffset(LaneNetwork->Lanes[LaneConnection.DestinationLaneID]))),
-            Distance - ((Destination - Source).Size() - Offset)));
+        queue.push(std::pair<RoutePoint, float>(
+              RoutePoint(
+                static_cast<int64_t>(_lane_id_to_segment_id_map.at(lane_connection.destination_lane_id)),
+                lane_connection.destination_offset - _lane_network->GetLaneStartMinOffset(_lane_network->Lanes().at(lane_connection.destination_lane_id))),
+              distance - ((destination - source).Length() - offset)));
       }
     }
   }
 
-  //UE_LOG(LogCarla, Display, TEXT("END"));
+  return next_route_points;
+}
 
-  return NextRoutePoints;
+}
 }

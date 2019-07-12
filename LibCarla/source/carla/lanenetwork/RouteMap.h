@@ -1,54 +1,55 @@
 #pragma once
 
-#include "RouteMap/RouteMap.h"
-#include <compiler/disable-ue4-macros.h>
+#include "LaneNetwork.h"
+#include <cstdint>
+#include <vector>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
 #include <boost/geometry/index/rtree.hpp>
-#include <compiler/enable-ue4-macros.h>
 
-class FLaneNetworkRouteMap : public FRouteMap {
+namespace carla {
+namespace lanenetwork {
+
+class LaneNetwork;
+
+struct RoutePoint {
+  int64_t id;
+  float offset;
+
+  RoutePoint() = default;
+
+  RoutePoint(int64_t id, float offset) : id(id), offset(offset) { }
+};
+
+class RouteMap {
 public:
 
-  FLaneNetworkRouteMap() { }
+  RouteMap() { }
 
-  FLaneNetworkRouteMap(const FLaneNetwork* LaneNetwork);
-  
-  FVector2D GetPosition(const FRoutePoint& RoutePoint) const override;
+  RouteMap(const LaneNetwork* lane_network);
 
-  FRoutePoint GetNearestRoutePoint(const FVector2D& Position) const override;
+  geom::Vector2D GetPosition(const RoutePoint& route_point) const ;
 
-  TArray<FRoutePoint> GetNextRoutePoints(const FRoutePoint& RoutePoint, float LookaheadDistance) const override;
+  RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
+
+  std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float lookahead_distance) const;
 
 private:
   
-  typedef std::pair<bool, long long> network_segment;
-  typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point;
-  typedef boost::geometry::model::segment<rt_point> rt_segment;
-  typedef std::pair<rt_segment, int> rt_value;
-  typedef boost::geometry::index::rtree<rt_value, boost::geometry::index::rstar<16> > rt_tree;
+  typedef std::pair<bool, int64_t> network_segment_t;
+  typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;
+  typedef boost::geometry::model::segment<rt_point_t> rt_segment_t;
+  typedef std::pair<rt_segment_t, int> rt_value_t;
+  typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16> > rt_tree_t;
 
-  const FLaneNetwork* LaneNetwork;
+  const LaneNetwork* _lane_network;
+  std::vector<network_segment_t> _segments;
+  std::unordered_map<int64_t, size_t> _lane_id_to_segment_id_map;
+  std::unordered_map<int64_t, size_t> _lane_connection_id_to_segment_id_map;
+  rt_tree_t _segments_index;
 
-  TArray<network_segment> Segments;
-  TMap<long long, int> LaneIDToSegmentIDMap;
-  TMap<long long, int> LaneConnectionIDToSegmentIDMap;
-  rt_tree SegmentsIndex;
-  
-  static FVector2D ToUE2D(const FVector2D& Position) { 
-    return 100.0f * FVector2D(Position.Y, Position.X);
-  }
-
-  static FVector2D ToNetwork(const FVector2D& Position) {
-    return FVector2D(Position.Y, Position.X) / 100.0f;
-  }
-
-  static float ToUE(float Distance) {
-    return 100.0f * Distance;
-  }
-
-  static float ToNetwork(float Distance) {
-    return Distance / 100.0f;
-  }
 };
+
+}
+}

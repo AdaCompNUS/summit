@@ -6,9 +6,12 @@
 #include <unordered_map>
 #include <string>
 #include <cstdint>
+#include "RouteMap.h"
 
 namespace carla {
 namespace lanenetwork {
+
+class RouteMap;
 
 struct Node {
   int64_t id;
@@ -106,6 +109,8 @@ public:
   float GetLaneStartMinOffset(const Lane& lane) const;
 
   float GetLaneEndMinOffset(const Lane& lane) const;
+
+  RouteMap CreateRouteMap() const;
 
 private:
   
