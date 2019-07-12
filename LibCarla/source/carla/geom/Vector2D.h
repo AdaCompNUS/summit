@@ -49,9 +49,12 @@ namespace geom {
 
     Vector2D MakeUnitVector() const {
       const float len = Length();
-      DEVELOPMENT_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / len;
-      return Vector2D(x * k, y * k);
+      if (len > len > 2.0f * std::numeric_limits<float>::epsilon()) {
+        const float k = 1.0f / len;
+        return Vector2D(x * k, y * k);
+      } else {
+        return Vector2D(0, 0);
+      }
     }
   
     Vector2D Rotate(float angle) {

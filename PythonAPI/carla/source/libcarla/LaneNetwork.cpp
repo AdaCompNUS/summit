@@ -1,8 +1,10 @@
 #include <carla/lanenetwork/LaneNetwork.h>
+#include <carla/lanenetwork/RouteMap.h>
 #include <carla/geom/Vector2D.h>
 #include <cstdint>
 #include <unordered_map>
 #include "unordered_map_indexing_suite.hpp"
+#include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
 namespace lanenetwork {
@@ -59,6 +61,17 @@ namespace lanenetwork {
     return out;
   }
   
+  std::ostream &operator<<(std::ostream &out, const RoutePoint &route_point) {
+    out << "RoutePoint(id=" << route_point.segment_id
+        << ", offset=" << route_point.offset << ')';
+    return out;
+  }
+  
+  // TODO print more stuff maybe.
+  std::ostream &operator<<(std::ostream &out, const RouteMap &route_map) {
+    out << "RouteMap()";
+    return out;
+  }
 }
 }
 
@@ -176,6 +189,33 @@ void export_lane_network() {
     .def("get_lane_end_min_offset", 
         &carla::lanenetwork::LaneNetwork::GetLaneEndMinOffset, 
         (arg("lane")))
+    .def("create_route_map",
+        &carla::lanenetwork::LaneNetwork::CreateRouteMap)
     .def(self_ns::str(self_ns::self))
   ;
+  
+  class_<carla::lanenetwork::RoutePoint>("RoutePoint", 
+      init<int64_t, float>(
+        (arg("id"), arg("offset"))))
+    .def(init<const carla::lanenetwork::RoutePoint &>((arg("rhs"))))
+    .def("__eq__", &carla::lanenetwork::RoutePoint::operator==)
+    .def("__ne__", &carla::lanenetwork::RoutePoint::operator!=)
+    .def_readwrite("id", &carla::lanenetwork::RoutePoint::segment_id)
+    .def_readwrite("offset", &carla::lanenetwork::RoutePoint::offset)
+    .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<std::vector<carla::lanenetwork::RoutePoint>>("vector_of_route_point")
+       .def(vector_indexing_suite<std::vector<carla::lanenetwork::RoutePoint>>())
+  ;
+  
+  class_<carla::lanenetwork::RouteMap>("RouteMap")
+    .def(init<const carla::lanenetwork::RouteMap &>((arg("rhs"))))
+    .def("get_position", &carla::lanenetwork::RouteMap::GetPosition)
+    .def("rand_route_point", &carla::lanenetwork::RouteMap::RandRoutePoint)
+    .def("get_nearest_route_point", &carla::lanenetwork::RouteMap::GetNearestRoutePoint)
+    .def("get_next_route_points", &carla::lanenetwork::RouteMap::GetNextRoutePoints)
+    .def(self_ns::str(self_ns::self))
+  ;
+  
 }

@@ -3,6 +3,7 @@
 #include "LaneNetwork.h"
 #include <cstdint>
 #include <vector>
+#include <random>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -14,22 +15,33 @@ namespace lanenetwork {
 class LaneNetwork;
 
 struct RoutePoint {
-  int64_t id;
+  int64_t segment_id;
   float offset;
 
   RoutePoint() = default;
 
-  RoutePoint(int64_t id, float offset) : id(id), offset(offset) { }
+  RoutePoint(int64_t segment_id, float offset) : segment_id(segment_id), offset(offset) { }
+    
+  bool operator==(const RoutePoint &route_point) const {
+    return segment_id == route_point.segment_id && offset == route_point.offset;
+  }
+
+  bool operator!=(const RoutePoint &rhs) const {
+    return !(*this == rhs);
+  }
 };
 
 class RouteMap {
 public:
 
-  RouteMap() { }
+  RouteMap() = default;
 
   RouteMap(const LaneNetwork* lane_network);
 
-  geom::Vector2D GetPosition(const RoutePoint& route_point) const ;
+  RoutePoint RandRoutePoint();
+
+  // TODO optimize.
+  geom::Vector2D GetPosition(const RoutePoint& route_point) const;
 
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
 
@@ -48,7 +60,8 @@ private:
   std::unordered_map<int64_t, size_t> _lane_id_to_segment_id_map;
   std::unordered_map<int64_t, size_t> _lane_connection_id_to_segment_id_map;
   rt_tree_t _segments_index;
-
+  
+  std::mt19937 _rng;
 };
 
 }
