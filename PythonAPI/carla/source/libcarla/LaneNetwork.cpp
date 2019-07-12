@@ -137,16 +137,16 @@ void export_lane_network() {
         &carla::lanenetwork::LaneNetwork::LaneWidth)
     .def("nodes", 
         &carla::lanenetwork::LaneNetwork::Nodes,
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("roads", 
         &carla::lanenetwork::LaneNetwork::Roads,
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("lanes", 
         &carla::lanenetwork::LaneNetwork::Lanes,
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("lane_connections", 
         &carla::lanenetwork::LaneNetwork::LaneConnections,
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("get_road_length", 
         &carla::lanenetwork::LaneNetwork::GetRoadLength, 
         (arg("road")))
@@ -165,11 +165,11 @@ void export_lane_network() {
     .def("get_incoming_lane_connection_ids", 
         &carla::lanenetwork::LaneNetwork::GetIncomingLaneConnectionIds, 
         (arg("lane")),
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("get_outgoing_lane_connection_ids", 
         &carla::lanenetwork::LaneNetwork::GetOutgoingLaneConnectionIds, 
         (arg("lane")),
-        return_value_policy<reference_existing_object>())
+        return_internal_reference<>())
     .def("get_lane_start_min_offset", 
         &carla::lanenetwork::LaneNetwork::GetLaneStartMinOffset,
         (arg("lane")))
