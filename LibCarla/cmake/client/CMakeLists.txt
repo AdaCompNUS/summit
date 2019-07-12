@@ -12,6 +12,11 @@ install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
+# Install opencv (install in system folder to avoid extra warnings).
+install(DIRECTORY "${OPENCV_INCLUDE_PATH}/opencv4" DESTINATION include/system)
+file(GLOB opencv_libraries "${OPENCV_LIB_PATH}/*.*")
+install(FILES ${opencv_libraries} DESTINATION lib)
+
 # Windows need libpng alongside with zlib to be installed
 if (WIN32)
     # Install zlib headers.
@@ -71,6 +76,12 @@ file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_lanenetwork_sources}")
 install(FILES ${libcarla_carla_lanenetwork_sources} DESTINATION include/carla/lanenetwork)
+
+file(GLOB libcarla_carla_occupancymap_sources
+    "${libcarla_source_path}/carla/occupancymap/*.cpp"
+    "${libcarla_source_path}/carla/occupancymap/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_occupancymap_sources}")
+install(FILES ${libcarla_carla_occupancymap_sources} DESTINATION include/carla/occupancymap)
 
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
@@ -198,7 +209,8 @@ if (LIBCARLA_BUILD_RELEASE)
 
   target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${OPENCV_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
 
@@ -219,7 +231,8 @@ if (LIBCARLA_BUILD_DEBUG)
 
   target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${OPENCV_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
