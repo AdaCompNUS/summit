@@ -16,7 +16,7 @@ std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::V
   
 OccupancyGrid OccupancyMap::CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const {
 
-  cv::Mat mat(
+  cv::Mat mat = cv::Mat::zeros(
       static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / resolution)),
       static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / resolution)),
       CV_8UC1);

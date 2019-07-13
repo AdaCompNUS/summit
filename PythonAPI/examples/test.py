@@ -13,4 +13,14 @@ import carla
 import random
 
 if __name__ == '__main__':
-    pass
+    grid = carla.OccupancyGrid(4, 5)
+    data = grid.data
+
+    print(grid)
+    print(data)
+
+    grid.set(2, 3, 100)
+    print(data)
+
+    data[1][2] = 200
+    print(grid.get(1, 2))

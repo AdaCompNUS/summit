@@ -12,7 +12,7 @@ public:
   OccupancyGrid() = default;
 
   OccupancyGrid(uint32_t rows, uint32_t columns) 
-    : _mat(static_cast<int>(rows), static_cast<int>(columns), CV_8UC1) { }
+    : _mat(cv::Mat::zeros(static_cast<int>(rows), static_cast<int>(columns), CV_8UC1)) { }
 
   OccupancyGrid(const cv::Mat& mat) : _mat(mat) { }
 
