@@ -16,6 +16,8 @@ install(FILES ${boost_libraries} DESTINATION lib)
 install(DIRECTORY "${OPENCV_INCLUDE_PATH}/opencv4/opencv2" DESTINATION include/system)
 file(GLOB opencv_libraries "${OPENCV_LIB_PATH}/*.*")
 install(FILES ${opencv_libraries} DESTINATION lib)
+file(GLOB opencv_third_party_libraries "${OPENCV_LIB_PATH}/opencv4/3rdparty/*.*")
+install(FILES ${opencv_third_party_libraries} DESTINATION lib)
 
 # Windows need libpng alongside with zlib to be installed
 if (WIN32)

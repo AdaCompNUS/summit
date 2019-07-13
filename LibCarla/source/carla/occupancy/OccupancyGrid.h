@@ -2,7 +2,6 @@
 
 #include <cstdint>
 #include <opencv2/core/mat.hpp>
-#include "carla/geom/Triangle2D.h"
 
 namespace carla {
 namespace occupancy {
@@ -16,6 +15,8 @@ public:
     : _mat(static_cast<int>(rows), static_cast<int>(columns), CV_8UC1) { }
 
   OccupancyGrid(const cv::Mat& mat) : _mat(mat) { }
+
+  uint8_t* Data() { return _mat.data; }
 
   const uint8_t* Data() const { return _mat.data; }
 

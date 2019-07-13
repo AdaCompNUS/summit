@@ -263,9 +263,9 @@ else
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
       -DWITH_TBB=ON \
+      -DBUILD_TBB=ON \
       -DWITH_OPENMP=ON \
-      -DWITH_IPP=ON \
-      -DWITH_CSTRIPES=ON \
+      -DWITH_IPP=OFF \
       -DWITH_GTK=OFF \
       -DWITH_VTK=OFF \
       -DWITH_1394=OFF \
@@ -301,9 +301,9 @@ else
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
       -DWITH_TBB=ON \
+      -DBUILD_TBB=ON \
       -DWITH_OPENMP=ON \
-      -DWITH_IPP=ON \
-      -DWITH_CSTRIPES=ON \
+      -DWITH_IPP=OFF \
       -DWITH_GTK=OFF \
       -DWITH_VTK=OFF \
       -DWITH_1394=OFF \

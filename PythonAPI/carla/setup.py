@@ -38,6 +38,26 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib)]
+
+            if sys.version_info.major == 2:
+                extra_link_args += [
+                    os.path.join(pwd, 'dependencies/lib/libboost_python27.a'),
+                    os.path.join(pwd, 'dependencies/lib/libboost_numpy27.a')]
+            elif sys.version_info.major == 3:
+                extra_link_args += [
+                    os.path.join(pwd, 'dependencies/lib/libboost_python36.a'),
+                    os.path.join(pwd, 'dependencies/lib/libboost_numpy36.a')]
+
+            # @todo Include only required opencv libraries.
+            for lib in [x for x in os.listdir('dependencies/lib') if x.startswith('libopencv') and x.endswith('.a')]:
+                extra_link_args.append(os.path.join(pwd, 'dependencies/lib', lib))
+            extra_link_args += [
+                'dependencies/lib/libade.a',
+                'dependencies/lib/liblibjasper.a',
+                'dependencies/lib/liblibprotobuf.a',
+                'dependencies/lib/libquirc.a',
+                'dependencies/lib/libtbb.a']
+
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
@@ -48,6 +68,7 @@ def get_libcarla_extensions():
                 '-Wno-unused-parameter',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
+            
             if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
                 extra_link_args += ['-ljpeg', '-ltiff']
@@ -55,10 +76,12 @@ def get_libcarla_extensions():
             else:
                 extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
+
             # @todo Why would we need this?
-            #include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
-            #library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
-            #extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+            # Temporarily disabled to prevent errors in OpenCV's headers.
+            # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
+            library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
+            extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
         else:
             raise NotImplementedError
     elif os.name == "nt":
