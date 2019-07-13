@@ -1,17 +1,19 @@
 #pragma once
 
+#include "carla/geom/Vector2D.h"
+
 namespace carla {
 namespace geom {
 
 class Triangle2D {
   public:
-    carla::geom::Vector2D v0;
-    carla::geom::Vector2D v1;
-    carla::geom::Vector2D v2;
+    Vector2D v0;
+    Vector2D v1;
+    Vector2D v2;
 
     Triangle2D() = default;
 
-    Triangle2D(const carla::geom::Vector2D &v0, const carla::geom::Vector2D &v1, const carla::geom::Vector2D &v2)
+    Triangle2D(const Vector2D &v0, const Vector2D &v1, const Vector2D &v2)
         : v0(v0), v1(v1), v2(v2) { }
     
     bool operator==(const Triangle2D &rhs) const {

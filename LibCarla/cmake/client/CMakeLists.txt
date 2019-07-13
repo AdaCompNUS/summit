@@ -13,7 +13,7 @@ file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
 # Install opencv (install in system folder to avoid extra warnings).
-install(DIRECTORY "${OPENCV_INCLUDE_PATH}/opencv4" DESTINATION include/system)
+install(DIRECTORY "${OPENCV_INCLUDE_PATH}/opencv4/opencv2" DESTINATION include/system)
 file(GLOB opencv_libraries "${OPENCV_LIB_PATH}/*.*")
 install(FILES ${opencv_libraries} DESTINATION lib)
 
@@ -77,11 +77,11 @@ file(GLOB libcarla_carla_lanenetwork_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_lanenetwork_sources}")
 install(FILES ${libcarla_carla_lanenetwork_sources} DESTINATION include/carla/lanenetwork)
 
-file(GLOB libcarla_carla_occupancymap_sources
-    "${libcarla_source_path}/carla/occupancymap/*.cpp"
-    "${libcarla_source_path}/carla/occupancymap/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_occupancymap_sources}")
-install(FILES ${libcarla_carla_occupancymap_sources} DESTINATION include/carla/occupancymap)
+file(GLOB libcarla_carla_occupancy_sources
+    "${libcarla_source_path}/carla/occupancy/*.cpp"
+    "${libcarla_source_path}/carla/occupancy/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_occupancy_sources}")
+install(FILES ${libcarla_carla_occupancy_sources} DESTINATION include/carla/occupancy)
 
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
