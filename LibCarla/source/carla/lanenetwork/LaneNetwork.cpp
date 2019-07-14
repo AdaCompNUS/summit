@@ -251,5 +251,51 @@ RouteMap LaneNetwork::CreateRouteMap() const {
   return RouteMap(this);
 }
 
+occupancy::OccupancyMap LaneNetwork::CreateOccupancyMap() const {
+  std::vector<geom::Triangle2D> triangles;
+
+  auto FromSegment = [&triangles](const geom::Vector2D& start, const geom::Vector2D& end, float width) {
+    geom::Vector2D direction = (end - start).MakeUnitVector();
+    geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
+
+    geom::Vector2D v1 = start + normal * width / 2.0;
+    geom::Vector2D v2 = start - normal * width / 2.0;
+    geom::Vector2D v3 = end + normal * width / 2.0;
+    geom::Vector2D v4 = end - normal * width / 2.0;
+
+    triangles.emplace_back(v3, v2, v1);
+    triangles.emplace_back(v2, v3, v4);
+
+    for (int i = 0; i < 16; i++) {
+      v1 = start;
+      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
+      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
+      triangles.emplace_back(v3, v2, v1);
+
+      v1 = end;
+      v2 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
+      v3 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
+      triangles.emplace_back(v3, v2, v1);
+    }
+  };
+
+  for (const auto& entry : _lanes) {
+    FromSegment(
+        GetLaneStart(entry.second, GetLaneStartMinOffset(entry.second)),
+        GetLaneEnd(entry.second, GetLaneEndMinOffset(entry.second)),
+        _lane_width);
+  }
+
+  for (const auto& entry : _lane_connections) {
+    FromSegment(
+        GetLaneEnd(_lanes.at(entry.second.source_lane_id)),
+        GetLaneStart(_lanes.at(entry.second.destination_lane_id)),
+        _lane_width);
+  }
+
+  // TODO Move semantics.
+  return occupancy::OccupancyMap(triangles);
+}
+
 }
 }

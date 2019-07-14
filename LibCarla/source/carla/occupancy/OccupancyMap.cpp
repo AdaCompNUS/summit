@@ -4,6 +4,24 @@
 
 namespace carla {
 namespace occupancy {
+  
+OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _triangles(triangles) {
+  std::vector<rt_value_t> index_entries;
+
+  for (unsigned int i = 0; i < _triangles.size(); i++) {
+    const geom::Triangle2D& t = _triangles[i];
+    float minx = std::min(t.v0.x, std::min(t.v1.x, t.v2.x));
+    float miny = std::min(t.v0.y, std::min(t.v1.y, t.v2.y));
+    float maxx = std::max(t.v0.x, std::max(t.v1.x, t.v2.x));
+    float maxy = std::max(t.v0.y, std::max(t.v1.y, t.v2.y));
+
+    index_entries.emplace_back(
+        rt_box_t(rt_point_t(minx, miny), rt_point_t(maxx, maxy)),
+        i);
+  }
+
+  _triangles_index = rt_index_t(index_entries);
+}
 
 std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {
   std::vector<rt_value_t> index_entries;

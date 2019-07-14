@@ -40,7 +40,6 @@ public:
 
   RoutePoint RandRoutePoint();
 
-  // TODO optimize.
   geom::Vector2D GetPosition(const RoutePoint& route_point) const;
 
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;

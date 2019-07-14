@@ -7,6 +7,7 @@
 #include <string>
 #include <cstdint>
 #include "RouteMap.h"
+#include "carla/occupancy/OccupancyMap.h"
 
 namespace carla {
 namespace lanenetwork {
@@ -112,6 +113,8 @@ public:
 
   RouteMap CreateRouteMap() const;
 
+  occupancy::OccupancyMap CreateOccupancyMap() const;
+
 private:
   
   float _lane_width;
@@ -119,21 +122,13 @@ private:
   std::unordered_map<int64_t, Road> _roads;
   std::unordered_map<int64_t, Lane> _lanes;
   std::unordered_map<int64_t, LaneConnection> _lane_connections;
-  
-  // Lookup optimizations.
 
   std::unordered_map<int64_t, geom::Vector2D> _road_direction_map;
-
   std::unordered_map<int64_t, geom::Vector2D> _lane_start_map;
-
   std::unordered_map<int64_t, geom::Vector2D> _lane_end_map;
-
   std::unordered_map<int64_t, std::vector<int64_t>> _incoming_lane_connection_ids_map;
-  
   std::unordered_map<int64_t, std::vector<int64_t>> _outgoing_lane_connection_ids_map;
-
   std::unordered_map<int64_t, float> _lane_start_min_offset_map;
-
   std::unordered_map<int64_t, float> _lane_end_min_offset_map;
 };
 
