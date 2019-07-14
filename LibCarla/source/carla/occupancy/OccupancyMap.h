@@ -1,3 +1,5 @@
+#pragma once
+
 #include "carla/geom/Triangle2D.h"
 #include "carla/occupancy/OccupancyGrid.h"
 #include <boost/geometry.hpp>
