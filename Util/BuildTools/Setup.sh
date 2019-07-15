@@ -231,6 +231,7 @@ OPENCV_BASENAME=opencv-${OPENCV_VERSION}-${CXX_TAG}
 OPENCV_LIBSTDCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/include/opencv4
 OPENCV_LIBSTDCXX_LIBPATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib
 OPENCV_LIBSTDCXX_THIRD_PARTY_LIBPATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib/opencv4/3rdparty
+OPENCV_LIBSTDCXX_CMAKE_PATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib/cmake/opencv4
 
 if [[ -d "${OPENCV_BASENAME}-libstdcxx-install" ]] ; then
   log "${OPENCV_BASENAME} already installed."
@@ -253,7 +254,7 @@ else
   cmake -G "Ninja" \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${OPENCV_BASENAME}-libstdcxx-install" \
-      -DBUILD_LIST=core,highgui,imgcodecs,improc \
+      -DBUILD_LIST=core,imgproc \
       -DOPENCV_GENERATE_PKGCONFIG=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_EXAMPLES=OFF \
@@ -263,18 +264,32 @@ else
       -DBUILD_opencv_java=OFF \
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
-      -DWITH_TBB=OFF \
-      -DWITH_OPENMP=OFF \
+      -DBUILD_ZLIB=ON \
+      -DWITH_JASPER=OFF \
+      -DWITH_JPEG=OFF \
+      -DWITH_WEBP=OFF \
+      -DWITH_OPENEXR=OFF \
+      -DWITH_PNG=OFF \
+      -DWITH_TIFF=OFF \
+      -DWITH_IMGCODEC_HDR=OFF \
+      -DWITH_IMGCODEC_SUNRASTER=OFF \
+      -DWITH_IMGCODEC_PXM=OFF \
+      -DWITH_IMGCODEC_PFM=OFF \
+      -DWITH_QUIRC=OFF \
       -DWITH_IPP=OFF \
       -DWITH_GTK=OFF \
       -DWITH_VTK=OFF \
       -DWITH_1394=OFF \
       -DWITH_V4L=OFF \
-      -DWITH_FFMPEG=OFF \
       -DWITH_ITT=OFF \
+      -DWITH_EIGEN=OFF \
+      -DWITH_PROTOBUF=OFF \
       -DWITH_GSTREAMER=OFF \
-      -DBUILD_SHARED_LIBS=OFF \
+      -DWITH_FFMPEG=OFF \
+      -DWITH_TBB=OFF \
+      -DWITH_OPENMP=OFF \
       -DWITH_OPENCL=OFF \
+      -DBUILD_SHARED_LIBS=OFF \
       ../${OPENCV_BASENAME}-source
 
   ninja
@@ -446,6 +461,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(OPENCV_INCLUDE_PATH "${OPENCV_LIBSTDCXX_INCLUDE}")
   set(OPENCV_LIB_PATH "${OPENCV_LIBSTDCXX_LIBPATH}")
   set(OPENCV_THIRD_PARTY_LIB_PATH "${OPENCV_LIBSTDCXX_THIRD_PARTY_LIBPATH}")
+  set(OPENCV_CMAKE_PATH "${OPENCV_LIBSTDCXX_CMAKE_PATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")

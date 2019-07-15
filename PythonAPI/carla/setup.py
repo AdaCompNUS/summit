@@ -42,27 +42,10 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib', pylib),
                 os.path.join(pwd, 'dependencies/lib', numpylib)]
             
-
+            # OpenCV link libraries. @todo Get order from pkg-config or cmake.
             extra_link_args += [
-                '-lopencv_highgui',
-                '-lopencv_imgcodecs',
-                '-lopencv_imgproc',
-                '-lopencv_core',
-                '-llibjasper',
-                '-ljpeg',
-                '-lwebp',
-                '-lpng',
-                '-lz',
-                '-ltiff',
-                '-lImath',
-                '-lIlmImf',
-                '-lIex',
-                '-lHalf',
-                '-lIlmThread',
-                '-ldl', 
-                '-lm', 
-                '-lpthread',
-                '-lrt']
+                '-lopencv_imgproc', '-lopencv_core', '-lzlib', '-ldl', '-lm', 
+                '-lpthread', '-lrt']
 
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
