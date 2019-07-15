@@ -86,7 +86,7 @@ def in_bounds(position):
 
 
 if __name__ == '__main__':
-    lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
+    lane_network = carla.LaneNetwork.load('../../Data/network.ln')
     
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)
