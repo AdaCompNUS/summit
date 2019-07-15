@@ -267,29 +267,37 @@ occupancy::OccupancyMap LaneNetwork::CreateOccupancyMap() const {
     triangles.emplace_back(v2, v3, v4);
 
     for (int i = 0; i < 16; i++) {
-      v1 = start;
-      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
-      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
-      triangles.emplace_back(v3, v2, v1);
-
       v1 = end;
       v2 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
       v3 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
+      triangles.emplace_back(v3, v2, v1);
+
+      v1 = start;
+      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
+      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
       triangles.emplace_back(v3, v2, v1);
     }
   };
 
   for (const auto& entry : _lanes) {
     FromSegment(
-        GetLaneStart(entry.second, GetLaneStartMinOffset(entry.second)),
-        GetLaneEnd(entry.second, GetLaneEndMinOffset(entry.second)),
+        GetLaneStart(
+          entry.second, 
+          GetLaneStartMinOffset(entry.second)),
+        GetLaneEnd(
+          entry.second, 
+          GetLaneEndMinOffset(entry.second)),
         _lane_width);
   }
 
   for (const auto& entry : _lane_connections) {
     FromSegment(
-        GetLaneEnd(_lanes.at(entry.second.source_lane_id)),
-        GetLaneStart(_lanes.at(entry.second.destination_lane_id)),
+        GetLaneEnd(
+          _lanes.at(entry.second.source_lane_id),
+          entry.second.source_offset),
+        GetLaneStart(
+          _lanes.at(entry.second.destination_lane_id),
+          entry.second.destination_offset),
         _lane_width);
   }
 

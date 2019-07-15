@@ -35,29 +35,29 @@ std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::V
 OccupancyGrid OccupancyMap::CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const {
 
   cv::Mat mat = cv::Mat::zeros(
-      static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / resolution)),
-      static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / resolution)),
+      static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / resolution)), // Rows
+      static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / resolution)), // Columns
       CV_8UC1);
-  std::vector<std::vector<cv::Point>> triangles_mat;
+
+  std::vector<std::vector<cv::Point>> triangle_mat;
+  triangle_mat.emplace_back();
+  triangle_mat.back().emplace_back();
+  triangle_mat.back().emplace_back();
+  triangle_mat.back().emplace_back();
 
   for (const rt_value_t& index_entry : QueryIntersect(bounds_min, bounds_max)) {
     const geom::Triangle2D& triangle = _triangles[index_entry.second];
 
     // TODO: Any better way other than casting?
-    cv::Point v0(
-        static_cast<int>((bounds_max.x - triangle.v0.x) / resolution), 
-        static_cast<int>((triangle.v0.y - bounds_min.y) / resolution));
-    cv::Point v1(
-        static_cast<int>((bounds_max.x - triangle.v1.x) / resolution), 
-        static_cast<int>((triangle.v1.y - bounds_min.y) / resolution));
-    cv::Point v2(
-        static_cast<int>((bounds_max.x - triangle.v2.x) / resolution), 
-        static_cast<int>((triangle.v2.y - bounds_min.y) / resolution));
+    triangle_mat[0][0].x = static_cast<int>((triangle.v0.y - bounds_min.y) / resolution);
+    triangle_mat[0][0].y = static_cast<int>((bounds_max.x - triangle.v0.x) / resolution);
+    triangle_mat[0][1].x = static_cast<int>((triangle.v1.y - bounds_min.y) / resolution);
+    triangle_mat[0][1].y = static_cast<int>((bounds_max.x - triangle.v1.x) / resolution);
+    triangle_mat[0][2].x = static_cast<int>((triangle.v2.y - bounds_min.y) / resolution);
+    triangle_mat[0][2].y = static_cast<int>((bounds_max.x - triangle.v2.x) / resolution);
 
-    triangles_mat.emplace_back(std::initializer_list<cv::Point>{ v0, v1, v2 });
+    cv::fillPoly(mat, triangle_mat, cv::Scalar(255), cv::LINE_8);
   }
-  
-  cv::fillPoly(mat, triangles_mat, cv::Scalar(255), cv::LINE_AA);
 
   return OccupancyGrid(mat);
 }

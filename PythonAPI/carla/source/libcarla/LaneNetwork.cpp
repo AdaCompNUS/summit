@@ -55,23 +55,12 @@ namespace lanenetwork {
     return out;
   }
   
-  // TODO print more stuff maybe.
-  std::ostream &operator<<(std::ostream &out, const LaneNetwork &lane_network) {
-    out << "LaneNetwork(lane_width=" << lane_network.LaneWidth() << ')';
-    return out;
-  }
-  
   std::ostream &operator<<(std::ostream &out, const RoutePoint &route_point) {
     out << "RoutePoint(id=" << route_point.segment_id
         << ", offset=" << route_point.offset << ')';
     return out;
   }
   
-  // TODO print more stuff maybe.
-  std::ostream &operator<<(std::ostream &out, const RouteMap &route_map) {
-    out << "RouteMap()";
-    return out;
-  }
 }
 }
 
@@ -143,7 +132,7 @@ void export_lane_network() {
         &carla::lanenetwork::LaneNetwork::Load, 
         (arg("path")))
     .staticmethod("load")
-    .def("lane_width", 
+    .add_property("lane_width", 
         &carla::lanenetwork::LaneNetwork::LaneWidth)
     .def("nodes", 
         &carla::lanenetwork::LaneNetwork::Nodes,
@@ -190,7 +179,6 @@ void export_lane_network() {
         &carla::lanenetwork::LaneNetwork::CreateRouteMap)
     .def("create_occupancy_map",
         &carla::lanenetwork::LaneNetwork::CreateOccupancyMap)
-    .def(self_ns::str(self_ns::self))
   ;
   
   class_<carla::lanenetwork::RoutePoint>("RoutePoint", 
@@ -213,7 +201,6 @@ void export_lane_network() {
     .def("rand_route_point", &carla::lanenetwork::RouteMap::RandRoutePoint)
     .def("get_nearest_route_point", &carla::lanenetwork::RouteMap::GetNearestRoutePoint)
     .def("get_next_route_points", &carla::lanenetwork::RouteMap::GetNextRoutePoints)
-    .def(self_ns::str(self_ns::self))
   ;
   
 }

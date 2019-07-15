@@ -18,6 +18,7 @@
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/occupancy/OccupancyMap.h"
 
 namespace carla {
 namespace client {
@@ -59,8 +60,8 @@ namespace client {
 
     void ApplySettings(const rpc::EpisodeSettings &settings);
 
-    // Spawns a mesh in the world.
-    void SpawnMesh(const std::vector<geom::Vector3D> &triangles);
+    // Spawns an occupancy map in the world.
+    void SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;

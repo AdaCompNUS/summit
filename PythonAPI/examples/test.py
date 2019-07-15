@@ -19,8 +19,20 @@ if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
     occupancy_map = lane_network.create_occupancy_map()
     
+    client = carla.Client('127.0.0.1', 2000)
+    client.set_timeout(2.0)
+    client.get_world().spawn_occupancy_map(occupancy_map)
+
     occupancy_grid = occupancy_map.create_occupancy_grid(
-            carla.Vector2D(-1000, -1000),
-            carla.Vector2D(1000, 1000),
+            carla.Vector2D(-500, -500),
+            carla.Vector2D(500, 500),
             0.1)
+    
+    img, contours, hierarchy = cv2.findContours(occupancy_grid.data, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+    
+    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+    cv2.drawContours(img, contours, -1, (255, 0, 0), 1)
     cv2.imwrite('test.bmp', occupancy_grid.data)
+
+    cv2.imshow('test', occupancy_grid.data)
+    cv2.waitKey(0)

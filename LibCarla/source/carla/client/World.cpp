@@ -37,7 +37,13 @@ namespace client {
     _episode.Lock()->SetEpisodeSettings(settings);
   }
     
-  void World::SpawnMesh(const std::vector<geom::Vector3D> &triangles) {
+  void World::SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map) {
+    std::vector<geom::Vector3D> triangles;
+    for (const geom::Triangle2D& t : occupancy_map.Triangles()) {
+      triangles.emplace_back(t.v0.x, t.v0.y, 0);
+      triangles.emplace_back(t.v1.x, t.v1.y, 0);
+      triangles.emplace_back(t.v2.x, t.v2.y, 0);
+    }
     _episode.Lock()->SpawnMesh(triangles);
   }
 

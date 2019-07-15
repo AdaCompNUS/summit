@@ -64,14 +64,6 @@ static auto GetActorsById(carla::client::World &self, const boost::python::list 
   return self.GetActors(ids);
 }
 
-static void SpawnMesh(carla::client::World &self, const boost::python::list &triangles) {
-  std::vector<carla::geom::Vector3D> _triangles{
-      boost::python::stl_input_iterator<carla::geom::Vector3D>(triangles),
-      boost::python::stl_input_iterator<carla::geom::Vector3D>()};
-  carla::PythonUtil::ReleaseGIL unlock;
-  return self.SpawnMesh(_triangles);
-}
-
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -142,7 +134,7 @@ void export_world() {
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
     .def("apply_settings", &cc::World::ApplySettings)
-    .def("spawn_mesh", &SpawnMesh, (arg("triangles")))
+    .def("spawn_occupancy_map", &cc::World::SpawnOccupancyMap, (arg("occupancy_map")))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_snapshot", &cc::World::GetSnapshot)

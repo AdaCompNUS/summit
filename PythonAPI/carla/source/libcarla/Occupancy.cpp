@@ -29,6 +29,8 @@ void export_occupancy() {
   ;
 
   class_<OccupancyMap>("OccupancyMap", no_init)
+    .def("triangles", &OccupancyMap::Triangles,
+        return_internal_reference<>())
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
   ;
 }
