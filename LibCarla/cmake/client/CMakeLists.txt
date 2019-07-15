@@ -224,11 +224,8 @@ if (LIBCARLA_BUILD_RELEASE)
   target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-<<<<<<< HEAD
-      "${OPENCV_INCLUDE_PATH}")
-=======
+      "${OPENCV_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
->>>>>>> carla/master
 
   install(TARGETS carla_client DESTINATION lib)
 
@@ -260,11 +257,8 @@ if (LIBCARLA_BUILD_DEBUG)
   target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-<<<<<<< HEAD
-      "${OPENCV_INCLUDE_PATH}")
-=======
+      "${OPENCV_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
->>>>>>> carla/master
 
   install(TARGETS carla_client_debug DESTINATION lib)
 

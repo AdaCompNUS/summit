@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     route_map = lane_network.create_route_map()
     while True:
-        while len(crowd_walkers) < 20:
+        while len(crowd_walkers) < 100:
             position = carla.Vector2D(random.uniform(-500, 500), random.uniform(-500, 500))
             route_point = route_map.get_nearest_route_point(position)
             position = route_map.get_position(route_point)
