@@ -11,6 +11,7 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include "bitmap_image/bitmap_image.hpp"
+#include "Carla/Game/CarlaHUD.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -28,6 +29,8 @@ ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializ
   Recorder = CreateDefaultSubobject<ACarlaRecorder>(TEXT("Recorder"));
 
   CrowdController = CreateDefaultSubobject<ACrowdController>(TEXT("CrowdController"));
+  // HUD
+  HUDClass = ACarlaHUD::StaticClass();
 
   TaggerDelegate = CreateDefaultSubobject<UTaggerDelegate>(TEXT("TaggerDelegate"));
   CarlaSettingsDelegate = CreateDefaultSubobject<UCarlaSettingsDelegate>(TEXT("CarlaSettingsDelegate"));

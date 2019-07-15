@@ -19,10 +19,12 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/WalkerNavigation.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/rpc/TrafficLightState.h"
 
 #include <memory>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -31,6 +33,7 @@ namespace client {
   class BlueprintLibrary;
   class Map;
   class Sensor;
+  class WalkerAIController;
 
 namespace detail {
 
@@ -141,14 +144,17 @@ namespace detail {
 
     WorldSnapshot WaitForTick(time_duration timeout);
 
-    void RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
+    size_t RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
       DEBUG_ASSERT(_episode != nullptr);
-      _episode->RegisterOnTickEvent(std::move(callback));
+      return _episode->RegisterOnTickEvent(std::move(callback));
     }
 
-    void Tick() {
-      _client.SendTickCue();
+    void RemoveOnTickEvent(size_t id) {
+      DEBUG_ASSERT(_episode != nullptr);
+      _episode->RemoveOnTickEvent(id);
     }
+
+    uint64_t Tick();
 
     /// @}
     // =========================================================================
@@ -164,9 +170,7 @@ namespace detail {
       return _client.GetEpisodeSettings();
     }
 
-    void SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
-      _client.SetEpisodeSettings(settings);
-    }
+    uint64_t SetEpisodeSettings(const rpc::EpisodeSettings &settings);
 
     rpc::WeatherParameters GetWeatherParameters() {
       return _client.GetWeatherParameters();
@@ -178,6 +182,22 @@ namespace detail {
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
+    }
+
+    /// @}
+    // =========================================================================
+    /// @name AI
+    // =========================================================================
+    /// @{
+
+    void RegisterAIController(const WalkerAIController &controller);
+
+    void UnregisterAIController(const WalkerAIController &controller);
+
+    boost::optional<geom::Location> GetRandomLocationFromNavigation();
+
+    std::shared_ptr<WalkerNavigation> GetNavigation() {
+      return _episode->GetNavigation();
     }
 
     /// @}

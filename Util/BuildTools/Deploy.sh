@@ -9,6 +9,8 @@ source $(dirname "$0")/Environment.sh
 REPLACE_LATEST=false
 DOCKER_PUSH=false
 AWS_COPY="aws s3 cp"
+DOCKER="docker"
+UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
 
 # ==============================================================================
@@ -35,6 +37,8 @@ while true; do
       shift ;;
     --dry-run )
       AWS_COPY="echo ${AWS_COPY}";
+      DOCKER="echo ${DOCKER}";
+      UNTAR="echo ${UNTAR}";
       shift ;;
     -h | --help )
       echo "$DOC_STRING"
@@ -91,19 +95,19 @@ fi
 
 if ${UPLOAD_MAPS} ; then
 
-  mkdir -p ${CARLA_EXPORTED_MAPS_FOLDER}
-  pushd "${CARLA_EXPORTED_MAPS_FOLDER}" >/dev/null
+  mkdir -p ${CARLA_DIST_FOLDER}
 
-  for MAP_PACKAGE in *.tar.gz; do
+  pushd "${CARLA_DIST_FOLDER}" >/dev/null
 
-    DEPLOY_MAP_NAME=$(basename "${MAP_PACKAGE}" .tar.gz)_${REPOSITORY_TAG}.tar.gz
-    DEPLOY_MAP_URI=${S3_PREFIX}/${DEPLOY_MAP_NAME}
+  for MAP_PACKAGE in *_${REPOSITORY_TAG}.tar.gz ; do if [[ ${MAP_PACKAGE} != ${LATEST_PACKAGE} ]] ; then
+
+    DEPLOY_MAP_URI=${S3_PREFIX}/${MAP_PACKAGE}
 
     ${AWS_COPY} ${MAP_PACKAGE} ${DEPLOY_MAP_URI}
 
     log "${MAP_PACKAGE} uploaded to ${DEPLOY_MAP_URI}."
 
-  done
+  fi ; done
 
   popd >/dev/null
 
@@ -120,17 +124,17 @@ if ${DOCKER_PUSH} ; then
 
   mkdir -p ${DOCKER_BUILD_FOLDER}
 
-  tar -xvzf ${LATEST_PACKAGE_PATH} -C ${DOCKER_BUILD_FOLDER}/
+  ${UNTAR} ${LATEST_PACKAGE_PATH} -C ${DOCKER_BUILD_FOLDER}/
 
   pushd "${DOCKER_BUILD_FOLDER}" >/dev/null
 
   log "Building Docker image ${DOCKER_NAME}."
 
-  docker build -t ${DOCKER_NAME} -f Dockerfile .
+  ${DOCKER} build -t ${DOCKER_NAME} -f Dockerfile .
 
   log "Pushing Docker image."
 
-  docker push ${DOCKER_NAME}
+  ${DOCKER} push ${DOCKER_NAME}
 
   popd >/dev/null
 

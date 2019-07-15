@@ -39,6 +39,9 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libcarla_client.a'),
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
+                os.path.join(pwd, 'dependencies/lib/libRecast.a'),
+                os.path.join(pwd, 'dependencies/lib/libDetour.a'),
+                os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib),
                 os.path.join(pwd, 'dependencies/lib', numpylib)]
             
@@ -81,12 +84,13 @@ def get_libcarla_extensions():
             sys.version_info.major,
             sys.version_info.minor)
 
-        extra_link_args = ['shlwapi.lib']
+        extra_link_args = ['shlwapi.lib' ]
 
         required_libs = [
             pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
-            'libpng.lib', 'zlib.lib']
+            'libpng.lib', 'zlib.lib',
+            'Recast.lib', 'Detour.lib', 'DetourCrowd.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name
@@ -127,7 +131,7 @@ def get_libcarla_extensions():
 
 setup(
     name='carla',
-    version='0.9.5',
+    version='0.9.6',
     package_dir={'': 'source'},
     packages=['carla', 'adacomp'],
     ext_modules=get_libcarla_extensions(),
