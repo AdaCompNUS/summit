@@ -38,21 +38,26 @@ OccupancyGrid OccupancyMap::CreateOccupancyGrid(const geom::Vector2D& bounds_min
       static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / resolution)),
       static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / resolution)),
       CV_8UC1);
-  std::vector<std::vector<cv::Point2f>> triangles_mat;
+  std::vector<std::vector<cv::Point>> triangles_mat;
 
   for (const rt_value_t& index_entry : QueryIntersect(bounds_min, bounds_max)) {
     const geom::Triangle2D& triangle = _triangles[index_entry.second];
 
-    cv::Point2f v0(bounds_max.y - triangle.v0.y, triangle.v0.x - bounds_min.x);
-    cv::Point2f v1(bounds_max.y - triangle.v1.y, triangle.v1.x - bounds_min.x);
-    cv::Point2f v2(bounds_max.y - triangle.v2.y, triangle.v2.x - bounds_min.x);
-    triangles_mat.emplace_back(std::initializer_list<cv::Point2f>{ 
-        v0 / resolution,
-        v1 / resolution,
-        v2 / resolution });
+    // TODO: Any better way other than casting?
+    cv::Point v0(
+        static_cast<int>((bounds_max.x - triangle.v0.x) / resolution), 
+        static_cast<int>((triangle.v0.y - bounds_min.y) / resolution));
+    cv::Point v1(
+        static_cast<int>((bounds_max.x - triangle.v1.x) / resolution), 
+        static_cast<int>((triangle.v1.y - bounds_min.y) / resolution));
+    cv::Point v2(
+        static_cast<int>((bounds_max.x - triangle.v2.x) / resolution), 
+        static_cast<int>((triangle.v2.y - bounds_min.y) / resolution));
+
+    triangles_mat.emplace_back(std::initializer_list<cv::Point>{ v0, v1, v2 });
   }
   
-  cv::fillPoly(mat, triangles_mat, cv::Scalar(255, 255, 255), cv::LINE_AA);
+  cv::fillPoly(mat, triangles_mat, cv::Scalar(255), cv::LINE_AA);
 
   return OccupancyGrid(mat);
 }

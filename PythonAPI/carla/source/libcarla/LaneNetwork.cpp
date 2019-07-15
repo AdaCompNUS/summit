@@ -138,10 +138,7 @@ void export_lane_network() {
        .def(unordered_map_indexing_suite<std::unordered_map<int64_t, carla::lanenetwork::LaneConnection>>())
   ;
   
-  class_<carla::lanenetwork::LaneNetwork>("LaneNetwork", 
-      init<float>(
-        (arg("lane_width") = 3.0f)))
-    .def(init<const carla::lanenetwork::LaneNetwork &>((arg("rhs"))))
+  class_<carla::lanenetwork::LaneNetwork>("LaneNetwork", no_init)
     .def("load", 
         &carla::lanenetwork::LaneNetwork::Load, 
         (arg("path")))
@@ -191,6 +188,8 @@ void export_lane_network() {
         (arg("lane")))
     .def("create_route_map",
         &carla::lanenetwork::LaneNetwork::CreateRouteMap)
+    .def("create_occupancy_map",
+        &carla::lanenetwork::LaneNetwork::CreateOccupancyMap)
     .def(self_ns::str(self_ns::self))
   ;
   
@@ -209,8 +208,7 @@ void export_lane_network() {
        .def(vector_indexing_suite<std::vector<carla::lanenetwork::RoutePoint>>())
   ;
   
-  class_<carla::lanenetwork::RouteMap>("RouteMap")
-    .def(init<const carla::lanenetwork::RouteMap &>((arg("rhs"))))
+  class_<carla::lanenetwork::RouteMap>("RouteMap", no_init)
     .def("get_position", &carla::lanenetwork::RouteMap::GetPosition)
     .def("rand_route_point", &carla::lanenetwork::RouteMap::RandRoutePoint)
     .def("get_nearest_route_point", &carla::lanenetwork::RouteMap::GetNearestRoutePoint)

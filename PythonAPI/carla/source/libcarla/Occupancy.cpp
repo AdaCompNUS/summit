@@ -8,9 +8,8 @@ void export_occupancy() {
   using namespace boost::python;
   using namespace carla::occupancy;
 
-  class_<carla::occupancy::OccupancyGrid>("OccupancyGrid",
+  class_<OccupancyGrid>("OccupancyGrid",
       init<uint32_t, uint32_t>((arg("rows"), arg("columns"))))
-    .def(init<const OccupancyGrid &>((arg("rhs"))))
     .add_property("rows", &OccupancyGrid::Rows)
     .add_property("columns", &OccupancyGrid::Columns)
     .add_property("data", +[](OccupancyGrid& self) {
@@ -27,5 +26,9 @@ void export_occupancy() {
     .def("set", +[](OccupancyGrid& self, uint32_t row, uint32_t column, uint8_t value) {
           self.At(row, column) = value;
         })
+  ;
+
+  class_<OccupancyMap>("OccupancyMap", no_init)
+    .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
   ;
 }
