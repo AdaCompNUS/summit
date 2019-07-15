@@ -222,68 +222,29 @@ fi
 unset RPCLIB_BASENAME
 
 # ==============================================================================
-# -- Get opencv and compile it with libc++ and libstdc++ -----------------------
+# -- Get opencv and compile it with libstdc++ -----------------------
 # ==============================================================================
 
 OPENCV_VERSION=4.1.0
 OPENCV_BASENAME=opencv-${OPENCV_VERSION}-${CXX_TAG}
 
-OPENCV_LIBCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libcxx-install/include
-OPENCV_LIBCXX_LIBPATH=${PWD}/${OPENCV_BASENAME}-libcxx-install/lib
-OPENCV_LIBSTDCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/include
+OPENCV_LIBSTDCXX_INCLUDE=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/include/opencv4
 OPENCV_LIBSTDCXX_LIBPATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib
+OPENCV_LIBSTDCXX_THIRD_PARTY_LIBPATH=${PWD}/${OPENCV_BASENAME}-libstdcxx-install/lib/opencv4/3rdparty
 
-if [[ -d "${OPENCV_BASENAME}-libcxx-install" && -d "${OPENCV_BASENAME}-libstdcxx-install" ]] ; then
+if [[ -d "${OPENCV_BASENAME}-libstdcxx-install" ]] ; then
   log "${OPENCV_BASENAME} already installed."
 else
   rm -Rf \
-      ${OPENCV_BASENAME}-source \
-      ${OPENCV_BASENAME}-libcxx-build ${OPENCV_BASENAME}-libstdcxx-build \
-      ${OPENCV_BASENAME}-libcxx-install ${OPENCV_BASENAME}-libstdcxx-install
+      ${OPENCV_BASENAME}-libstdcxx-build \
+      ${OPENCV_BASENAME}-libstdcxx-install
 
-  log "Retrieving opencv."
+  if [[ ! -d "${OPENCV_BASENAME}-source" ]]; then
+    log "Retrieving opencv."
+    git clone -b ${OPENCV_VERSION} https://github.com/opencv/opencv.git ${OPENCV_BASENAME}-source
+  fi
 
-  git clone -b ${OPENCV_VERSION} https://github.com/opencv/opencv.git ${OPENCV_BASENAME}-source
-
-  log "Building opencv with libc++."
-
-  mkdir -p ${OPENCV_BASENAME}-libcxx-build
-  
-  pushd ${OPENCV_BASENAME}-libcxx-build >/dev/null
-
-  cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX="../${OPENCV_BASENAME}-libcxx-install" \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DBUILD_EXAMPLES=OFF \
-      -DBUILD_DOCS=OFF \
-      -DBUILD_PERF_TESTS=OFF \
-      -DBUILD_TESTS=OFF \
-      -DBUILD_opencv_java=OFF \
-      -DBUILD_opencv_python2=OFF \
-      -DBUILD_opencv_python3=OFF \
-      -DWITH_TBB=ON \
-      -DBUILD_TBB=ON \
-      -DWITH_OPENMP=ON \
-      -DWITH_IPP=OFF \
-      -DWITH_GTK=OFF \
-      -DWITH_VTK=OFF \
-      -DWITH_1394=OFF \
-      -DWITH_V4L=OFF \
-      -DWITH_FFMPEG=OFF \
-      -DWITH_ITT=OFF \
-      -DWITH_GSTREAMER=OFF \
-      -DBUILD_SHARED_LIBS=OFF \
-      -DWITH_OPENCL=ON \
-      ../${OPENCV_BASENAME}-source
-
-  ninja
-
-  ninja install
-  
-  popd >/dev/null
-
-  log "Building rpclib with libstdc++."
+  log "Building opencv with libstdc++."
 
   mkdir -p ${OPENCV_BASENAME}-libstdcxx-build
 
@@ -292,6 +253,8 @@ else
   cmake -G "Ninja" \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${OPENCV_BASENAME}-libstdcxx-install" \
+      -DBUILD_LIST=core,highgui,imgcodecs,improc \
+      -DOPENCV_GENERATE_PKGCONFIG=ON \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_EXAMPLES=OFF \
       -DBUILD_DOCS=OFF \
@@ -300,9 +263,8 @@ else
       -DBUILD_opencv_java=OFF \
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
-      -DWITH_TBB=ON \
-      -DBUILD_TBB=ON \
-      -DWITH_OPENMP=ON \
+      -DWITH_TBB=OFF \
+      -DWITH_OPENMP=OFF \
       -DWITH_IPP=OFF \
       -DWITH_GTK=OFF \
       -DWITH_VTK=OFF \
@@ -312,7 +274,7 @@ else
       -DWITH_ITT=OFF \
       -DWITH_GSTREAMER=OFF \
       -DBUILD_SHARED_LIBS=OFF \
-      -DWITH_OPENCL=ON \
+      -DWITH_OPENCL=OFF \
       ../${OPENCV_BASENAME}-source
 
   ninja
@@ -321,11 +283,11 @@ else
 
   popd >/dev/null
 
-  rm -Rf ${OPENCV_BASENAME}-source ${OPENCV_BASENAME}-libcxx-build ${OPENCV_BASENAME}-libstdcxx-build
+  rm -Rf ${OPENCV_BASENAME}-libstdcxx-build
 
 fi
 
-unset RPCLIB_BASENAME
+unset OPENCV_BASENAME
 
 # ==============================================================================
 # -- Get GTest and compile it with libc++ --------------------------------------
@@ -475,8 +437,6 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(LLVM_LIB_PATH "${LLVM_LIBPATH}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBCXX_LIBPATH}")
-  set(OPENCV_INCLUDE_PATH "${OPENCV_LIBCXX_INCLUDE}")
-  set(OPENCV_LIB_PATH "${OPENCV_LIBCXX_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
@@ -485,6 +445,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(RPCLIB_LIB_PATH "${RPCLIB_LIBSTDCXX_LIBPATH}")
   set(OPENCV_INCLUDE_PATH "${OPENCV_LIBSTDCXX_INCLUDE}")
   set(OPENCV_LIB_PATH "${OPENCV_LIBSTDCXX_LIBPATH}")
+  set(OPENCV_THIRD_PARTY_LIB_PATH "${OPENCV_LIBSTDCXX_THIRD_PARTY_LIBPATH}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")

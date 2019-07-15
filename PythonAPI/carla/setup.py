@@ -33,30 +33,36 @@ def get_libcarla_extensions():
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
+            numpylib = "libboost_numpy%d%d.a" % (sys.version_info.major,
+                                               sys.version_info.minor)
             extra_link_args = [
                 os.path.join(pwd, 'dependencies/lib/libcarla_client.a'),
                 os.path.join(pwd, 'dependencies/lib/librpc.a'),
                 os.path.join(pwd, 'dependencies/lib/libboost_filesystem.a'),
-                os.path.join(pwd, 'dependencies/lib', pylib)]
+                os.path.join(pwd, 'dependencies/lib', pylib),
+                os.path.join(pwd, 'dependencies/lib', numpylib)]
+            
 
-            if sys.version_info.major == 2:
-                extra_link_args += [
-                    os.path.join(pwd, 'dependencies/lib/libboost_python27.a'),
-                    os.path.join(pwd, 'dependencies/lib/libboost_numpy27.a')]
-            elif sys.version_info.major == 3:
-                extra_link_args += [
-                    os.path.join(pwd, 'dependencies/lib/libboost_python36.a'),
-                    os.path.join(pwd, 'dependencies/lib/libboost_numpy36.a')]
-
-            # @todo Include only required opencv libraries.
-            for lib in [x for x in os.listdir('dependencies/lib') if x.startswith('libopencv') and x.endswith('.a')]:
-                extra_link_args.append(os.path.join(pwd, 'dependencies/lib', lib))
             extra_link_args += [
-                'dependencies/lib/libade.a',
-                'dependencies/lib/liblibjasper.a',
-                'dependencies/lib/liblibprotobuf.a',
-                'dependencies/lib/libquirc.a',
-                'dependencies/lib/libtbb.a']
+                '-lopencv_highgui',
+                '-lopencv_imgcodecs',
+                '-lopencv_imgproc',
+                '-lopencv_core',
+                '-llibjasper',
+                '-ljpeg',
+                '-lwebp',
+                '-lpng',
+                '-lz',
+                '-ltiff',
+                '-lImath',
+                '-lIlmImf',
+                '-lIex',
+                '-lHalf',
+                '-lIlmThread',
+                '-ldl', 
+                '-lm', 
+                '-lpthread',
+                '-lrt']
 
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',

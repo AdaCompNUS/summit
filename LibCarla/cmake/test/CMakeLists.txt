@@ -9,7 +9,9 @@ endif ()
 
 link_directories(
     ${RPCLIB_LIB_PATH}
-    ${GTEST_LIB_PATH})
+    ${GTEST_LIB_PATH}
+    ${OPENCV_LIB_PATH}
+    ${OPENCV_THIRD_PARTY_LIB_PATH})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Client")
   file(GLOB libcarla_test_sources
@@ -44,6 +46,7 @@ foreach(target ${build_targets})
   target_include_directories(${target} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
+      "${OPENCV_INCLUDE_PATH}"
       "${GTEST_INCLUDE_PATH}")
 
   target_include_directories(${target} PRIVATE
@@ -58,20 +61,6 @@ foreach(target ${build_targets})
       target_link_libraries(${target} "-lgtest_main")
       target_link_libraries(${target} "-lgtest")
 
-      # OpenCV libs.
-      target_link_libraries(${target} "-lopencv_calib3d")
-      target_link_libraries(${target} "-lopencv_core")
-      target_link_libraries(${target} "-lopencv_features2d")
-      target_link_libraries(${target} "-lopencv_flann")
-      target_link_libraries(${target} "-lopencv_highgui")
-      target_link_libraries(${target} "-lopencv_imgcodecs")
-      target_link_libraries(${target} "-lopencv_imgproc")
-      target_link_libraries(${target} "-lopencv_ml")
-      target_link_libraries(${target} "-lopencv_objdetect")
-      target_link_libraries(${target} "-lopencv_photo")
-      target_link_libraries(${target} "-lopencv_stitching")
-      target_link_libraries(${target} "-lopencv_video")
-      target_link_libraries(${target} "-lopencv_videoio")
   endif()
 
   install(TARGETS ${target} DESTINATION test OPTIONAL)
@@ -84,6 +73,25 @@ if (LIBCARLA_BUILD_DEBUG)
   target_compile_definitions(libcarla_test_${carla_config}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
       target_link_libraries(libcarla_test_${carla_config}_debug "${BOOST_LIB_PATH}/libboost_filesystem.a")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_highgui")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_imgcodecs")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_imgproc")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_core")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-llibjasper")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-ljpeg")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lwebp")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lpng")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lz")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-ltiff")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lImath")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lIlmImf")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lIex")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lHalf")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lIlmThread")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-ldl")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lm")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lpthread")
+      target_link_libraries(libcarla_test_${carla_config}_debug "-lrt")
   endif()
 endif()
 
@@ -93,6 +101,25 @@ if (LIBCARLA_BUILD_RELEASE)
   target_link_libraries(libcarla_test_${carla_config}_release "carla_${carla_config}")
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
       target_link_libraries(libcarla_test_${carla_config}_release "${BOOST_LIB_PATH}/libboost_filesystem.a")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_highgui")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_imgcodecs")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_imgproc")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_core")
+      target_link_libraries(libcarla_test_${carla_config}_release "-llibjasper")
+      target_link_libraries(libcarla_test_${carla_config}_release "-ljpeg")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lwebp")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lpng")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lz")
+      target_link_libraries(libcarla_test_${carla_config}_release "-ltiff")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lImath")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lIlmImf")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lIex")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lHalf")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lIlmThread")
+      target_link_libraries(libcarla_test_${carla_config}_release "-ldl")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lm")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lpthread")
+      target_link_libraries(libcarla_test_${carla_config}_release "-lrt")
   endif()
 endif()
 
