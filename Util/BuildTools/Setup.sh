@@ -264,6 +264,7 @@ else
       -DBUILD_opencv_java=OFF \
       -DBUILD_opencv_python2=OFF \
       -DBUILD_opencv_python3=OFF \
+      -DWITH_ADE=OFF \
       -DBUILD_ZLIB=ON \
       -DWITH_JASPER=OFF \
       -DWITH_JPEG=OFF \
