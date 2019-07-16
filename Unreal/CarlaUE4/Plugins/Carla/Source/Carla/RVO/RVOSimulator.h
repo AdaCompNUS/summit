@@ -191,6 +191,54 @@ namespace RVO {
 						float timeHorizonObst, float radius, float maxSpeed,
 						const Vector2 &velocity = Vector2());
 
+		// size_t addAgent(const Vector2 &position, float neighborDist, 
+		// 	size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
+		// 	float radius, float maxSpeed, 
+		// 	const Vector2 &velocity = Vector2(), 
+		// 	std::string tag = "People", float max_tracking_angle = 90);
+
+		// size_t addAgent(const Vector2 &position, float neighborDist, 
+		// 	size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
+		// 	float radius, float maxSpeed, 
+		// 	const Vector2 &velocity = Vector2(), 
+		// 	std::string tag = "People", float max_tracking_angle = 90, int agent_id = -1);
+
+		size_t addAgent(const Vector2 &position, float neighborDist, 
+			size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
+			float radius, float maxSpeed, 
+			const Vector2 &velocity, 
+			std::string tag, float max_tracking_angle);
+
+		size_t addAgent(const Vector2 &position, float neighborDist, 
+			size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
+			float radius, float maxSpeed, 
+			const Vector2 &velocity, 
+			std::string tag, float max_tracking_angle, int agent_id);
+
+		void setAgentID(int agentNo, int agent_id);
+
+		int getAgentID(int agentNo);
+
+		std::string getAgentTag(int agentNo);
+
+		Vector2 getAgentHeading(int agentNo);
+	
+		void setAgentBoundingBoxCorners(int agentNo, std::vector<Vector2> corners);
+
+		void setAgentHeading(int agentNo, Vector2 heading);
+
+		void setAgentMaxTrackingAngle(int agentNo, float max_tracking_angle);
+
+		void setAgentAttentionRadius(int agentNo, float r_front, float r_rear);
+
+		void setAgentResDecRate(int agentNo, float res_dec_rate);
+
+		float getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b);
+
+		std::vector<Vector2> bicycleMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
+		std::vector<Vector2> holonomicMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
+
+
 		/**
 		 * \brief      Adds a new obstacle to the simulation.
 		 * \param      vertices        List of the vertices of the polygonal
@@ -574,6 +622,8 @@ namespace RVO {
 		 *                             Must be positive.
 		 */
 		void setTimeStep(float timeStep);
+
+		void clearAllAgents();
 
 	private:
 		std::vector<Agent *> agents_;

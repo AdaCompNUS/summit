@@ -19,6 +19,8 @@ ACrowdController::ACrowdController(const FObjectInitializer &ObjectInitializer)
 }
 
 void ACrowdController::Tick(float DeltaSeconds) {
+  if (!Started) return;
+
   for (int I = 0; I < Walkers.Num(); I++) {
     FVector2D Position = Walkers[I].GetPosition2D();
     boost::optional<FVector2D> PreferredVelocity = Walkers[I].GetPreferredVelocity();
@@ -116,6 +118,8 @@ void ACrowdController::StartCrowd(int InNumWalkers) {
   for (int I = 0; I < NumWalkers; I++) {
     RVOSim.addAgent(RVO::Vector2(0, 0));
   }
+
+  Started = true;
 }
 
 void ACrowdController::StopCrowd() {

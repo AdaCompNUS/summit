@@ -42,6 +42,7 @@ private:
   const FOccupancyMap* OccupancyMap;
   const FRouteMap* RouteMap;
   FBox2D Bounds;
+  bool Started = false;
 
   FOccupancyArea OccupancyArea;
 

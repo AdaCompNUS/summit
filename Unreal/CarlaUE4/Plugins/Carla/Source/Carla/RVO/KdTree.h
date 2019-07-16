@@ -125,6 +125,8 @@ namespace RVO {
 		 */
 		~KdTree();
 
+		void clearAllAgents();
+
 		/**
 		 * \brief      Builds an agent <i>k</i>d-tree.
 		 */
