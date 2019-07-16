@@ -9,6 +9,7 @@
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
+#include "Carla/Util/NavigationMesh.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
@@ -157,10 +158,10 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(tick_cue) << [this]() -> R<void>
+  BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
     ++TickCuesReceived;
-    return R<void>::Success();
+    return GFrameCounter + 1u;
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -208,17 +209,29 @@ void FCarlaServer::FPimpl::BindActions()
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
   };
 
+  BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto FileContents = FNavigationMesh::Load(Episode->GetMapName());
+    // make a mem copy (from TArray to std::vector)
+    std::vector<uint8_t> Result(FileContents.Num());
+    memcpy(&Result[0], FileContents.GetData(), FileContents.Num());
+    return Result;
+  };
+
+
   BIND_SYNC(get_episode_settings) << [this]() -> R<cr::EpisodeSettings>
   {
     REQUIRE_CARLA_EPISODE();
     return cr::EpisodeSettings{Episode->GetSettings()};
   };
 
-  BIND_SYNC(set_episode_settings) << [this](const cr::EpisodeSettings &settings) -> R<void>
+  BIND_SYNC(set_episode_settings) << [this](
+      const cr::EpisodeSettings &settings) -> R<uint64_t>
   {
     REQUIRE_CARLA_EPISODE();
     Episode->ApplySettings(settings);
-    return R<void>::Success();
+    return GFrameCounter;
   };
 
   BIND_SYNC(spawn_mesh) << [this](const std::vector<cg::Vector3D> &triangles) -> R<void>
@@ -389,6 +402,52 @@ void FCarlaServer::FPimpl::BindActions()
         false,
         nullptr,
         ETeleportType::TeleportPhysics);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_walker_state) << [this] (
+      cr::ActorId ActorId,
+      cr::Transform Transform,
+      float Speed) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto ActorView = Episode->FindActor(ActorId);
+    if (!ActorView.IsValid())
+    {
+      RESPOND_ERROR("unable to set walker state: actor not found");
+    }
+
+    // apply walker transform
+    FTransform NewTransform = Transform;
+    FVector NewLocation = NewTransform.GetLocation();
+
+    FTransform CurrentTransform = ActorView.GetActor()->GetTransform();
+    FVector CurrentLocation = CurrentTransform.GetLocation();
+
+    NewLocation.Z = CurrentLocation.Z;
+
+    NewTransform.SetLocation(NewLocation);
+
+    ActorView.GetActor()->SetActorRelativeTransform(
+    NewTransform,
+    false,
+    nullptr,
+    ETeleportType::TeleportPhysics);
+
+    // apply walker speed
+    auto Pawn = Cast<APawn>(ActorView.GetActor());
+    if (Pawn == nullptr)
+    {
+      RESPOND_ERROR("unable to set walker state: actor is not a walker");
+    }
+    auto Controller = Cast<AWalkerController>(Pawn->GetController());
+    if (Controller == nullptr)
+    {
+      RESPOND_ERROR("unable to set walker state: walker has an incompatible controller");
+    }
+    cr::WalkerControl Control(Transform.GetForwardVector(), Speed, false);
+    Controller->ApplyWalkerControl(Control);
+
     return R<void>::Success();
   };
 
@@ -858,7 +917,8 @@ void FCarlaServer::FPimpl::BindActions()
       [=](auto, const C::ApplyAngularVelocity &c) { MAKE_RESULT(set_actor_angular_velocity(c.actor, c.angular_velocity)); },
       [=](auto, const C::ApplyImpulse &c) {         MAKE_RESULT(add_actor_impulse(c.actor, c.impulse)); },
       [=](auto, const C::SetSimulatePhysics &c) {   MAKE_RESULT(set_actor_simulate_physics(c.actor, c.enabled)); },
-      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); });
+      [=](auto, const C::SetAutopilot &c) {         MAKE_RESULT(set_actor_autopilot(c.actor, c.enabled)); },
+      [=](auto, const C::ApplyWalkerState &c) {     MAKE_RESULT(set_walker_state(c.actor, c.transform, c.speed)); });
 
 #undef MAKE_RESULT
 

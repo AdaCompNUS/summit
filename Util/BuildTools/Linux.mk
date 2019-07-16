@@ -12,6 +12,9 @@ launch: LibCarla.server.release
 launch-only:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.sh --launch $(ARGS)
 
+import: CarlaUE4Editor
+	@${CARLA_BUILD_TOOLS_FOLDER}/Import.py $(ARGS)
+
 package: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
@@ -37,9 +40,6 @@ hard-clean:
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --clean
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.sh --clean
 	@echo "To force recompiling dependencies run: rm -Rf ${CARLA_BUILD_FOLDER}"
-
-export-maps:
-	@${CARLA_BUILD_TOOLS_FOLDER}/ExportMaps.sh ${ARGS}
 
 check: LibCarla PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --all $(ARGS)
@@ -87,6 +87,9 @@ PythonAPI.2: LibCarla.client.release
 
 PythonAPI.3: LibCarla.client.release
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --py3
+
+PythonAPI.docs:
+	@python PythonAPI/docs/doc_gen.py
 
 .PHONY: LibCarla
 LibCarla: LibCarla.release LibCarla.debug

@@ -53,7 +53,7 @@ def from_segment(start, end, width):
         yield (v3, v2, v1)
 
 if __name__ == '__main__':
-    lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
+    lane_network = carla.LaneNetwork.load('../../Data/network.ln')
     lanes = [e.data() for e in lane_network.lanes()]
   
     triangles = []

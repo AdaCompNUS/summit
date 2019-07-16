@@ -12,6 +12,11 @@
 #include <type_traits>
 #include <vector>
 
+template <typename OptionalT>
+static boost::python::object OptionalToPythonObject(OptionalT &optional) {
+  return optional.has_value() ? boost::python::object(*optional) : boost::python::object();
+}
+
 // Convenient for requests without arguments.
 #define CALL_WITHOUT_GIL(cls, fn) +[](cls &self) { \
       carla::PythonUtil::ReleaseGIL unlock; \
@@ -93,13 +98,27 @@
       return result; \
     }
 
+#define CALL_RETURNING_LIST_2(cls, fn, T1_, T2_) +[](const cls &self, T1_ t1, T2_ t2) { \
+      boost::python::list result; \
+      for (auto &&item : self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2))) { \
+        result.append(item); \
+      } \
+      return result; \
+    }
+
 #define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &self) { \
       auto optional = self.fn(); \
-      return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
+      return OptionalToPythonObject(optional); \
     }
 
 #define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
       auto optional = self.fn(std::forward<T1_>(t1)); \
+      return OptionalToPythonObject(optional); \
+    }
+
+#define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      auto optional = self.fn(); \
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
 

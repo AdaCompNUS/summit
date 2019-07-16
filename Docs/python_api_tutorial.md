@@ -1,4 +1,5 @@
-<h1>Python API tutorial</h1>
+<h1>Python
+API tutorial</h1>
 
 In this tutorial we introduce the basic concepts of the CARLA Python API, as
 well as an overview of its most important functionalities. The reference of all
@@ -106,8 +107,8 @@ transform = Transform(Location(x=230, y=195, z=40), Rotation(yaw=180))
 actor = world.spawn_actor(blueprint, transform)
 ```
 
-The spawn actor function comes in two flavours, `spawn_actor` and
-`try_spawn_actor`. The former will raise an exception if the actor could not be
+The spawn actor function comes in two flavours, [`spawn_actor`](python_api.md#carla.World.spawn_actor) and
+[`try_spawn_actor`](python_api.md#carla.World.try_spawn_actor). The former will raise an exception if the actor could not be
 spawned, the later will return `None` instead. The most typical cause of
 failure is collision at spawn point, meaning the actor does not fit at the spot
 we chose; probably another vehicle is in that spot or we tried to spawn into a
@@ -179,7 +180,7 @@ by providing throttle, break, and steer values
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
 ```
 
-These are all the parameters of the `VehicleControl` object and their default
+These are all the parameters of the [`VehicleControl`](python_api.md#carla.VehicleControl) object and their default
 values
 
 ```py
@@ -198,7 +199,7 @@ Also, physics control properties can be tuned for vehicles and its wheels
 vehicle.apply_physics_control(carla.VehiclePhysicsControl(max_rpm = 5000.0, center_of_mass = carla.Vector3D(0.0, 0.0, 0.0), torque_curve=[[0,400],[5000,400]]))
 ```
 
-These properties are controlled through a `VehiclePhysicsControl` object, which also contains a property to control each wheel's physics through a `WheelPhysicsControl` object.
+These properties are controlled through a [`VehiclePhysicsControl`](python_api.md#carla.VehiclePhysicsControl) object, which also contains a property to control each wheel's physics through a [`WheelPhysicsControl`](python_api.md#carla.WheelPhysicsControl) object.
 
 ```py
 carla.VehiclePhysicsControl(
@@ -229,11 +230,14 @@ Where:
 - *gear_switch_time*: Switching time between gears
 - *clutch_strength*: The clutch strength of the vehicle. Measured in Kgm^2/s
 
+- *final_ratio*: The fixed ratio from transmission to wheels.
+- *forward_gears*: List of `GearPhysicsControl` objects.
+
 - *mass*: The mass of the vehicle measured in Kg
 - *drag_coefficient*: Drag coefficient of the vehicle's chassis
 - *center_of_mass*: The center of mass of the vehicle
 - *steering_curve*: Curve that indicates the maximum steering for a specific forward speed
-- *wheels*: List of `WheelPhysicsControl` objects.
+- *wheels*: List of [`WheelPhysicsControl`](python_api.md#carla.WheelPhysicsControl) objects.
 
 ```py
 carla.WheelPhysicsControl(
@@ -254,6 +258,16 @@ Where:
 - *max_handbrake_torque*: The maximum handbrake torque in Nm.
 - *position*: The position of the wheel.
 
+```py
+carla.GearPhysicsControl(
+    ratio,
+    down_ratio,
+    up_ratio)
+```
+Where:
+- *ratio*: The transmission ratio of this gear.
+- *down_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting down.
+- *up_ratio*: The level of RPM (in relation to MaxRPM) where the gear autobox initiates shifting up.
 
 Our vehicles also come with a handy autopilot
 
@@ -313,7 +327,7 @@ for speed_sign in actor_list.filter('traffic.speed_limit.*'):
 
 Among the actors you can find in this list are
 
-  * **Traffic lights** with a `state` property to check the light's current state.
+  * **Traffic lights** with a [`state`](python_api.md#carla.TrafficLight.state) property to check the light's current state.
   * **Speed limit signs** with the speed codified in their type_id.
   * The **Spectator** actor that can be used to move the view of the simulator window.
 
@@ -341,7 +355,44 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
 
 The full list of presets can be found in the
-[WeatherParameters reference](python_api.md#carlaweatherparameters).
+[WeatherParameters reference](python_api.md#carla.WeatherParameters).
+
+### World Snapshot
+
+A world snapshot represents the state of every actor in the simulation at a single frame, a sort of still image of the world with a timestamp. With this feature it is possible to record the location of every actor and make sure all of them were captured at the same frame without the need of using synchronous mode.
+
+```py
+# Retrieve a snapshot of the world at this point in time.
+world_snapshot = world.get_snapshot()
+
+# Wait for the next tick and retrieve the snapshot of the tick.
+world_snapshot = world.wait_for_tick()
+
+# Register a callback to get called every time we receive a new snapshot.
+world.on_tick(lambda world_snapshot: do_something(world_snapshot))
+```
+
+The world snapshot contains a timestamp and a list of actor snapshots. Actor snapshots do not allow to operate on the actor directly as they only contain data about the physical state of the actor, but you can use their id to retrieve the actual actor. And the other way around, you can look up snapshots by id (average O(1) complexity).
+
+```py
+timestamp = world_snapshot.timestamp
+timestamp.frame_count
+timestamp.elapsed_seconds
+timestamp.delta_seconds
+timestamp.platform_timestamp
+
+
+for actor_snapshot in world_snapshot:
+    actor_snapshot.get_transform()
+    actor_snapshot.get_velocity()
+    actor_snapshot.get_angular_velocity()
+    actor_snapshot.get_acceleration()
+
+    actual_actor = world.get_actor(actor_snapshot.id)
+
+
+actor_snapshot = world_snapshot.find(actual_actor.id)
+```
 
 #### Map and waypoints
 
@@ -359,7 +410,7 @@ Let's start by getting the map of the current world
 map = world.get_map()
 ```
 
-For starters, the map has a `name` attribute that matches the name of the
+For starters, the map has a [`name`](python_api.md#carla.Map.name) attribute that matches the name of the
 currently loaded city, e.g. Town01. And, as we've seen before, we can also ask
 the map to provide a list of recommended locations for spawning vehicles,
 `map.get_spawn_points()`.
@@ -372,7 +423,7 @@ vehicle
 waypoint = map.get_waypoint(vehicle.get_location())
 ```
 
-This waypoint's `transform` is located on a drivable lane, and it's oriented
+This waypoint's [`transform`](python_api.md#carla.Waypoint.transform) is located on a drivable lane, and it's oriented
 according to the road direction at that point.
 
 Waypoints also have function to query the "next" waypoints; this method returns
@@ -417,13 +468,9 @@ for each road segment in the map.
 Finally, to allow access to the whole road information, the map object can be
 converted to OpenDrive format, and saved to disk as such.
 
-#### Recording and Replaying system
+### Recording and Replaying system
 
-CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position/orientation** of all vehicles and walkers.
-
-All data is written in a binary file on the server. We can use filenames with or without a path. If we specify a filename without any of '\\', '/' or ':' characters, then it is considered to be only a filename and will be saved on folder **CarlaUE4/Saved**. If we use any of the previous characters then the filename will be considered as an absolute filename with path (for example: '/home/carla/recording01.log' or 'c:\\records\\recording01.log').
-
-As estimation, a simulation with about 150 actors (50 traffic lights, 100 vehicles) for 1h of recording takes around 200 Mb in size.
+CARLA includes now a recording and replaying API, that allows to record a simulation in a file and later replay that simulation. The file is written on server side only, and it includes which **actors are created or destroyed** in the simulation, the **state of the traffic lights** and the **position** and **orientation** of all vehicles and pedestrians.
 
 To start recording we only need to supply a file name:
 
@@ -442,252 +489,120 @@ At any point we can replay a simulation, specifying the filename:
 ```py
 client.replay_file("recording01.log")
 ```
-The replayer will create and destroy all actors that were recorded, and move all actors and setting the traffic lights as they were working at that moment.
 
-When replaying we have some other options that we can use, the full API call is:
+The replayer replicates the actor and traffic light information of the recording each frame.
 
-```py
-client.replay_file("recording01.log", start, duration, camera)
-```
-* **start**: time we want to start the simulation.
-  * If the value is positive, it means the number of seconds from the beginning.
-  Ex: a value of 10 will start the simulation at second 10.
-  * If the value is negative, it means the number of seconds from the end.
-  Ex: a value of -10 will replay only the last 10 seconds of the simulation.
-* **duration**: we can say how many seconds we want to play. If the simulation has not reached the end, then all actors will have autopilot enabled automatically. The intention here is to allow for replaying a piece of a simulation and then let all actors start driving in autopilot again.
-* **camera**: we can specify the Id of an actor and then the camera will follow that actor while replaying. Continue reading to know which Id has an actor.
+For more details, [Recorder and Playback system](recorder_and_playback.md)
 
-We can specify the time factor (speed) for the replayer at any moment, using the next API:
+#### Pedestrians
+
+![pedestrian types](img/pedestrian_types.png)
+
+We can get a lit of all pedestrians from the blueprint library and choose one:
 
 ```py
-client.set_replayer_time_factor(2.0)
+world = client.get_world()
+blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
+walker_bp = random.choice(blueprintsWalkers)
 ```
-A value greater than 1.0 will play in fast motion, and a value below 1.0 will play in slow motion, being 1.0 the default value for normal playback.
-As a performance trick, with values over 2.0 the interpolation of positions is disabled.
 
-The call of this API will not stop the replayer in course, it will change just the speed, so you can change that several times while the replayer is running.
-
-We can know details about a recorded simulation, using this API:
+We can **get a list of random points** where to spawn the pedestrians. Those points are always from the areas where the pedestrian can walk:
 
 ```py
-client.show_recorder_file_info("recording01.log")
+# 1. take all the random locations to spawn
+spawn_points = []
+for i in range(50):
+    spawn_point = carla.Transform()
+    spawn_point.location = world.get_random_location_from_navigation()
+    if (spawn_point.location != None):
+        spawn_points.append(spawn_point)
+
 ```
 
-The output result is something like this:
-
-```
-Version: 1
-Map: Town05
-Date: 02/21/19 10:46:20
-
-Frame 1 at 0 seconds
- Create 2190: spectator (0) at (-260, -200, 382.001)
- Create 2191: traffic.traffic_light (3) at (4255, 10020, 0)
- Create 2192: traffic.traffic_light (3) at (4025, 7860, 0)
- Create 2193: traffic.traffic_light (3) at (1860, 7975, 0)
- Create 2194: traffic.traffic_light (3) at (1915, 10170, 0)
- ...
- Create 2258: traffic.speed_limit.90 (0) at (21651.7, -1347.59, 15)
- Create 2259: traffic.speed_limit.90 (0) at (5357, 21457.1, 15)
- Create 2260: traffic.speed_limit.90 (0) at (858, 18176.7, 15)
-Frame 2 at 0.0254253 seconds
- Create 2276: vehicle.mini.cooperst (1) at (4347.63, -8409.51, 120)
-  number_of_wheels = 4
-  object_type =
-  color = 255,241,0
-  role_name = autopilot
-Frame 4 at 0.0758538 seconds
- Create 2277: vehicle.diamondback.century (1) at (4017.26, 14489.8, 123.86)
-  number_of_wheels = 2
-  object_type =
-  color = 50,96,242
-  role_name = autopilot
-Frame 6 at 0.122666 seconds
- Create 2278: vehicle.seat.leon (1) at (3508.17, 7611.85, 120.002)
-  number_of_wheels = 4
-  object_type =
-  color = 237,237,237
-  role_name = autopilot
-Frame 8 at 0.171718 seconds
- Create 2279: vehicle.diamondback.century (1) at (3160, 3020.07, 120.002)
-  number_of_wheels = 2
-  object_type =
-  color = 50,96,242
-  role_name = autopilot
-Frame 10 at 0.219568 seconds
- Create 2280: vehicle.bmw.grandtourer (1) at (-5405.99, 3489.52, 125.545)
-  number_of_wheels = 4
-  object_type =
-  color = 0,0,0
-  role_name = autopilot
-Frame 2350 at 60.2805 seconds
- Destroy 2276
-Frame 2351 at 60.3057 seconds
- Destroy 2277
-Frame 2352 at 60.3293 seconds
- Destroy 2278
-Frame 2353 at 60.3531 seconds
- Destroy 2279
-Frame 2354 at 60.3753 seconds
- Destroy 2280
-
-Frames: 2354
-Duration: 60.3753 seconds
-```
-From here we know the **date** and the **map** where the simulation was recorded.
-Then for each frame that has an event (create or destroy an actor, collisions) it shows that info. For creating actors we see the **Id** it has and some info about the actor to create. This is the **id** we need to specify in the **camera** option when replaying if we want to follow that actor during the replay.
-At the end we can see the **total time** of the recording and also the number of **frames** that were recorded.
-
-In simulations whith a **hero actor** the collisions are automatically saved, so we can query a recorded file to see if any **hero actor** had collisions with some other actor. Currently the actor types we can use in the query are these:
-
-* **h** = Hero
-* **v** = Vehicle
-* **w** = Walker
-* **t** = Traffic light
-* **o** = Other
-* **a** = Any
-
-The collision query needs to know the type of actors involved in the collision. If we don't care we can specify **a** (any) for both. These are some examples:
-
-* **a** **a**: will show all collisions recorded
-* **v** **v**: will show all collisions between vehicles
-* **v** **t**: will show all collisions between a vehicle and a traffic light
-* **v** **w**: will show all collisions between a vehicle and a walker
-* **v** **o**: will show all collisions between a vehicle and other actor, like static meshes
-* **h** **w**: will show all collisions between a hero and a walker
-
-Currently only **hero actors** record the collisions, so first actor will be a hero always.
-
-The API for querying the collisions is:
+Now we can **spawn the pedestrians** at those positions using a batch of commands:
 
 ```py
-client.show_recorder_collisions("recording01.log", "a", "a")
+# 2. build the batch of commands to spawn the pedestrians
+batch = []
+for spawn_point in spawn_points:
+    walker_bp = random.choice(blueprintsWalkers)
+    batch.append(carla.command.SpawnActor(walker_bp, spawn_point))
+
+# apply the batch
+results = client.apply_batch_sync(batch, True)
+for i in range(len(results)):
+    if results[i].error:
+        logging.error(results[i].error)
+    else:
+        walkers_list.append({"id": results[i].actor_id})
 ```
 
-The output is something similar to this:
-
-```
-Version: 1
-Map: Town05
-Date: 02/19/19 15:36:08
-
-    Time  Types     Id Actor 1                                 Id Actor 2
-      16   v v     122 vehicle.yamaha.yzf                     118 vehicle.dodge_charger.police
-      27   v o     122 vehicle.yamaha.yzf                       0
-
-Frames: 790
-Duration: 46 seconds
-```
-
-We can see there for each collision the **time** when happened, the **type** of the actors involved, and the **id and description** of each actor.
-
-So, if we want to see what happened on that recording for the first collision where the hero actor was colliding with a vehicle, we could use this API:
+We save the id of each walker from the results of the batch, in a dictionary because we will assign to them also a controller.
+We need to **create the controller** that will manage the pedestrian automatically:
 
 ```py
-client.replay_file("col2.log", 13, 0, 122)
+# 3. we spawn the walker controller
+batch = []
+walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+for i in range(len(walkers_list)):
+    batch.append(carla.command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+
+# apply the batch
+results = client.apply_batch_sync(batch, True)
+for i in range(len(results)):
+    if results[i].error:
+        logging.error(results[i].error)
+    else:
+        walkers_list[i]["con"] = results[i].actor_id
 ```
-We have started the replayer just a bit before the time of the collision, so we can see how it happened.
-Also, a value of 0 for the **duration** means to replay all the file (it is the default value).
 
-We can see something like this then:
+We create the controller as child of the walker, so the location we pass is (0,0,0).
 
-![collision](img/collision1.gif)
-
-There is another API to get information about actors that has been blocked by something and can not follow its way. That could be good to find incidences in the simulation. The API is:
+At this point we have a list of pedestrians with a controller each one, but we need to get the actual actor from the id. Because the controller is a child of the pedestrian, we need to **put all id in the same list** so the parent can find the child in the same list.
 
 ```py
-client.show_recorder_actors_blocked("recording01.log", min_time, min_distance)
+# 4. we put altogether the walkers and controllers id to get the objects from their id
+for i in range(len(walkers_list)):
+    all_id.append(walkers_list[i]["con"])
+    all_id.append(walkers_list[i]["id"])
+all_actors = world.get_actors(all_id)
 ```
+The list all_actors has now all the actor objects we created.
 
-The parameters are:
-* **min_time**: the minimum time that an actor needs to be stopped to be considered as blocked (in seconds).
-* **min_distance**: the minimum distance to consider an actor to be stopped (in cm).
-
-So, if we want to know which actor is stopped (moving less than 1 meter during 60 seconds), we could use something like:
+At this point is a good idea to **wait for a tick** on client, because then the server has time to send all new data about the new actors we just created (we need the transform of each one updated). So we can do a call like:
 
 ```py
-client.show_recorder_actors_blocked("col3.log", 60, 100)
+# wait for a tick to ensure client receives the last transform of the walkers we have just created
+world.wait_for_tick()
 ```
+After that, our client has the data about the actors updated.
 
-The result can be something like (it is sorted by the duration):
-
-```
-Version: 1
-Map: Town05
-Date: 02/19/19 15:45:01
-
-    Time     Id Actor                                 Duration
-      36    173 vehicle.nissan.patrol                      336
-      75    104 vehicle.dodge_charger.police               295
-      75    214 vehicle.chevrolet.impala                   295
-     234     76 vehicle.nissan.micra                       134
-     241    162 vehicle.audi.a2                            128
-     302    143 vehicle.bmw.grandtourer                     67
-     303    133 vehicle.nissan.micra                        67
-     303    167 vehicle.audi.a2                             66
-     302     80 vehicle.nissan.micra                        67
-
-Frames: 6985
-Duration: 374 seconds
-```
-
-This lines tell us when an actor was stopped for at least the minimum time specified.
-For example the 6th line, the actor 143, at time 302 seconds, was stopped for 67 seconds.
-
-We could check what happened that time with the next API command:
+ **Using the controller** we can set the locations where we want each pedestrian walk to:
 
 ```py
-client.replay_file("col3.log", 302, 0, 143)
+# 5. initialize each controller and set target to walk to (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_actors), 2):
+    # start walker
+    all_actors[i].start()
+    # set walk to random point
+    all_actors[i].go_to_location(world.get_random_location_from_navigation())
+    # random max speed
+    all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2 (default is 1.4 m/s)
 ```
 
-![actor blocked](img/actor_blocked1.png)
+There we have set at each pedestrian (through its controller) a random point and random speed. When they reach the target point then automatically walk to another random point.
 
-We see there is some mess there that actually blocks the actor (red vehicle in the image).
-We can check also another actor with:
+If the target point is not reachable, then they reach the closest point from the are where they are.
+
+![pedestrian sample](img/pedestrians_shoot.png)
+
+To **destroy the pedestrians**, we need to stop them from the navigation, and then destroy the objects (actor and controller):
 
 ```py
-client.replay_file("col3.log", 75, 0, 104)
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
 ```
-
-![actor blocked](img/actor_blocked2.png)
-
-We can see it is the same incidence but from another actor involved (police car).
-
-The result is sorted by duration, so the actor that is blocked for more time comes first. We could check the first line, with Id 173 at time 36 seconds it get stopped for 336 seconds. We could check how it arrived to that situation replaying a few seconds before time 36.
-
-```py
-client.replay_file("col3.log", 34, 0, 173)
-```
-
-![accident](img/accident.gif)
-
-We can see then the responsible of the incident.
-
-#### Sample PY scripts to use with the recording / replaying system
-
-There are some scripts you could use:
-
-* **start_recording.py**: this will start recording, and optionally you can spawn several actors and define how much time you want to record.
-  * **-f**: filename of write
-  * **-n**: vehicles to spawn (optional, 10 by default)
-  * **-t**: duration of the recording (optional)
-* **start_replaying.py**: this will start a replay of a file. We can define the starting time, duration and also an actor to follow.
-  * **-f**: filename of write
-  * **-s**: starting time (optional, by default from start)
-  * **-d**: duration (optional, by default all)
-  * **-c**: actor to follow (id) (optional)
-* **show_recorder_collisions.py**: this will show all the collisions hapenned while recording (currently only involved by hero actors).
-  * **-f**: filename of write
-  * **-t**: two letters definning the types of the actors involved, for example: -t aa
-    * **h** = Hero
-    * **v** = Vehicle
-    * **w** = Walker
-    * **t** = Traffic light
-    * **o** = Other
-    * **a** = Any
-* **show_recorder_actors_blocked.py**: this will show all the actors that are blocked (stopped) in the recorder. We can define the time and distance to be considered as blocked.
-  * **-f**: filename of write
-  * **-t**: minimum seconds stopped to be considered as blocked (optional)
-  * **-d**: minimum distance to be considered stopped (optional)
-
-

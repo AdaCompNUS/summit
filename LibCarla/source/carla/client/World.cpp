@@ -25,6 +25,10 @@ namespace client {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
+  boost::optional<geom::Location> World::GetRandomLocationFromNavigation() const {
+    return _episode.Lock()->GetRandomLocationFromNavigation();
+  }
+
   SharedPtr<Actor> World::GetSpectator() const {
     return _episode.Lock()->GetSpectator();
   }
@@ -33,11 +37,17 @@ namespace client {
     return _episode.Lock()->GetEpisodeSettings();
   }
 
-  void World::ApplySettings(const rpc::EpisodeSettings &settings) {
-    _episode.Lock()->SetEpisodeSettings(settings);
+  uint64_t World::ApplySettings(const rpc::EpisodeSettings &settings) {
+    return _episode.Lock()->SetEpisodeSettings(settings);
   }
     
-  void World::SpawnMesh(const std::vector<geom::Vector3D> &triangles) {
+  void World::SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map) {
+    std::vector<geom::Vector3D> triangles;
+    for (const geom::Triangle2D& t : occupancy_map.Triangles()) {
+      triangles.emplace_back(t.v0.x, t.v0.y, 0);
+      triangles.emplace_back(t.v1.x, t.v1.y, 0);
+      triangles.emplace_back(t.v2.x, t.v2.y, 0);
+    }
     _episode.Lock()->SpawnMesh(triangles);
   }
 
@@ -97,12 +107,16 @@ namespace client {
     return _episode.Lock()->WaitForTick(timeout);
   }
 
-  void World::OnTick(std::function<void(WorldSnapshot)> callback) {
+  size_t World::OnTick(std::function<void(WorldSnapshot)> callback) {
     return _episode.Lock()->RegisterOnTickEvent(std::move(callback));
   }
 
-  void World::Tick() {
-    _episode.Lock()->Tick();
+  void World::RemoveOnTick(size_t callback_id) {
+    _episode.Lock()->RemoveOnTickEvent(callback_id);
+  }
+
+  uint64_t World::Tick() {
+    return _episode.Lock()->Tick();
   }
 
 } // namespace client

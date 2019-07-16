@@ -23,6 +23,7 @@ namespace client {
 namespace detail {
 
   class Client;
+  class WalkerNavigation;
 
   /// Holds the current episode, and the current episode state.
   ///
@@ -48,6 +49,14 @@ namespace detail {
       return _state.load();
     }
 
+    std::shared_ptr<WalkerNavigation> CreateNavigationIfMissing();
+
+    std::shared_ptr<WalkerNavigation> GetNavigation() const {
+      auto nav = _navigation.load();
+      DEBUG_ASSERT(nav != nullptr);
+      return nav;
+    }
+
     void RegisterActor(rpc::Actor actor) {
       _actors.Insert(std::move(actor));
     }
@@ -62,8 +71,12 @@ namespace detail {
       return _snapshot.WaitFor(timeout);
     }
 
-    void RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
-      _on_tick_callbacks.RegisterCallback(std::move(callback));
+    size_t RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
+      return _on_tick_callbacks.Push(std::move(callback));
+    }
+
+    void RemoveOnTickEvent(size_t id) {
+      _on_tick_callbacks.Remove(id);
     }
 
   private:
@@ -75,6 +88,8 @@ namespace detail {
     Client &_client;
 
     AtomicSharedPtr<const EpisodeState> _state;
+
+    AtomicSharedPtr<WalkerNavigation> _navigation;
 
     CachedActorList _actors;
 

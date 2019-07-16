@@ -52,8 +52,8 @@ static auto WaitForTick(const carla::client::World &world, double seconds) {
   return world.WaitForTick(TimeDurationFromSeconds(seconds));
 }
 
-static void OnTick(carla::client::World &self, boost::python::object callback) {
-  self.OnTick(MakeCallback(std::move(callback)));
+static size_t OnTick(carla::client::World &self, boost::python::object callback) {
+  return self.OnTick(MakeCallback(std::move(callback)));
 }
 
 static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
@@ -62,14 +62,6 @@ static auto GetActorsById(carla::client::World &self, const boost::python::list 
       boost::python::stl_input_iterator<carla::ActorId>()};
   carla::PythonUtil::ReleaseGIL unlock;
   return self.GetActors(ids);
-}
-
-static void SpawnMesh(carla::client::World &self, const boost::python::list &triangles) {
-  std::vector<carla::geom::Vector3D> _triangles{
-      boost::python::stl_input_iterator<carla::geom::Vector3D>(triangles),
-      boost::python::stl_input_iterator<carla::geom::Vector3D>()};
-  carla::PythonUtil::ReleaseGIL unlock;
-  return self.SpawnMesh(_triangles);
 }
 
 void export_world() {
@@ -104,11 +96,20 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool>(
+    .def(init<bool, bool, double>(
         (arg("synchronous_mode")=false,
-         arg("no_rendering_mode")=false)))
+         arg("no_rendering_mode")=false,
+         arg("fixed_delta_seconds")=0.0)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
+    .add_property("fixed_delta_seconds",
+        +[](const cr::EpisodeSettings &self) {
+          return OptionalToPythonObject(self.fixed_delta_seconds);
+        },
+        +[](cr::EpisodeSettings &self, object value) {
+          double fds = (value == object{} ? 0.0 : extract<double>(value));
+          self.fixed_delta_seconds = fds > 0.0 ? fds : boost::optional<double>{};
+        })
     .def("__eq__", &cc::Timestamp::operator==)
     .def("__ne__", &cc::Timestamp::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -139,10 +140,11 @@ void export_world() {
     .add_property("debug", &cc::World::MakeDebugHelper)
     .def("get_blueprint_library", CONST_CALL_WITHOUT_GIL(cc::World, GetBlueprintLibrary))
     .def("get_map", CONST_CALL_WITHOUT_GIL(cc::World, GetMap))
+    .def("get_random_location_from_navigation", CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cc::World, GetRandomLocationFromNavigation))
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
-    .def("apply_settings", &cc::World::ApplySettings)
-    .def("spawn_mesh", &SpawnMesh, (arg("triangles")))
+    .def("spawn_occupancy_map", &cc::World::SpawnOccupancyMap, (arg("occupancy_map")))
+    .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
     .def("get_snapshot", &cc::World::GetSnapshot)
@@ -153,7 +155,8 @@ void export_world() {
     .def("try_spawn_actor", SPAWN_ACTOR_WITHOUT_GIL(TrySpawnActor))
     .def("wait_for_tick", &WaitForTick, (arg("seconds")=10.0))
     .def("on_tick", &OnTick, (arg("callback")))
-    .def("tick", &cc::World::Tick)
+    .def("remove_on_tick", &cc::World::RemoveOnTick, (arg("callback_id")))
+    .def("tick", CALL_WITHOUT_GIL(cc::World, Tick))
     .def(self_ns::str(self_ns::self))
   ;
 

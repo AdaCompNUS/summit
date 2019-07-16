@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.5.1)
 project(libcarla-client)
 
+# Install Recast&Detour libraries
+install(DIRECTORY "${RECAST_INCLUDE_PATH}/recast" DESTINATION include/system)
+file(GLOB libcarla_carla_recastlib "${RECAST_LIB_PATH}/*.*")
+install(FILES ${libcarla_carla_recastlib} DESTINATION lib)
+
 # Install rpclib (install in system folder to avoid extra warnings).
 install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include/system)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
@@ -85,6 +90,12 @@ file(GLOB libcarla_carla_occupancy_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_occupancy_sources}")
 install(FILES ${libcarla_carla_occupancy_sources} DESTINATION include/carla/occupancy)
 
+file(GLOB libcarla_carla_nav_sources
+    "${libcarla_source_path}/carla/nav/*.cpp"
+    "${libcarla_source_path}/carla/nav/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_nav_sources}")
+install(FILES ${libcarla_carla_nav_sources} DESTINATION include/carla/nav)
+
 file(GLOB libcarla_carla_opendrive_sources
     "${libcarla_source_path}/carla/opendrive/*.cpp"
     "${libcarla_source_path}/carla/opendrive/*.h")
@@ -96,12 +107,6 @@ file(GLOB libcarla_carla_opendrive_parser_sources
     "${libcarla_source_path}/carla/opendrive/parser/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_opendrive_parser_sources}")
 install(FILES ${libcarla_carla_opendrive_parser_sources} DESTINATION include/carla/opendrive/parser)
-
-file(GLOB libcarla_pugixml_sources
-    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.hpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 
 file(GLOB libcarla_carla_pointcloud_sources
     "${libcarla_source_path}/carla/pointcloud/*.cpp"
@@ -124,11 +129,6 @@ file(GLOB libcarla_carla_road_element_sources
     "${libcarla_source_path}/carla/road/element/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_road_element_sources}")
 install(FILES ${libcarla_carla_road_element_sources} DESTINATION include/carla/road/element)
-
-file(GLOB libcarla_carla_cephes_sources
-    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
-    "${libcarla_source_thirdparty_path}/cephes/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_cephes_sources}")
 
 file(GLOB libcarla_carla_road_general_sources
     "${libcarla_source_path}/carla/road/general/*.cpp"
@@ -196,15 +196,27 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_cephes_sources
+    "${libcarla_source_thirdparty_path}/cephes/*.cpp"
+    "${libcarla_source_thirdparty_path}/cephes/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_cephes_sources}")
+install(FILES ${libcarla_cephes_sources} DESTINATION include/cephes)
+
 file(GLOB libcarla_moodycamel_sources
     "${libcarla_source_thirdparty_path}/moodycamel/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_moodycamel_sources}")
 install(FILES ${libcarla_moodycamel_sources} DESTINATION include/moodycamel)
 
+file(GLOB libcarla_pugixml_sources
+    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
+    "${libcarla_source_thirdparty_path}/pugixml/*.hpp"
+    "${libcarla_source_thirdparty_path}/pugixml/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
+install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
+
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
-
 if (LIBCARLA_BUILD_RELEASE)
 
   add_library(carla_client STATIC ${libcarla_sources})
@@ -212,17 +224,28 @@ if (LIBCARLA_BUILD_RELEASE)
   target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${OPENCV_INCLUDE_PATH}")
+      "${OPENCV_INCLUDE_PATH}"
+      "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
 
   if (WIN32) # @todo Fix PythonAPI build on Windows.
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/DetourCrowd.lib")
   else ()
     if (NOT DEFINED CMAKE_CXX_FLAGS_RELEASE_CLIENT)
       set(CMAKE_CXX_FLAGS_RELEASE_CLIENT ${CMAKE_CXX_FLAGS_RELEASE})
     endif()
+
     set_target_properties(carla_client PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE_CLIENT}")
+
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client "${RECAST_LIB_PATH}/libDetourCrowd.a")
+
   endif (WIN32)
 
 endif()
@@ -234,11 +257,30 @@ if (LIBCARLA_BUILD_DEBUG)
   target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${OPENCV_INCLUDE_PATH}")
+      "${OPENCV_INCLUDE_PATH}"
+      "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)
 
-  set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+  if (WIN32) # @todo Fix PythonAPI build on Windows.
+    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
+
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Recast.lib")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/Detour.lib")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/DetourCrowd.lib")
+  else ()
+    if (NOT DEFINED CMAKE_CXX_FLAGS_DEBUG_CLIENT)
+      set(CMAKE_CXX_FLAGS_DEBUG_CLIENT ${CMAKE_CXX_FLAGS_DEBUG})
+    endif()
+
+    set_target_properties(carla_client_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG_CLIENT}")
+
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libRecast.a")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetour.a")
+    target_link_libraries(carla_client_debug "${RECAST_LIB_PATH}/libDetourCrowd.a")
+
+  endif (WIN32)
+
   target_compile_definitions(carla_client_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()

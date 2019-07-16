@@ -136,6 +136,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::MapInfo>("get_map_info");
   }
 
+  std::vector<uint8_t> Client::GetNavigationMesh() const {
+    return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
+  }
+
   std::vector<std::string> Client::GetAvailableMaps() {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
@@ -156,8 +160,8 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::EpisodeSettings>("get_episode_settings");
   }
 
-  void Client::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
-    _pimpl->AsyncCall("set_episode_settings", settings);
+  uint64_t Client::SetEpisodeSettings(const rpc::EpisodeSettings &settings) {
+    return _pimpl->CallAndWait<uint64_t>("set_episode_settings", settings);
   }
 
   rpc::WeatherParameters Client::GetWeatherParameters() {
@@ -332,8 +336,8 @@ namespace detail {
     return result.as<std::vector<rpc::CommandResponse>>();
   }
 
-  void Client::SendTickCue() {
-    _pimpl->AsyncCall("tick_cue");
+  uint64_t Client::SendTickCue() {
+    return _pimpl->CallAndWait<uint64_t>("tick_cue");
   }
 
 } // namespace detail

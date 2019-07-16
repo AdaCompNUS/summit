@@ -11,11 +11,11 @@
 namespace CommonAttributes {
   static const FString PATH = FPaths::ProjectContentDir();
   static const FString DEFAULT = TEXT("/Carla/Config/Default");
-  static const FString DEFINITIONS = TEXT("definitions");
+  static const FString DEFINITIONS = TEXT("props");
 }
 
 namespace PropAttributes {
-  static const FString REGISTRY_FORMAT = TEXT(".PropRegistry.json");
+  static const FString REGISTRY_FORMAT = TEXT(".Package.json");
   static const FString NAME = TEXT("name");
   static const FString MESH_PATH = TEXT("path");
   static const FString SIZE = TEXT("size");
@@ -119,32 +119,17 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
 
 void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropParametersArray)
 {
-  // Loads prop registry json files
+
+  // Find all Package.json files inside Unreal Content folder
   const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
 
-  // Get all Package names
-  TArray<FString> PackageList;
-  IFileManager::Get().FindFiles(PackageList, *(CommonAttributes::PATH + "/*"), false, true);
-
-  // Find all prop registry files inside package
   TArray<FString> PropFileNames;
-  for (FString &PackageName : PackageList)
-  {
-    FString FullPath = CommonAttributes::PATH + "/" + PackageName + "/Config";
-
-    TArray<FString> RegistryFileNames;
-    IFileManager::Get().FindFilesRecursive(RegistryFileNames,
-        *FullPath,
-        *WildCard,
-        true,
-        false,
-        false);
-
-    for (const FString &RegistryFileName : RegistryFileNames)
-    {
-      PropFileNames.Add(RegistryFileName);
-    }
-  }
+  IFileManager::Get().FindFilesRecursive(PropFileNames,
+      *CommonAttributes::PATH,
+      *WildCard,
+      true,
+      false,
+      false);
 
   // Sort and place Default File First if it exists
   PropFileNames.Sort();
