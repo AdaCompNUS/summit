@@ -14,8 +14,6 @@ namespace occupancy {
 class OccupancyMap {
 public:
 
-  OccupancyMap() = default;
-
   OccupancyMap(const std::vector<geom::Triangle2D>& triangles);
 
   const std::vector<geom::Triangle2D>& Triangles() const { return _triangles; }

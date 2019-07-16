@@ -2,15 +2,20 @@
 #include <carla/occupancy/OccupancyGrid.h>
 #include <carla/occupancy/OccupancyMap.h>
 #include <carla/occupancy/PolygonTable.h>
+#include <boost/python/register_ptr_to_python.hpp>
 #include <boost/python/numpy.hpp>
 #include <cstdint>
 
 void export_occupancy() {
   using namespace boost::python;
+  using namespace carla;
   using namespace carla::occupancy;
 
-  class_<OccupancyGrid>("OccupancyGrid",
-      init<uint32_t, uint32_t>((arg("rows"), arg("columns"))))
+  class_<OccupancyGrid>("OccupancyGrid", no_init)
+    .def("__init__", 
+        make_constructor(+[](uint32_t rows, uint32_t columns) {
+          return MakeShared<OccupancyGrid>(rows, columns);
+        }))
     .add_property("rows", &OccupancyGrid::Rows)
     .add_property("columns", &OccupancyGrid::Columns)
     .add_property("data", +[](OccupancyGrid& self) {
@@ -30,6 +35,10 @@ void export_occupancy() {
   ;
   
   class_<PolygonTable>("PolygonTable", no_init)
+    .def("__init__", 
+        make_constructor(+[](size_t rows, size_t columns) {
+          return MakeShared<PolygonTable>(rows, columns);
+        }))
     .add_property("rows", &PolygonTable::Rows)
     .add_property("columns", &PolygonTable::Columns)
     .def("get", &PolygonTable::Get,
@@ -37,6 +46,10 @@ void export_occupancy() {
   ;
 
   class_<OccupancyMap>("OccupancyMap", no_init)
+    .def("__init__", 
+        make_constructor(+[](const std::vector<geom::Triangle2D>& triangles) {
+          return MakeShared<OccupancyMap>(triangles);
+        }))
     .def("triangles", &OccupancyMap::Triangles,
         return_internal_reference<>())
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)

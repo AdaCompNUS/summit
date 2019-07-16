@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <fstream>
 #include <carla/geom/Math.h>
+#include <carla/Memory.h>
 
 namespace carla {
 namespace lanenetwork{
@@ -251,10 +252,6 @@ float LaneNetwork::GetLaneEndMinOffset(const Lane& lane) const {
     }
   }
   return min_offset.get_value_or(0);
-}
-
-RouteMap LaneNetwork::CreateRouteMap() const {
-  return RouteMap(this);
 }
 
 occupancy::OccupancyMap LaneNetwork::CreateOccupancyMap() const {

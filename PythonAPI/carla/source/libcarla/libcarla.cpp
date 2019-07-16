@@ -191,6 +191,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Geom.cpp"
 #include "LaneNetwork.cpp"
 #include "Occupancy.cpp"
+#include "Crowd.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
@@ -213,6 +214,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_lane_network();
   export_occupancy();
   export_control();
+  export_crowd();
   export_blueprint();
   export_actor();
   export_sensor();

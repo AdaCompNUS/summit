@@ -94,7 +94,8 @@ if __name__ == '__main__':
     walker_blueprints = world.get_blueprint_library().filter("walker.pedestrian.*")
     crowd_walkers = []
 
-    route_map = lane_network.create_route_map()
+    print(type(lane_network))
+    route_map = carla.RouteMap(lane_network)
     while True:
         while len(crowd_walkers) < 100:
             position = carla.Vector2D(random.uniform(-500, 500), random.uniform(-500, 500))

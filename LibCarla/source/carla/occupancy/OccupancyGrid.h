@@ -9,8 +9,6 @@ namespace occupancy {
 class OccupancyGrid {
 public:
 
-  OccupancyGrid() = default;
-
   OccupancyGrid(uint32_t rows, uint32_t columns) 
     : _mat(cv::Mat::zeros(static_cast<int>(rows), static_cast<int>(columns), CV_8UC1)) { }
 

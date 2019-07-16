@@ -9,12 +9,18 @@ namespace crowd {
   _lane_network(lane_network),
   _bounds_min(bounds_min),
   _bounds_max(bounds_max) {
-
-  _world->OnTick(std::bind(&CrowdController::OnWorldTick, this, std::placeholders::_1));
 }
 
 void CrowdController::OnWorldTick(const client::WorldSnapshot& world_snapshot) {
-  
+  std::cout << world_snapshot.GetTimestamp().platform_timestamp << std::endl;
+}
+
+void CrowdController::Start() {
+  _world->OnTick(std::bind(&CrowdController::OnWorldTick, this, std::placeholders::_1));
+}
+
+void CrowdController::Stop() {
+
 }
 
 }

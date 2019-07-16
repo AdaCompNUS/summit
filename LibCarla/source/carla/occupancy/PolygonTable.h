@@ -18,7 +18,6 @@ private:
 
 public:
 
-  PolygonTable() = default;
   PolygonTable(size_t rows, size_t columns) 
     : _rows(rows),
     _columns(columns),

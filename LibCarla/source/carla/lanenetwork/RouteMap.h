@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LaneNetwork.h"
+#include "carla/Memory.h"
 #include <cstdint>
 #include <vector>
 #include <random>
@@ -18,8 +19,6 @@ struct RoutePoint {
   int64_t segment_id;
   float offset;
 
-  RoutePoint() = default;
-
   RoutePoint(int64_t segment_id, float offset) : segment_id(segment_id), offset(offset) { }
     
   bool operator==(const RoutePoint &route_point) const {
@@ -34,9 +33,7 @@ struct RoutePoint {
 class RouteMap {
 public:
 
-  RouteMap() = default;
-
-  RouteMap(const LaneNetwork* lane_network);
+  RouteMap(SharedPtr<const LaneNetwork> lane_network);
 
   RoutePoint RandRoutePoint();
 
@@ -54,7 +51,7 @@ private:
   typedef std::pair<rt_segment_t, int> rt_value_t;
   typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16> > rt_tree_t;
 
-  const LaneNetwork* _lane_network;
+  SharedPtr<const LaneNetwork> _lane_network;
   std::vector<network_segment_t> _segments;
   std::unordered_map<int64_t, size_t> _lane_id_to_segment_id_map;
   std::unordered_map<int64_t, size_t> _lane_connection_id_to_segment_id_map;

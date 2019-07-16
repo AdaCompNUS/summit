@@ -8,6 +8,7 @@
 #include <cstdint>
 #include "RouteMap.h"
 #include "carla/occupancy/OccupancyMap.h"
+#include "carla/Memory.h"
 
 namespace carla {
 namespace lanenetwork {
@@ -99,7 +100,6 @@ public:
   float GetLaneStartMinOffset(const Lane& lane) const;
   float GetLaneEndMinOffset(const Lane& lane) const;
 
-  RouteMap CreateRouteMap() const;
   occupancy::OccupancyMap CreateOccupancyMap() const;
 
 private:
