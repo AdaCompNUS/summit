@@ -145,7 +145,7 @@ namespace detail {
   }
 
   void Client::SpawnMesh(const std::vector<geom::Vector3D>& triangles) {
-    _pimpl->AsyncCall("spawn_mesh", triangles);
+    _pimpl->CallAndWait<void>("spawn_mesh", triangles);
   }
 
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
