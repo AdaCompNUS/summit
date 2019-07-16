@@ -1,6 +1,7 @@
 #include <carla/geom/Vector2D.h>
 #include <carla/occupancy/OccupancyGrid.h>
 #include <carla/occupancy/OccupancyMap.h>
+#include <carla/occupancy/PolygonTable.h>
 #include <boost/python/numpy.hpp>
 #include <cstdint>
 
@@ -27,10 +28,18 @@ void export_occupancy() {
           self.At(row, column) = value;
         })
   ;
+  
+  class_<PolygonTable>("PolygonTable", no_init)
+    .add_property("rows", &PolygonTable::Rows)
+    .add_property("columns", &PolygonTable::Columns)
+    .def("get", &PolygonTable::Get,
+        return_internal_reference<>())
+  ;
 
   class_<OccupancyMap>("OccupancyMap", no_init)
     .def("triangles", &OccupancyMap::Triangles,
         return_internal_reference<>())
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
+    .def("create_polygon_table", &OccupancyMap::CreatePolygonTable)
   ;
 }

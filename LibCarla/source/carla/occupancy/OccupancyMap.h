@@ -2,6 +2,7 @@
 
 #include "carla/geom/Triangle2D.h"
 #include "carla/occupancy/OccupancyGrid.h"
+#include "carla/occupancy/PolygonTable.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -21,7 +22,7 @@ public:
 
   OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
 
-  PolygonTable CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;
+  PolygonTable CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float cell_size, float resolution) const;
 
 private:
     

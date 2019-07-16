@@ -18,6 +18,11 @@ import cv2
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
     occupancy_map = lane_network.create_occupancy_map()
+    polygon_table = occupancy_map.create_polygon_table(
+            carla.Vector2D(-500, -500),
+            carla.Vector2D(500, 500),
+            100,
+            0.1)
     
     #client = carla.Client('127.0.0.1', 2000)
     #client.set_timeout(2.0)
@@ -28,11 +33,26 @@ if __name__ == '__main__':
             carla.Vector2D(500, 500),
             0.1)
     
-    img, contours, hierarchy = cv2.findContours(
-            cv2.bitwise_not(occupancy_grid.data), 
-            cv2.RETR_EXTERNAL, 
-            cv2.CHAIN_APPROX_SIMPLE)
+    img = cv2.cvtColor(occupancy_grid.data, cv2.COLOR_GRAY2BGR)
     
-    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    cv2.drawContours(img, contours, -1, (255, 0, 0), 3)
+    for r in range(polygon_table.rows):
+        for c in range(polygon_table.columns):
+            for p in polygon_table.get(r, c):
+                print(r, c, len(polygon_table.get(r, c)))
+                for i in range(len(p) - 1):
+                    v1 = p[i]
+                    v2 = p[i + 1]
+                    cv2.arrowedLine(img, 
+                        (int((v1.y - (-500)) / 0.1), int((500 - v1.x) / 0.1)),
+                        (int((v2.y - (-500)) / 0.1), int((500 - v2.x) / 0.1)),
+                        (0, 0, 255),
+                        1)
+
+    
+    #img, contours, hierarchy = cv2.findContours(
+    #        cv2.bitwise_not(occupancy_grid.data), 
+    #        cv2.RETR_EXTERNAL, 
+    #        cv2.CHAIN_APPROX_SIMPLE)
+    #cv2.drawContours(img, contours, -1, (255, 0, 0), 3)
+
     cv2.imwrite('test.bmp', img)

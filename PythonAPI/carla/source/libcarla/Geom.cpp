@@ -101,6 +101,11 @@ void export_geom() {
       .def(boost::python::vector_indexing_suite<std::vector<cg::Vector2D>>())
       .def(self_ns::str(self_ns::self))
   ;
+  
+  class_<std::vector<std::vector<cg::Vector2D>>>("vector_of_vector_of_vector2D")
+      .def(boost::python::vector_indexing_suite<std::vector<std::vector<cg::Vector2D>>>())
+      .def(self_ns::str(self_ns::self))
+  ;
 
   class_<cg::Vector2D>("Vector2D")
     .def(init<float, float>((arg("x")=0.0f, arg("y")=0.0f)))
