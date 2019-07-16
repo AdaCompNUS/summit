@@ -3,10 +3,10 @@
 namespace carla {
 namespace crowd {
 
-  CrowdController::CrowdController(SharedPtr<client::World> world, SharedPtr<lanenetwork::LaneNetwork> lane_network, 
+CrowdController::CrowdController(SharedPtr<client::World> world, SharedPtr<const lanenetwork::RouteMap> route_map, 
     const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max)
   : _world(std::move(world)),
-  _lane_network(lane_network),
+  _route_map(std::move(route_map)),
   _bounds_min(bounds_min),
   _bounds_max(bounds_max) {
 }

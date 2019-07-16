@@ -2,7 +2,7 @@
 
 #include "carla/client/World.h"
 #include "carla/Memory.h"
-#include "carla/lanenetwork/LaneNetwork.h"
+#include "carla/lanenetwork/RouteMap.h"
 #include "carla/geom/Vector2D.h"
 
 namespace carla {
@@ -12,7 +12,7 @@ class CrowdController {
 
 public:
 
-  CrowdController(SharedPtr<client::World> world, SharedPtr<lanenetwork::LaneNetwork> lane_network, 
+  CrowdController(SharedPtr<client::World> world, SharedPtr<const lanenetwork::RouteMap> route_map, 
       const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
   
   void Start();
@@ -22,7 +22,7 @@ public:
 private:
 
   SharedPtr<client::World> _world;
-  SharedPtr<lanenetwork::LaneNetwork> _lane_network;
+  SharedPtr<const lanenetwork::RouteMap> _route_map;
   geom::Vector2D _bounds_min;
   geom::Vector2D _bounds_max;
 

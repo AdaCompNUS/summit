@@ -1,3 +1,16 @@
+# Example showing usage of LaneNetwork API and mesh spawning.
+#
+# LaneNetwork is loaded in LibCarla (C++) and exposed through the
+# PythonAPI wrapper. Mesh triangles are calculated in this script
+# (python) and sent back to LibCarla, where the API function 
+# SpawnMesh spawns the mesh in UE.
+#
+# In future iterations, the mesh calculations will probably be 
+# done completely in LibCarla and the concept of mesh triangles
+# will completely be hidden from users. i.e. the PythonAPI should
+# only contain a world.spawn_map(lane_network) or something like
+# that.
+
 import glob
 import math
 import os
@@ -13,46 +26,17 @@ import carla
 import random
 import time
 
-import cv2
-
 if __name__ == '__main__':
-    lane_network = carla.LaneNetwork.load('/home/leeyiyuan/Projects/osm-convert/network.ln')
+    lane_network = carla.LaneNetwork.load('../../Data/network.ln')
     occupancy_map = lane_network.create_occupancy_map()
-    polygon_table = occupancy_map.create_polygon_table(
-            carla.Vector2D(-500, -500),
-            carla.Vector2D(500, 500),
-            100,
-            0.1)
     
-    #client = carla.Client('127.0.0.1', 2000)
-    #client.set_timeout(2.0)
-    #client.get_world().spawn_occupancy_map(occupancy_map)
+    client = carla.Client('127.0.0.1', 2000)
+    client.set_timeout(2.0)
 
-    occupancy_grid = occupancy_map.create_occupancy_grid(
-            carla.Vector2D(-500, -500),
-            carla.Vector2D(500, 500),
-            0.1)
-    
-    img = cv2.cvtColor(occupancy_grid.data, cv2.COLOR_GRAY2BGR)
-    
-    for r in range(polygon_table.rows):
-        for c in range(polygon_table.columns):
-            for p in polygon_table.get(r, c):
-                print(r, c, len(polygon_table.get(r, c)))
-                for i in range(len(p) - 1):
-                    v1 = p[i]
-                    v2 = p[i + 1]
-                    cv2.arrowedLine(img, 
-                        (int((v1.y - (-500)) / 0.1), int((500 - v1.x) / 0.1)),
-                        (int((v2.y - (-500)) / 0.1), int((500 - v2.x) / 0.1)),
-                        (0, 0, 255),
-                        1)
+    crowd_controller = carla.CrowdController(
+            client.get_world(), 
+            carla.RouteMap(lane_network),
+            carla.Vector2D(-100, -100),
+            carla.Vector2D(100, 100))
 
-    
-    #img, contours, hierarchy = cv2.findContours(
-    #        cv2.bitwise_not(occupancy_grid.data), 
-    #        cv2.RETR_EXTERNAL, 
-    #        cv2.CHAIN_APPROX_SIMPLE)
-    #cv2.drawContours(img, contours, -1, (255, 0, 0), 3)
-
-    cv2.imwrite('test.bmp', img)
+    crowd_controller.start()
