@@ -1,6 +1,7 @@
 #include "OccupancyMap.h"
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include "PolygonTable.h"
 
 namespace carla {
 namespace occupancy {

@@ -21,6 +21,8 @@ public:
 
   OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
 
+  PolygonTable CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;
+
 private:
     
   typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;

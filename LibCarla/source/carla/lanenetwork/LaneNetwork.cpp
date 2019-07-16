@@ -66,6 +66,7 @@ LaneNetwork LaneNetwork::Load(const std::string& path) {
   };
 
   LaneNetwork lane_network(static_cast<float>((*read_double())));
+  bool has_bounds = false;
   boost::optional<uint8_t> element_type = read_uint8();
   while (element_type) {
     switch(*element_type) {
@@ -74,6 +75,11 @@ LaneNetwork LaneNetwork::Load(const std::string& path) {
         geom::Vector2D position(static_cast<float>((*read_double())), static_cast<float>((*read_double())));
         std::swap(position.x, position.y); // TODO change conversion to match.
         lane_network._nodes.emplace(id, Node(id, position));
+        if (!has_bounds || lane_network._bounds_min.x > position.x) lane_network._bounds_min.x = position.x;
+        if (!has_bounds || lane_network._bounds_min.y > position.y) lane_network._bounds_min.y = position.y;
+        if (!has_bounds || lane_network._bounds_max.x < position.x) lane_network._bounds_max.x = position.x;
+        if (!has_bounds || lane_network._bounds_max.y < position.y) lane_network._bounds_max.y = position.y;
+        has_bounds = true;
         break;
       }
       case 2: { // Road

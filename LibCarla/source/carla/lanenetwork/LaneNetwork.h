@@ -84,40 +84,29 @@ public:
   static LaneNetwork Load(const std::string& path);
 
   float LaneWidth() const { return _lane_width; }
-
   const std::unordered_map<int64_t, Node>& Nodes() const { return _nodes; }
-  
   const std::unordered_map<int64_t, Road>& Roads() const { return _roads; }
-  
   const std::unordered_map<int64_t, Lane>& Lanes() const { return _lanes; }
-  
   const std::unordered_map<int64_t, LaneConnection>& LaneConnections() const { return _lane_connections; }
   
   float GetRoadLength(const Road& road) const;
-
   geom::Vector2D GetRoadDirection(const Road& road) const;
-
   geom::Vector2D GetLaneDirection(const Lane& lane) const;
-
   geom::Vector2D GetLaneStart(const Lane& lane, float offset=0.0f) const;
-
   geom::Vector2D GetLaneEnd(const Lane& lane, float offset=0.0f) const;
-
   const std::vector<int64_t>& GetIncomingLaneConnectionIds(const Lane& lane) const;
-  
   const std::vector<int64_t>& GetOutgoingLaneConnectionIds(const Lane& lane) const;
-
   float GetLaneStartMinOffset(const Lane& lane) const;
-
   float GetLaneEndMinOffset(const Lane& lane) const;
 
   RouteMap CreateRouteMap() const;
-
   occupancy::OccupancyMap CreateOccupancyMap() const;
 
 private:
   
   float _lane_width;
+  geom::Vector2D _bounds_min;
+  geom::Vector2D _bounds_max;
   std::unordered_map<int64_t, Node> _nodes;
   std::unordered_map<int64_t, Road> _roads;
   std::unordered_map<int64_t, Lane> _lanes;

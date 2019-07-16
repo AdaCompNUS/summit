@@ -45,3 +45,4 @@ _site
 core
 profiler.csv
 *.swp
+*.swo
