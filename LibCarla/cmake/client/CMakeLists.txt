@@ -208,6 +208,12 @@ file(GLOB libcarla_pugixml_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
 
+file(GLOB libcarla_carla_crowd_sources
+    "${libcarla_source_path}/carla/crowd/*.cpp"
+    "${libcarla_source_path}/carla/crowd/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_crowd_sources}")
+install(FILES ${libcarla_carla_crowd_sources} DESTINATION include/carla/crowd)
+
 # ==============================================================================
 # Create targets for debug and release in the same build type.
 # ==============================================================================
