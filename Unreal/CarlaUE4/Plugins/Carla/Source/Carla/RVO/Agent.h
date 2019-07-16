@@ -40,6 +40,8 @@
 
 #include "Definitions.h"
 #include "RVOSimulator.h"
+#include "GammaParams.h"
+#include "Minkowski.h"
 
 namespace RVO {
 	/**
@@ -86,6 +88,19 @@ namespace RVO {
 		 */
 		void update();
 
+
+		void computeObstacleOrcaLines ();
+		void computeAgentOrcaLinesDisc ();
+		void computeAgentOrcaLinesPoly ();
+		void computeKinematicVelSet (float _max_tracking_bound);
+		float computeAttention(const Agent *other);
+		float computeResponsibility(const Agent *other);
+		bool inCollision(std::vector<Vector2> &minkowski_diff);
+        void computeLeftAndRightMostVector(Vector2 &left_most_vector, Vector2 &right_most_vector, std::vector<Vector2> &minkowski_diff);
+
+
+
+
 		std::vector<std::pair<float, const Agent *> > agentNeighbors_;
 		size_t maxNeighbors_;
 		float maxSpeed_;
@@ -102,6 +117,28 @@ namespace RVO {
 		Vector2 velocity_;
 
 		size_t id_;
+
+
+		// std::vector<Vector2> bounding_corners_ = new List<Point> ();
+		// string tag_ = "People";
+		// float max_tracking_angle_ = 90.0f;
+		// Vector2 heading_ = new Vector2 (0.0f, 1.0f);
+
+		// int agent_id_ = 0;
+		// float r_front_=20f;
+		// float r_rear_=0f;
+		// float res_dec_rate_ = 0.1f;
+
+		std::vector<Vector2> bounding_corners_;
+		std::string tag_;
+		float max_tracking_angle_;
+		Vector2 heading_;
+
+		int agent_id_;
+		float r_front_;
+		float r_rear_;
+		float res_dec_rate_;
+
 
 		friend class KdTree;
 		friend class RVOSimulator;

@@ -16,10 +16,7 @@ public class Carla : ModuleRules
     PrivatePCHHeaderFile = "Carla.h";
     bEnableUndefinedIdentifierWarnings = false;
 
-    if (IsWindows(Target))
-    {
-      bEnableExceptions = true;
-    }
+    bEnableExceptions = true;
 
     PublicIncludePaths.AddRange(
       new string[] {

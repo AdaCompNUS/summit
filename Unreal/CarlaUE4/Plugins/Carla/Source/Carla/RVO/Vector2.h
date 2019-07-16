@@ -175,6 +175,35 @@ namespace RVO {
 			return x_ != vector.x() || y_ != vector.y();
 		}
 
+		inline bool operator<(const Vector2 &vector) const
+		{
+			if (x_ != vector.x()) 
+				return x_ < vector.x();
+			else return y_ < vector.y();
+		}
+
+		inline bool operator>(const Vector2 &vector) const
+		{
+			if (x_ != vector.x()) 
+				return x_ > vector.x();
+			else return y_ > vector.y();
+		}
+
+		inline bool operator<=(const Vector2 &vector) const
+		{
+			if (x_ != vector.x()) 
+				return x_ < vector.x();
+			else return y_ <= vector.y();
+		}
+
+		inline bool operator>=(const Vector2 &vector) const
+		{
+			if (x_ != vector.x()) 
+				return x_ > vector.x();
+			else return y_ >= vector.y();
+		}
+
+
 		/**
 		 * \brief      Sets the value of this two-dimensional vector to the scalar
 		 *             multiplication of itself with the specified scalar value.
@@ -236,6 +265,25 @@ namespace RVO {
 
 			return *this;
 		}
+
+		/**
+		* \brief	rotate angele_deg counter-clockwise
+		* \param	angele_deg   angle to rotate in degree
+		* \return 	the rotated vector
+		*/
+		inline Vector2 rotate(float angle_deg)
+		{
+			double angle_rad = (double) angle_deg * 3.14159/180.0;
+
+			double cs = cos(angle_rad);
+			double sn = sin(angle_rad);
+
+			float px = x_ * (float) cs - y_ * (float) sn; 
+			float py = x_ * (float) sn + y_ * (float) cs;
+
+			return Vector2(px, py);
+		}
+
 
 	private:
 		float x_;
@@ -324,9 +372,47 @@ namespace RVO {
 	 * \return     The normalization of the two-dimensional vector.
 	 */
 	inline Vector2 normalize(const Vector2 &vector)
-	{
-		return vector / abs(vector);
+	{	
+		float norm = abs(vector);
+		if(norm == 0) return Vector2(0,0);
+
+		return vector / norm;
 	}
+
+
+	/**
+     * <summary> Computes the squared distance from a line segment with the
+     * specified endpoints to a specified point, and assign the nearest point to nearest_point</summary>
+     *
+     * <returns>The squared distance from the line segment to the point.
+     * </returns>
+     *
+     * <param name="vector1">The first endpoint of the line segment.</param>
+     * <param name="vector2">The second endpoint of the line segment.
+     * </param>
+     * <param name="vector3">The point to which the squared distance is to
+     * be calculated.</param>
+     */
+	inline float distSqPointLineSegment(Vector2 vector1, Vector2 vector2, Vector2 vector3, Vector2 &nearest_point)
+	{
+		float r = ((vector3 - vector1) * (vector2 - vector1)) / absSq(vector2 - vector1);
+
+		if (r < 0.0f)
+		{
+			nearest_point = vector1;
+			return absSq(vector3 - vector1);
+		}
+
+		if (r > 1.0f)
+		{
+			nearest_point = vector2;
+			return absSq(vector3 - vector2);
+		}
+
+		nearest_point = vector1 + r * (vector2 - vector1);
+		return absSq(vector3 - (vector1 + r * (vector2 - vector1)));
+	}
+
 }
 
 #endif /* RVO_VECTOR2_H_ */

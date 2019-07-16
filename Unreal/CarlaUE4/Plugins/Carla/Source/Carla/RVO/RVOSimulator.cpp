@@ -77,6 +77,20 @@ namespace RVO {
 		delete kdTree_;
 	}
 
+	void RVOSimulator::clearAllAgents()
+	{
+		for(int i=0; i< agents_.size(); i++)
+		{
+			if(agents_[i]!=NULL){
+				delete agents_[i];
+				agents_[i] = NULL;
+			}
+		}
+		agents_.clear();
+		kdTree_->clearAllAgents();
+	}
+
+
 	size_t RVOSimulator::addAgent(const Vector2 &position)
 	{
 		if (defaultAgent_ == NULL) {
@@ -120,6 +134,98 @@ namespace RVO {
 
 		return agents_.size() - 1;
 	}
+
+	size_t RVOSimulator::addAgent(const Vector2 &position, float neighborDist, size_t maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, const Vector2 &velocity, std::string tag, float max_tracking_angle)
+	{
+		Agent *agent = new Agent(this);
+
+		agent->position_ = position;
+		agent->maxNeighbors_ = maxNeighbors;
+		agent->maxSpeed_ = maxSpeed;
+		agent->neighborDist_ = neighborDist;
+		agent->radius_ = radius;
+		agent->timeHorizon_ = timeHorizon;
+		agent->timeHorizonObst_ = timeHorizonObst;
+		agent->velocity_ = velocity;
+
+		agent->id_ = agents_.size();
+
+		agent->tag_ = tag;
+		agent->max_tracking_angle_ = max_tracking_angle;
+
+
+		agents_.push_back(agent);
+
+		return agents_.size() - 1;
+	}
+
+	size_t RVOSimulator::addAgent(const Vector2 &position, float neighborDist, size_t maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, const Vector2 &velocity, std::string tag, float max_tracking_angle, int agent_id)
+	{
+		Agent *agent = new Agent(this);
+
+		agent->position_ = position;
+		agent->maxNeighbors_ = maxNeighbors;
+		agent->maxSpeed_ = maxSpeed;
+		agent->neighborDist_ = neighborDist;
+		agent->radius_ = radius;
+		agent->timeHorizon_ = timeHorizon;
+		agent->timeHorizonObst_ = timeHorizonObst;
+		agent->velocity_ = velocity;
+
+		agent->id_ = agents_.size();
+
+		agent->tag_ = tag;
+		agent->max_tracking_angle_ = max_tracking_angle;
+
+		agent->agent_id_ = agent_id;
+
+
+
+		agents_.push_back(agent);
+
+		return agents_.size() - 1;
+	}
+
+
+	void RVOSimulator::setAgentID(int agentNo, int agent_id){
+		agents_[agentNo]->agent_id_ = agent_id;
+	}
+
+	int RVOSimulator::getAgentID(int agentNo){
+		return agents_[agentNo]->agent_id_;
+	}
+
+	std::string RVOSimulator::getAgentTag(int agentNo){
+		return agents_[agentNo]->tag_;
+	}
+
+	Vector2 RVOSimulator::getAgentHeading(int agentNo)
+	{
+		return agents_[agentNo]->heading_;
+	}
+	void RVOSimulator::setAgentBoundingBoxCorners(int agentNo, std::vector<Vector2> corners)
+	{
+		agents_[agentNo]->bounding_corners_ = corners;
+	}
+
+	void RVOSimulator::setAgentHeading(int agentNo, Vector2 heading){
+		agents_[agentNo]->heading_ = heading;
+	}
+
+	void RVOSimulator::setAgentMaxTrackingAngle(int agentNo, float max_tracking_angle){
+		agents_[agentNo]->max_tracking_angle_ = max_tracking_angle;
+	}
+
+	void RVOSimulator::setAgentAttentionRadius(int agentNo, float r_front, float r_rear){
+		agents_[agentNo]->r_front_ = r_front;
+		agents_[agentNo]->r_rear_ = r_rear;
+	}
+
+	void RVOSimulator::setAgentResDecRate(int agentNo, float res_dec_rate){
+		agents_[agentNo]->res_dec_rate_ = res_dec_rate;
+	}
+
+////////////////////////////////
 
 	size_t RVOSimulator::addObstacle(const std::vector<Vector2> &vertices)
 	{
@@ -180,6 +286,102 @@ namespace RVO {
 		}
 
 		globalTime_ += timeStep_;
+	}
+
+	float RVOSimulator::getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b){
+		float theta = atan2 (a.y (), a.x ()) - atan2 (b.y (), b.x ());
+		if (theta > GammaParams::GAMMA_PI)
+			theta -= 2 * GammaParams::GAMMA_PI;
+		if (theta < - GammaParams::GAMMA_PI)
+			theta += 2 * GammaParams::GAMMA_PI;
+
+		return theta;
+	}
+
+	// return next position and heading for tracking pref_vel by applying bicycle model for dt time
+	std::vector<Vector2> RVOSimulator::bicycleMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg) {
+
+		std::vector<Vector2> pos_heading;
+
+		float speed_ = abs (pref_vel); //this is equivalent to making k0 infinite, where k0 is the control param for acceleration P controller: a = k0*(v* - v)
+
+		if (speed_ == 0) {
+			pos_heading.push_back (cur_pos);
+			pos_heading.push_back (cur_heading);
+			return pos_heading;
+		} else if (speed_ > max_speed){
+			speed_ = max_speed;
+		} else if (speed_ < -max_speed){
+			speed_ = -max_speed;
+		}
+
+		float max_tracking_angle_rad = max_tracking_angle_deg * GammaParams::GAMMA_PI / 180.0f;
+			
+		float steer_ = (car_len/6.8f)*getSignedAngleRadOfTwoVector(pref_vel, cur_heading);
+		if (steer_ > max_tracking_angle_rad)
+			steer_ = max_tracking_angle_rad;
+		if (steer_ < -max_tracking_angle_rad)
+			steer_ = -max_tracking_angle_rad;
+
+		float distance = speed_ * dt;
+
+		float turn = tan (steer_) * distance / car_len;
+
+		if ( (float) fabs (turn) < 0.0001f) { // use straight line model
+			cur_heading = cur_heading.rotate (turn * 180.0f / GammaParams::GAMMA_PI);
+			cur_pos += cur_heading * distance;
+		}else { // use bicycle model
+			float yaw =  atan2(cur_heading.y(), cur_heading.x());
+			float radius = distance / turn;
+
+			float cx = cur_pos.x() -  sin (yaw) * radius;
+			float cy = cur_pos.y() +  cos (yaw) * radius;
+			yaw = fmod(yaw + turn, 2 * GammaParams::GAMMA_PI);
+			float new_x = cx +  sin (yaw) * radius;
+			float new_y = cy -  cos (yaw) * radius;
+
+			cur_pos = Vector2 (new_x, new_y);
+			cur_heading = cur_heading.rotate (turn * 180.0f / GammaParams::GAMMA_PI);
+		}
+		
+		pos_heading.push_back (cur_pos);
+		pos_heading.push_back (cur_heading);
+		return pos_heading;
+
+	}
+
+
+	// return next position and heading for tracking pref_vel by applying holonomic model for dt time
+	std::vector<Vector2> RVOSimulator::holonomicMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg) {
+
+		std::vector<Vector2> pos_heading;
+
+		float speed_ = abs (pref_vel); //this is equivalent to making k0 infinite, where k0 is the control param for acceleration P controller: a = k0*(v* - v)
+
+		if (speed_ > max_speed){
+			speed_ = max_speed;
+		} else if (speed_ < -max_speed){
+			speed_ = -max_speed;
+		}
+
+		float max_tracking_angle_rad = max_tracking_angle_deg * GammaParams::GAMMA_PI / 180.0f;
+			
+		float steer_ = getSignedAngleRadOfTwoVector(pref_vel, cur_heading);
+		if (steer_ > max_tracking_angle_rad)
+			steer_ = max_tracking_angle_rad;
+		if (steer_ < -max_tracking_angle_rad)
+			steer_ = -max_tracking_angle_rad;
+
+		float distance = speed_ * dt;
+		
+		cur_heading = cur_heading.rotate (steer_ * 180.0f / GammaParams::GAMMA_PI);
+		cur_pos += cur_heading * distance;
+	
+		pos_heading.push_back (cur_pos);
+		pos_heading.push_back (cur_heading);
+		
+		return pos_heading;
+
 	}
 
 	size_t RVOSimulator::getAgentAgentNeighbor(size_t agentNo, size_t neighborNo) const
