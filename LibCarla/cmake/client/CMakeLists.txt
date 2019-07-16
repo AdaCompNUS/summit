@@ -72,12 +72,6 @@ file(GLOB libcarla_carla_image_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
 
-file(GLOB libcarla_carla_index_sources
-    "${libcarla_source_path}/carla/index/*.cpp"
-    "${libcarla_source_path}/carla/index/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_index_sources}")
-install(FILES ${libcarla_carla_index_sources} DESTINATION include/carla/index)
-
 file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.cpp"
     "${libcarla_source_path}/carla/lanenetwork/*.h")
