@@ -25,6 +25,7 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 import numpy as np
 import carla
 import random
+import time
 
 class CrowdWalker:
     def __init__(self, route_map, actor, max_speed):
@@ -84,9 +85,21 @@ class CrowdWalker:
 def in_bounds(position):
     return -500 <= position.x <= 500 and -500 <= position.y <= 500
 
+NUM_WALKERS = 100
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
+    route_map = carla.RouteMap(lane_network)
+    gamma = carla.RVOSimulator()
+    gamma.set_agent_defaults(
+            10.0, # neighbour_dist
+            20,   # max_neighbours
+            2.0,  # time_horizon
+            0.5,  # time_horizon_obst
+            0.4,  # radius
+            3.0)  # max_speed
+    for _ in range(NUM_WALKERS):
+        gamma.add_agent(carla.Vector2D())
     
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)
@@ -94,10 +107,9 @@ if __name__ == '__main__':
     walker_blueprints = world.get_blueprint_library().filter("walker.pedestrian.*")
     crowd_walkers = []
 
-    print(type(lane_network))
-    route_map = carla.RouteMap(lane_network)
     while True:
-        while len(crowd_walkers) < 100:
+
+        while len(crowd_walkers) < NUM_WALKERS:
             position = carla.Vector2D(random.uniform(-500, 500), random.uniform(-500, 500))
             route_point = route_map.get_nearest_route_point(position)
             position = route_map.get_position(route_point)
@@ -110,19 +122,31 @@ if __name__ == '__main__':
                     trans)
                 if actor:
                     crowd_walkers.append(CrowdWalker(route_map, actor, 2.0))
+        world.wait_for_tick()
 
         next_crowd_walkers = []
-        for crowd_walker in crowd_walkers:
+        for (i, crowd_walker) in enumerate(crowd_walkers):
             if not in_bounds(crowd_walker.get_position()):
+                next_crowd_walkers.append(None)
                 crowd_walker.actor.destroy()
                 continue
 
             pref_vel = crowd_walker.get_preferred_velocity()
             if pref_vel:
-                crowd_walker.set_velocity(pref_vel)
                 next_crowd_walkers.append(crowd_walker)
+                gamma.set_agent_position(i, crowd_walker.get_position())
+                gamma.set_agent_pref_velocity(i, pref_vel)
             else:
-                crowd_walker.set_velocity(carla.Vector2D(0.0, 0.0))
+                next_crowd_walkers.append(None)
+                gamma.set_agent_position(i, crowd_walker.get_position())
+                gamma.set_agent_pref_velocity(i, carla.Vector2D(0, 0))
                 crowd_walker.actor.destroy()
         crowd_walkers = next_crowd_walkers
+        
+        gamma.do_step()
 
+        for (i, crowd_walker) in enumerate(crowd_walkers):
+            if crowd_walker is not None:
+                crowd_walker.set_velocity(gamma.get_agent_velocity(i))
+
+        crowd_walkers = [w for w in crowd_walkers if w is not None]

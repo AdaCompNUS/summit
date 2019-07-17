@@ -37,7 +37,7 @@ void export_gamma() {
               Vector2(velocity.x, velocity.y));
         })
     .def("do_step", &RVOSimulator::doStep)
-    .def("get_velocity", 
+    .def("get_agent_velocity", 
         +[](RVOSimulator& self, int agent_no) {
           Vector2 velocity = self.getAgentVelocity(static_cast<size_t>(agent_no));
           return geom::Vector2D(velocity.x(), velocity.y());
