@@ -135,6 +135,9 @@ namespace RVO {
 		 */
 		~RVOSimulator();
 
+    // Guard against "definition of implicit copy constructor for 'RVOSimulator' is deprecated because it has a user-declared destructor [-Wdeprecated]"
+    RVOSimulator(const RVOSimulator&) = default;
+
 		/**
 		 * \brief      Adds a new agent with default properties to the
 		 *             simulation.
