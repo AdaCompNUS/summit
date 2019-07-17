@@ -148,6 +148,12 @@ file(GLOB libcarla_carla_rpc_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_rpc_sources}")
 install(FILES ${libcarla_carla_rpc_sources} DESTINATION include/carla/rpc)
 
+file(GLOB libcarla_carla_gamma_sources
+    "${libcarla_source_path}/carla/gamma/*.cpp"
+    "${libcarla_source_path}/carla/gamma/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_gamma_sources}")
+install(FILES ${libcarla_carla_gamma_sources} DESTINATION include/carla/gamma)
+
 file(GLOB libcarla_carla_sensor_sources
     "${libcarla_source_path}/carla/sensor/*.cpp"
     "${libcarla_source_path}/carla/sensor/*.h")
@@ -207,12 +213,6 @@ file(GLOB libcarla_pugixml_sources
     "${libcarla_source_thirdparty_path}/pugixml/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_pugixml_sources}")
 install(FILES ${libcarla_pugixml_sources} DESTINATION include/pugixml)
-
-file(GLOB libcarla_carla_crowd_sources
-    "${libcarla_source_path}/carla/crowd/*.cpp"
-    "${libcarla_source_path}/carla/crowd/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_crowd_sources}")
-install(FILES ${libcarla_carla_crowd_sources} DESTINATION include/carla/crowd)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
