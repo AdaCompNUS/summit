@@ -36,11 +36,8 @@ public:
   RouteMap(SharedPtr<const LaneNetwork> lane_network);
 
   RoutePoint RandRoutePoint();
-
   geom::Vector2D GetPosition(const RoutePoint& route_point) const;
-
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
-
   std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float lookahead_distance) const;
 
 private:

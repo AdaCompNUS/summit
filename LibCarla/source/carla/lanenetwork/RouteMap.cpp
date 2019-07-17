@@ -5,7 +5,8 @@ namespace carla {
 namespace lanenetwork {
 
 RouteMap::RouteMap(SharedPtr<const LaneNetwork> lane_network)
-  : _lane_network(std::move(lane_network)) {
+  : _lane_network(std::move(lane_network)),
+  _rng(std::random_device()()) {
   
   std::vector<rt_value_t> index_entries; 
   
