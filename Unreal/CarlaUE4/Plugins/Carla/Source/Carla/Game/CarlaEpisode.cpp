@@ -9,6 +9,7 @@
 
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Util/DynamicMeshActor.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
@@ -16,7 +17,6 @@
 #include "Engine/StaticMeshActor.h"
 #include "GameFramework/SpectatorPawn.h"
 #include "Kismet/GameplayStatics.h"
-#include "DynamicMeshActor.h"
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
 {

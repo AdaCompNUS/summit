@@ -13,8 +13,6 @@
 #include "Carla/Game/TaggerDelegate.h"
 #include "Carla/Settings/CarlaSettingsDelegate.h"
 #include "Carla/Weather/Weather.h"
-#include "Carla/Crowd/CrowdController.h"
-#include "LaneNetwork/LaneNetworkActor.h"
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
@@ -38,15 +36,6 @@ public:
     check(Episode != nullptr);
     return *Episode;
   }
-  
-  UFUNCTION(Exec)
-  void RenderOccupancyMap(const FString& FileName) const;
-
-  UFUNCTION(Exec)
-  void LoadLaneNetwork(const FString& LaneNetworkPath);
-
-  UFUNCTION(Exec)
-  void StartCrowd(int NumWalkers);
 
 protected:
 
@@ -61,16 +50,6 @@ protected:
   void Tick(float DeltaSeconds) override;
 
 private:
-
-  // Pointer to either occupancy map from CARLA or from lane network,
-  // depending on which is used.
-  const FOccupancyMap* OccupancyMap;
-
-  // Occupancy map lives either here or in LaneNetworkActor depending
-  // on whether CARLA map or lane network is used.
-  FOccupancyMap CarlaOccupancyMap;
-
-  boost::optional<carla::road::Map> CarlaWaypointMap;
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
@@ -87,12 +66,6 @@ private:
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;
 
-  UPROPERTY()
-  ALaneNetworkActor *LaneNetworkActor = nullptr;
-
-  UPROPERTY()
-  ACrowdController *CrowdController = nullptr;
-
   /// The class of Weather to spawn.
   UPROPERTY(Category = "CARLA Game Mode", EditAnywhere)
   TSubclassOf<AWeather> WeatherClass;
@@ -107,7 +80,4 @@ private:
 
   void SpawnActorFactories();
 
-  void CreateCarlaOccupancyMap();
-
-  void CreateCarlaWaypointMap(const FString& MapName);
 };

@@ -13,7 +13,6 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Weather/Weather.h"
-#include "Carla/Crowd/CrowdController.h"
 
 #include "GameFramework/Pawn.h"
 
@@ -269,11 +268,6 @@ public:
 
   std::string StartRecorder(std::string name);
 
-  void SetCrowdController(ACrowdController *CrowdCtrl)
-  {
-    CrowdController = CrowdCtrl;
-  }
-
 private:
 
   friend class ACarlaGameModeBase;
@@ -321,6 +315,4 @@ private:
   AWeather *Weather = nullptr;
 
   ACarlaRecorder *Recorder = nullptr;
-
-  ACrowdController *CrowdController = nullptr;
 };
