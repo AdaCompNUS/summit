@@ -11,7 +11,7 @@ void export_gamma() {
   static const auto GeomToGamma = [](const geom::Vector2D& v) { return Vector2(v.x, v.y); };
   static const auto GammaToGeom = [](const Vector2& v) { return geom::Vector2D(v.x(), v.y()); };
   
-  class_<AgentParams>("AgentParams", no_init)
+  class_<AgentParams>("AgentParams", init<>())
     .def("get_default", 
         &AgentParams::getDefaultAgentParam, 
         return_value_policy<reference_existing_object>())
