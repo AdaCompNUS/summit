@@ -139,16 +139,16 @@ void export_lane_network() {
     .staticmethod("load")
     .add_property("lane_width", 
         &LaneNetwork::LaneWidth)
-    .def("nodes", 
+    .add_property("nodes", 
         &LaneNetwork::Nodes,
         return_internal_reference<>())
-    .def("roads", 
+    .add_property("roads", 
         &LaneNetwork::Roads,
         return_internal_reference<>())
-    .def("lanes", 
+    .add_property("lanes", 
         &LaneNetwork::Lanes,
         return_internal_reference<>())
-    .def("lane_connections", 
+    .add_property("lane_connections", 
         &LaneNetwork::LaneConnections,
         return_internal_reference<>())
     .def("get_road_length", 

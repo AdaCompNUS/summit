@@ -1,5 +1,4 @@
 <h1>DRUNC Python API Tutorial</h1>
-
 #### Overview
 
 The DRUNC project extends CARLA with additional functionality to support research in autonomous driving in urban crowds. This document serves as a tutorial for DRUNC's Python API to access these features.
@@ -23,6 +22,8 @@ Additionally, we have also added functionality to support our extensions:
 
 - **Occupancy Map Spawning:** Spawns a given occupancy map as a mesh in a CARLA simulation.
 
+
+
 #### Loading and spawning lane network
 
 The typical first step is to load a lane network from an existing network file
@@ -39,6 +40,8 @@ client = carla.Client('127.0.0.1', 2000)
 world = client.get_world()
 world.spawn_occupancy_map(occupancy_map)
 ```
+
+
 
 #### Creating route map and walking along random routes
 
@@ -66,12 +69,13 @@ path = [route_point]
 for _ in range(20):
 	# Find all possible next route points 1.0 meters ahead.
 	possible_next_route_points = route_map.get_next_route_points(route_point[-1], 1.0)
-	
 	# Randomly select next route point.
 	next_route_point = random.choice(possible_next_route_points)
-	
 	path.append(next_route_point)
 ```
 
 
 
+#### Miscellaneous drawing tasks
+
+Occupancy maps can be used for miscellaneous drawing tasks. 
