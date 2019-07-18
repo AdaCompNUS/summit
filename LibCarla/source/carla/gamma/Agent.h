@@ -43,6 +43,7 @@
 #include "GammaParams.h"
 #include "Minkowski.h"
 
+
 namespace RVO {
 	/**
 	 * \brief      Defines an agent in the simulation.
@@ -124,7 +125,7 @@ namespace RVO {
 		// float max_tracking_angle_ = 90.0f;
 		// Vector2 heading_ = new Vector2 (0.0f, 1.0f);
 
-		// int agent_id_ = 0;
+		// int tracking_id_ = 0;
 		// float r_front_=20f;
 		// float r_rear_=0f;
 		// float res_dec_rate_ = 0.1f;
@@ -134,7 +135,7 @@ namespace RVO {
 		float max_tracking_angle_;
 		Vector2 heading_;
 
-		int agent_id_;
+		int tracking_id_;
 		float r_front_;
 		float r_rear_;
 		float res_dec_rate_;

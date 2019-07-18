@@ -36,6 +36,7 @@
 #include "KdTree.h"
 #include "Obstacle.h"
 
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -44,6 +45,7 @@ namespace RVO {
 	RVOSimulator::RVOSimulator() : defaultAgent_(NULL), globalTime_(0.0f), kdTree_(NULL), timeStep_(0.0f)
 	{
 		kdTree_ = new KdTree(this);
+
 	}
 
 	RVOSimulator::RVOSimulator(float timeStep, float neighborDist, size_t maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, const Vector2 &velocity) : defaultAgent_(NULL), globalTime_(0.0f), kdTree_(NULL), timeStep_(timeStep)
@@ -159,7 +161,8 @@ namespace RVO {
 		return agents_.size() - 1;
 	}
 
-	size_t RVOSimulator::addAgent(const Vector2 &position, float neighborDist, size_t maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, const Vector2 &velocity, std::string tag, float max_tracking_angle, int agent_id)
+
+	size_t RVOSimulator::addAgent(const Vector2 &position, float neighborDist, size_t maxNeighbors, float timeHorizon, float timeHorizonObst, float radius, float maxSpeed, const Vector2 &velocity, std::string tag, float max_tracking_angle, int tracking_id)
 	{
 		Agent *agent = new Agent(this);
 
@@ -177,7 +180,7 @@ namespace RVO {
 		agent->tag_ = tag;
 		agent->max_tracking_angle_ = max_tracking_angle;
 
-		agent->agent_id_ = agent_id;
+		agent->tracking_id_ = tracking_id;
 
 
 
@@ -187,12 +190,40 @@ namespace RVO {
 	}
 
 
-	void RVOSimulator::setAgentID(int agentNo, int agent_id){
-		agents_[static_cast<size_t>(agentNo)]->agent_id_ = agent_id;
+	size_t RVOSimulator::addAgent(const AgentParams agt, int tracking_id)
+	{
+		Agent *agent = new Agent(this);
+
+		agent->position_ = agt.position;
+		agent->maxNeighbors_ = static_cast<size_t> (agt.maxNeighbors);
+		agent->maxSpeed_ = agt.maxSpeed;
+		agent->neighborDist_ = agt.neighborDist;
+		agent->radius_ = agt.radius;
+		agent->timeHorizon_ = agt.timeHorizon;
+		agent->timeHorizonObst_ = agt.timeHorizonObst;
+		agent->velocity_ = agt.velocity;
+
+		agent->id_ = agents_.size();
+
+		agent->tag_ = agt.tag;
+		agent->max_tracking_angle_ = agt.max_tracking_angle;
+
+		agent->tracking_id_ = tracking_id;
+
+
+
+		agents_.push_back(agent);
+
+		return agents_.size() - 1;
+	}
+
+
+	void RVOSimulator::setAgentID(int agentNo, int tracking_id){
+		agents_[static_cast<size_t>(agentNo)]->tracking_id_ = tracking_id;
 	}
 
 	int RVOSimulator::getAgentID(int agentNo){
-		return agents_[static_cast<size_t>(agentNo)]->agent_id_;
+		return agents_[static_cast<size_t>(agentNo)]->tracking_id_;
 	}
 
 	std::string RVOSimulator::getAgentTag(int agentNo){

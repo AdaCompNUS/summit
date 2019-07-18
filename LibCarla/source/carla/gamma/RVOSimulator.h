@@ -43,6 +43,7 @@
 #include <vector>
 
 #include "Vector2.h"
+#include "DefaultAgentParams.h"
 
 namespace RVO {
 	/**
@@ -217,6 +218,10 @@ namespace RVO {
 			float radius, float maxSpeed, 
 			const Vector2 &velocity, 
 			std::string tag, float max_tracking_angle, int agent_id);
+
+		size_t addAgent(const AgentParams agt, int tracking_id = 0);
+
+		//size_t addAgent()
 
 		void setAgentID(int agentNo, int agent_id);
 
