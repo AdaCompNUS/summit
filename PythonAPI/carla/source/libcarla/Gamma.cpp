@@ -15,6 +15,7 @@ void export_gamma() {
     .def("get_default", 
         &AgentParams::getDefaultAgentParam, 
         return_value_policy<reference_existing_object>())
+    .staticmethod("get_default")
     .add_property("position", 
         +[](AgentParams& self) {
           return GammaToGeom(self.position);
