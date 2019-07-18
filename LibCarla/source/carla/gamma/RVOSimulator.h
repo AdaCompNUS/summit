@@ -43,7 +43,7 @@
 #include <vector>
 
 #include "Vector2.h"
-#include "DefaultAgentParams.h"
+#include "AgentParams.h"
 
 namespace RVO {
 	/**
