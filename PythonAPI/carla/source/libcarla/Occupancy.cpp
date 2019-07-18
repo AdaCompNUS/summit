@@ -50,8 +50,8 @@ void export_occupancy() {
         make_constructor(+[](const std::vector<geom::Triangle2D>& triangles) {
           return MakeShared<OccupancyMap>(triangles);
         }))
-    .def("triangles", &OccupancyMap::Triangles,
-        return_internal_reference<>())
+    .add_property("triangles", 
+        make_function(&OccupancyMap::Triangles, return_internal_reference<>()))
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
     .def("create_polygon_table", &OccupancyMap::CreatePolygonTable)
   ;
