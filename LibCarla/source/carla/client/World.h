@@ -67,7 +67,7 @@ namespace client {
     uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
 
     // Spawns an occupancy map in the world.
-    void SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map);
+    void SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map, std::string material);
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;

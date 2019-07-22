@@ -84,8 +84,12 @@ if __name__ == '__main__':
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(10.0)
     world = client.get_world();
-    world.spawn_occupancy_map(occupancy_map)
-    world.spawn_occupancy_map(sidewalk_occupancy_map)
+    world.spawn_occupancy_map(
+        occupancy_map, 
+        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt')
+    world.spawn_occupancy_map(
+        sidewalk_occupancy_map,
+        '/Game/Carla/Static/GenericMaterials/Ground/GroundWheatField_Mat')
     world.wait_for_tick()
 
     walker_blueprints = world.get_blueprint_library().filter("walker.pedestrian.*")

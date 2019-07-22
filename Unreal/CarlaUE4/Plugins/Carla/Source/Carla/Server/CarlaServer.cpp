@@ -234,14 +234,14 @@ void FCarlaServer::FPimpl::BindActions()
     return GFrameCounter;
   };
 
-  BIND_SYNC(spawn_mesh) << [this](const std::vector<cg::Vector3D> &triangles) -> R<void>
+  BIND_SYNC(spawn_mesh) << [this](const std::vector<cg::Vector3D> &triangles, std::string material) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<FVector> Triangles;
     for (const cg::Vector3D& triangle : triangles) {
       Triangles.Emplace(triangle.x * 100.0f, triangle.y * 100.0f, triangle.z * 100.0f);
     }
-    Episode->SpawnMesh(Triangles);
+    Episode->SpawnMesh(Triangles, FString(material.c_str()));
     return R<void>::Success();
   };
 

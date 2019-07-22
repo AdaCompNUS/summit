@@ -136,9 +136,10 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   return Actor;
 }
 
-void UCarlaEpisode::SpawnMesh(const TArray<FVector>& Triangles)
+void UCarlaEpisode::SpawnMesh(const TArray<FVector>& Triangles, const FString& Material)
 {
   ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
+  DynamicMeshActor->SetMaterial(Material);
   DynamicMeshActor->SetTriangles(Triangles);
 }
 

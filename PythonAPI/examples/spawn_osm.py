@@ -31,4 +31,6 @@ if __name__ == '__main__':
     
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)
-    client.get_world().spawn_occupancy_map(occupancy_map)
+    client.get_world().spawn_occupancy_map(
+        occupancy_map,
+        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt')

@@ -144,8 +144,8 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
-  void Client::SpawnMesh(const std::vector<geom::Vector3D>& triangles) {
-    _pimpl->CallAndWait<void>("spawn_mesh", triangles);
+  void Client::SpawnMesh(const std::vector<geom::Vector3D>& triangles, std::string material) {
+    _pimpl->CallAndWait<void>("spawn_mesh", triangles, material);
   }
 
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {

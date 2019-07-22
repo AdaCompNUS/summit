@@ -210,7 +210,7 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  void SpawnMesh(const TArray<FVector>& Triangles);
+  void SpawnMesh(const TArray<FVector>& Triangles, const FString& Material);
 
   /// Attach @a Child to @a Parent.
   ///

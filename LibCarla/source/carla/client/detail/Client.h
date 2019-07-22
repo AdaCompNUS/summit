@@ -81,7 +81,7 @@ namespace detail {
 
     std::vector<std::string> GetAvailableMaps();
 
-    void SpawnMesh(const std::vector<geom::Vector3D>& triangles);
+    void SpawnMesh(const std::vector<geom::Vector3D>& triangles, std::string material);
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 

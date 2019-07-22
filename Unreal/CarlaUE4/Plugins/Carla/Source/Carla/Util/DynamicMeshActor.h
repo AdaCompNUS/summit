@@ -14,7 +14,9 @@ public:
 	UProceduralMeshComponent* MeshComponent;
   
   ADynamicMeshActor(const FObjectInitializer& ObjectInitializer);
-		
+
+  void SetMaterial(const FString& Material);
+
   void SetTriangles(const TArray<FVector>& Triangles);
 
 private:

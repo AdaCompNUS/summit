@@ -7,9 +7,10 @@ ADynamicMeshActor::ADynamicMeshActor(const FObjectInitializer& ObjectInitializer
   MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("Mesh"));
   MeshComponent->bUseAsyncCooking = true;
 	RootComponent = MeshComponent;
-  
-  static ConstructorHelpers::FObjectFinder<UMaterial> MeshMaterial(TEXT("Material'/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt'"));
-  MeshComponent->SetMaterial(0, MeshMaterial.Object);
+}
+
+void ADynamicMeshActor::SetMaterial(const FString& Material) {
+  MeshComponent->SetMaterial(0, Cast<UMaterial>(StaticLoadObject(UMaterial::StaticClass(), NULL, *Material)));
 }
 
 void ADynamicMeshActor::SetTriangles(const TArray<FVector>& Triangles) {
