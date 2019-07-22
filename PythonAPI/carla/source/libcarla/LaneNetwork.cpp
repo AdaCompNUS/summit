@@ -57,7 +57,7 @@ namespace lanenetwork {
   }
   
   std::ostream &operator<<(std::ostream &out, const RoutePoint &route_point) {
-    out << "RoutePoint(id=" << route_point.segment_id
+    out << "RoutePoint(segment_id=" << route_point.segment_id
         << ", offset=" << route_point.offset << ')';
     return out;
   }
@@ -182,17 +182,16 @@ void export_lane_network() {
   
   register_ptr_to_python<SharedPtr<LaneNetwork>>();
   
-  class_<RoutePoint>("RoutePoint", 
-      init<int64_t, float>(
-        (arg("id"), arg("offset"))))
+  class_<RoutePoint>("RoutePoint", init<int64_t, float>())
     .def(init<const RoutePoint &>((arg("rhs"))))
     .def("__eq__", &RoutePoint::operator==)
     .def("__ne__", &RoutePoint::operator!=)
-    .def_readwrite("id", &RoutePoint::segment_id)
+    .def_readwrite("segment_id", &RoutePoint::segment_id)
     .def_readwrite("offset", &RoutePoint::offset)
     .def(self_ns::str(self_ns::self))
   ;
-  
+ 
+  // Required because getting next route points returns a vector.
   class_<std::vector<RoutePoint>>("vector_of_route_point")
        .def(vector_indexing_suite<std::vector<RoutePoint>>())
   ;

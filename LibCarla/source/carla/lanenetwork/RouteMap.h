@@ -21,8 +21,8 @@ struct RoutePoint {
 
   RoutePoint(int64_t segment_id, float offset) : segment_id(segment_id), offset(offset) { }
     
-  bool operator==(const RoutePoint &route_point) const {
-    return segment_id == route_point.segment_id && offset == route_point.offset;
+  bool operator==(const RoutePoint &rhs) const {
+    return segment_id == rhs.segment_id && offset == rhs.offset;
   }
 
   bool operator!=(const RoutePoint &rhs) const {

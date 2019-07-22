@@ -91,15 +91,8 @@ if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
     route_map = carla.RouteMap(lane_network)
     gamma = carla.RVOSimulator()
-    gamma.set_agent_defaults(
-            10.0, # neighbour_dist
-            20,   # max_neighbours
-            2.0,  # time_horizon
-            0.5,  # time_horizon_obst
-            0.4,  # radius
-            3.0)  # max_speed
-    for _ in range(NUM_WALKERS):
-        gamma.add_agent(carla.Vector2D())
+    for i in range(NUM_WALKERS):
+        gamma.add_agent(carla.AgentParams.get_default("People"), i)
     
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)

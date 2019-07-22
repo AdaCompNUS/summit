@@ -1,16 +1,3 @@
-# Example showing usage of LaneNetwork API and mesh spawning.
-#
-# LaneNetwork is loaded in LibCarla (C++) and exposed through the
-# PythonAPI wrapper. Mesh triangles are calculated in this script
-# (python) and sent back to LibCarla, where the API function 
-# SpawnMesh spawns the mesh in UE.
-#
-# In future iterations, the mesh calculations will probably be 
-# done completely in LibCarla and the concept of mesh triangles
-# will completely be hidden from users. i.e. the PythonAPI should
-# only contain a world.spawn_map(lane_network) or something like
-# that.
-
 import glob
 import math
 import os
@@ -24,19 +11,16 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 import numpy as np
 import carla
 import random
-import time
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
     occupancy_map = lane_network.create_occupancy_map()
+    sidewalk = carla.Sidewalk(occupancy_map, 
+            carla.Vector2D(-200, -200), carla.Vector2D(200, 200),
+            2.0, 0.1)
+    sidewalk_occupancy_map = sidewalk.create_occupancy_map()
     
     client = carla.Client('127.0.0.1', 2000)
     client.set_timeout(2.0)
-
-    crowd_controller = carla.CrowdController(
-            client.get_world(), 
-            carla.RouteMap(lane_network),
-            carla.Vector2D(-100, -100),
-            carla.Vector2D(100, 100))
-
-    crowd_controller.start()
+    client.get_world().spawn_occupancy_map(occupancy_map)
+    client.get_world().spawn_occupancy_map(sidewalk_occupancy_map)

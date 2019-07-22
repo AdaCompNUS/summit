@@ -200,6 +200,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Map.cpp"
 #include "Sensor.cpp"
 #include "SensorData.cpp"
+#include "Sidewalk.cpp"
 #include "Snapshot.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
@@ -215,6 +216,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_occupancy();
   export_control();
   export_gamma();
+  export_sidewalk();
   export_blueprint();
   export_actor();
   export_sensor();

@@ -75,7 +75,7 @@ PolygonTable OccupancyMap::CreatePolygonTable(const geom::Vector2D& bounds_min, 
       cv::bitwise_not(cell_occupancy_grid.Mat(), cell_occupancy_grid.Mat());
       
       std::vector<std::vector<cv::Point>> contours;
-      findContours(cell_occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+      findContours(cell_occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
       for (const std::vector<cv::Point>& contour : contours) {
         std::vector<geom::Vector2D> polygon(contour.size());

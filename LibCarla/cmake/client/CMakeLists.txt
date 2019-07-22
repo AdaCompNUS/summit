@@ -172,6 +172,12 @@ file(GLOB libcarla_carla_sensor_s11n_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_sensor_s11n_sources}")
 install(FILES ${libcarla_carla_sensor_s11n_sources} DESTINATION include/carla/sensor/s11n)
 
+file(GLOB libcarla_carla_sidewalk_sources
+    "${libcarla_source_path}/carla/sidewalk/*.cpp"
+    "${libcarla_source_path}/carla/sidewalk/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_sidewalk_sources}")
+install(FILES ${libcarla_carla_sidewalk_sources} DESTINATION include/carla/sidewalk)
+
 file(GLOB libcarla_carla_streaming_sources
     "${libcarla_source_path}/carla/streaming/*.cpp"
     "${libcarla_source_path}/carla/streaming/*.h")
