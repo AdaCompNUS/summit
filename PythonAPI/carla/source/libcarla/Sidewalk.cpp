@@ -50,8 +50,10 @@ void export_sidewalk() {
         &Sidewalk::CreateOccupancyMap)
     .def("get_route_point_position",
         &Sidewalk::GetRoutePointPosition)
-    .def("rand_route_point",
-        &Sidewalk::RandRoutePoint)
+    .def("get_nearest_route_point",
+        &Sidewalk::GetNearestRoutePoint)
+    .def("get_next_route_point",
+        &Sidewalk::GetNextRoutePoint)
   ;
   
   register_ptr_to_python<SharedPtr<Sidewalk>>();

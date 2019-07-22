@@ -23,15 +23,32 @@ Sidewalk::Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map,
   std::vector<std::vector<cv::Point>> contours;
   findContours(occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-  for (const std::vector<cv::Point>& contour : contours) {
+  std::vector<rt_value_t> index_entries;
+  for (size_t i = 0; i < contours.size(); i++) {
+    const std::vector<cv::Point>& contour = contours[i];
+
     std::vector<geom::Vector2D> polygon(contour.size());
-    for (size_t i = 0; i < contour.size(); i++) {
-      polygon[i].x = bounds_max.x - (contour[i].y + 0.5f) * resolution;
-      polygon[i].y = bounds_min.y + (contour[i].x + 0.5f) * resolution;
+    
+    for (size_t j = 0; j < contour.size(); j++) {
+      polygon[j].x = bounds_max.x - (contour[j].y + 0.5f) * resolution;
+      polygon[j].y = bounds_min.y + (contour[j].x + 0.5f) * resolution;
     }
+
+    for (size_t j = 0; j < polygon.size(); j++) {
+      const geom::Vector2D& v_start = polygon[j];
+      const geom::Vector2D& v_end = polygon[(j + 1) % polygon.size()];
+
+      index_entries.emplace_back(
+          rt_segment_t(
+            rt_point_t(v_start.x, v_start.y),
+            rt_point_t(v_end.x, v_end.y)),
+          std::pair<size_t, size_t>(i, j));
+    }
+
     _polygons.emplace_back(std::move(polygon));
   }
 
+  _segments_index = rt_tree_t(index_entries);
 }
   
 occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
@@ -78,17 +95,58 @@ geom::Vector2D Sidewalk::GetRoutePointPosition(const SidewalkRoutePoint& route_p
   return segment_start + (segment_end - segment_start).MakeUnitVector() * route_point.offset;
 }
 
-SidewalkRoutePoint Sidewalk::RandRoutePoint() {
-  size_t polygon_id = std::uniform_int_distribution<size_t>(0, _polygons.size() - 1)(_rng);
-  size_t segment_id = std::uniform_int_distribution<size_t>(0, _polygons[polygon_id].size() - 1)(_rng);
+SidewalkRoutePoint Sidewalk::GetNearestRoutePoint(const geom::Vector2D& position) const {
+  std::vector<rt_value_t> results;
+  _segments_index.query(boost::geometry::index::nearest(rt_point_t(position.x, position.y), 1), std::back_inserter(results));
+  rt_value_t& result = results[0];
+  
+  geom::Vector2D segment_start(
+      boost::geometry::get<0, 0>(result.first),
+      boost::geometry::get<0, 1>(result.first));
+  geom::Vector2D segment_end(
+      boost::geometry::get<1, 0>(result.first),
+      boost::geometry::get<1, 1>(result.first));
+  geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
 
-  const geom::Vector2D& start = _polygons[polygon_id][segment_id];
-  const geom::Vector2D& end = _polygons[polygon_id][(segment_id + 1) % _polygons[polygon_id].size()];
+  float offset = geom::Vector2D::DotProduct(
+      position - segment_start,
+      direction);
+  offset = std::max(0.0f, std::min((segment_end - segment_start).Length(), offset));
 
-  float offset = std::uniform_real_distribution<float>(0, (end - start).Length())(_rng);
-  bool direction = std::uniform_int_distribution<uint8_t>(0, 1)(_rng) == 1;
+  return SidewalkRoutePoint(
+      result.second.first,
+      result.second.second,
+      offset,
+      true);
+}
+  
+SidewalkRoutePoint Sidewalk::GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const {
+  const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
 
-  return SidewalkRoutePoint(polygon_id, segment_id, offset, direction);
+  size_t segment_end_id;
+  float segment_length;
+
+  if (route_point.direction) {
+    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
+  } else {
+    segment_end_id = route_point.segment_id;
+    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
+    else segment_end_id--;
+  }
+    
+  segment_length = (_polygons[route_point.polygon_id][segment_end_id] - segment_start).Length();
+    
+  if (route_point.offset + lookahead_distance <= segment_length) {
+    return SidewalkRoutePoint(
+        route_point.polygon_id,
+        route_point.segment_id,
+        route_point.offset + lookahead_distance,
+        route_point.direction);
+  } else {
+    return GetNextRoutePoint(
+        SidewalkRoutePoint(route_point.polygon_id, segment_end_id, 0, route_point.direction),
+        lookahead_distance - (segment_length - route_point.offset));
+  }
 }
 
 }
