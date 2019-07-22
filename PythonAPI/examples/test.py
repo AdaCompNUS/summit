@@ -86,10 +86,10 @@ if __name__ == '__main__':
     world = client.get_world();
     world.spawn_occupancy_map(
         occupancy_map, 
-        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt')
+        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt01')
     world.spawn_occupancy_map(
         sidewalk_occupancy_map,
-        '/Game/Carla/Static/GenericMaterials/Ground/GroundWheatField_Mat')
+        '/Game/Carla/Static/GenericMaterials/M_Red')
     world.wait_for_tick()
 
     walker_blueprints = world.get_blueprint_library().filter("walker.pedestrian.*")
