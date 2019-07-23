@@ -112,5 +112,11 @@ void export_gamma() {
     .def("set_agent_attention_radius", &RVOSimulator::setAgentAttentionRadius)
     .def("set_agent_res_dec_rate", &RVOSimulator::setAgentResDecRate)
     .def("set_agent", &RVOSimulator::setAgent)
+    .def("set_agent_velocity",
+        +[](RVOSimulator& self, int agent_no, const geom::Vector2D& velocity) {
+          self.setAgentVelocity(
+              static_cast<size_t>(agent_no),
+              GeomToGamma(velocity));
+        })
   ;
 }
