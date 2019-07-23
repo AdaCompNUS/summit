@@ -117,51 +117,46 @@ SidewalkRoutePoint Sidewalk::GetNearestRoutePoint(const geom::Vector2D& position
   return SidewalkRoutePoint(
       result.second.first,
       result.second.second,
-      offset,
-      true);
+      offset);
 }
   
 SidewalkRoutePoint Sidewalk::GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const {
-  if (route_point.direction) {
-    const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
-    const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
-    float segment_length = (segment_end - segment_start).Length();
-      
-    if (route_point.offset + lookahead_distance <= segment_length) {
-      return SidewalkRoutePoint(
-          route_point.polygon_id,
-          route_point.segment_id,
-          route_point.offset + lookahead_distance,
-          route_point.direction);
-    } else {
-      return GetNextRoutePoint(
-          SidewalkRoutePoint(
-            route_point.polygon_id, 
-            (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size(),
-            0,
-            route_point.direction),
-          lookahead_distance - (segment_length - route_point.offset));
-    }
+  const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
+  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
+  float segment_length = (segment_end - segment_start).Length();
+    
+  if (route_point.offset + lookahead_distance <= segment_length) {
+    return SidewalkRoutePoint(
+        route_point.polygon_id,
+        route_point.segment_id,
+        route_point.offset + lookahead_distance);
   } else {
-    if (route_point.offset - lookahead_distance >= 0) {
-      return SidewalkRoutePoint(
-          route_point.polygon_id,
-          route_point.segment_id,
-          route_point.offset - lookahead_distance,
-          route_point.direction);
-    } else {
-      const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
-      size_t previous_segment_id = (route_point.segment_id == 0 ? _polygons[route_point.polygon_id].size() : route_point.segment_id) - 1;
-      const geom::Vector2D& previous_segment_start = _polygons[route_point.polygon_id][previous_segment_id];
+    return GetNextRoutePoint(
+        SidewalkRoutePoint(
+          route_point.polygon_id, 
+          (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size(),
+          0),
+        lookahead_distance - (segment_length - route_point.offset));
+  }
+}
 
-      return GetNextRoutePoint(
-          SidewalkRoutePoint(
-            route_point.polygon_id,
-            previous_segment_id,
-            (segment_start - previous_segment_start).Length(),
-            route_point.direction),
-          lookahead_distance - route_point.offset);
-    }
+SidewalkRoutePoint Sidewalk::GetPreviousRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const {
+  if (route_point.offset - lookahead_distance >= 0) {
+    return SidewalkRoutePoint(
+        route_point.polygon_id,
+        route_point.segment_id,
+        route_point.offset - lookahead_distance);
+  } else {
+    const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
+    size_t previous_segment_id = (route_point.segment_id == 0 ? _polygons[route_point.polygon_id].size() : route_point.segment_id) - 1;
+    const geom::Vector2D& previous_segment_start = _polygons[route_point.polygon_id][previous_segment_id];
+
+    return GetPreviousRoutePoint(
+        SidewalkRoutePoint(
+          route_point.polygon_id,
+          previous_segment_id,
+          (segment_start - previous_segment_start).Length()),
+        lookahead_distance - route_point.offset);
   }
 }
   
@@ -210,8 +205,7 @@ std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkR
     adjacent_route_points.emplace_back(
         best_polygon_id,
         best_segment_id,
-        best_offset,
-        true);
+        best_offset);
   }
 
   return adjacent_route_points;

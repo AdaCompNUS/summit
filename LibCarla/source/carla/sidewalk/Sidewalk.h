@@ -18,16 +18,14 @@ struct SidewalkRoutePoint {
   size_t polygon_id;
   size_t segment_id;
   float offset;
-  bool direction;
 
-  SidewalkRoutePoint(size_t polygon_id, size_t segment_id, float offset, bool direction)
-    : polygon_id(polygon_id), segment_id(segment_id), offset(offset), direction(direction) { }
+  SidewalkRoutePoint(size_t polygon_id, size_t segment_id, float offset)
+    : polygon_id(polygon_id), segment_id(segment_id), offset(offset) { }
   
   bool operator==(const SidewalkRoutePoint &rhs) const {
     return polygon_id == rhs.polygon_id &&
       segment_id == rhs.segment_id &&
-      offset == rhs.offset &&
-      direction == rhs.direction;
+      offset == rhs.offset;
   }
 
   bool operator!=(const SidewalkRoutePoint &rhs) const {
@@ -49,6 +47,7 @@ public:
   geom::Vector2D GetRoutePointPosition(const SidewalkRoutePoint& route_point) const;
   SidewalkRoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   SidewalkRoutePoint GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;
+  SidewalkRoutePoint GetPreviousRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;
   std::vector<SidewalkRoutePoint> GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point) const;
 
 private:
