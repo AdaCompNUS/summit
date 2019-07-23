@@ -26,6 +26,10 @@ struct AgentParams{
 	float error_bound;
 	float pref_speed;
 
+	float r_front;
+	float r_rear;
+	float res_dec_rate;
+
 	AgentParams(){
 		position = RVO::Vector2(0.0f, 0.0f);
 		neighborDist = 8.0f;
@@ -43,6 +47,10 @@ struct AgentParams{
 		len_rear_axle_to_front_axle = 0.2f;
 		error_bound = 0.0f;
 		pref_speed = 1.2f;
+
+		r_front = 6.0f;
+		r_rear = 0.0f;
+		res_dec_rate = 0.6f;
 	}
 
 
@@ -50,7 +58,7 @@ struct AgentParams{
 				float _timeHorizon, float _timeHorizonObst, float _radius, 
 				float _maxSpeed, RVO::Vector2 _velocity, std::string _tag,
 				float _max_tracking_angle, float _len_ref_to_front, float _len_ref_to_side,
-				float _len_ref_to_back, float _len_rear_axle_to_front_axle, float _error_bound, float _pref_speed){
+				float _len_ref_to_back, float _len_rear_axle_to_front_axle, float _error_bound, float _pref_speed, float _r_front, float _r_rear, float _res_dec_rate){
 		position = _position;
 		neighborDist = _neighborDist;
 		maxNeighbors = _maxNeighbors;
@@ -67,6 +75,10 @@ struct AgentParams{
 		len_rear_axle_to_front_axle = _len_rear_axle_to_front_axle;
 		error_bound = _error_bound;
 		pref_speed = _pref_speed;
+
+		r_front = _r_front;
+		r_rear = _r_rear;
+		res_dec_rate = _res_dec_rate;
 	}
 
 
@@ -76,6 +88,18 @@ struct AgentParams{
 
 		static auto create_lookup = []() { //lambda function
 			std::unordered_map<std::string, AgentParams> lookup;
+
+			float ped_r_front_list = 6.0f; 
+			float ped_r_rear_list = 0.0f; 
+			float ped_res_dec_rate_list = 0.6f;
+
+			float veh_r_front_list = 8.0f;
+			float veh_r_rear_list = 0.0f;
+			float veh_res_dec_rate_list = 0.1f;
+
+			float bicycle_r_front_list = 8.0f;
+			float bicycle_r_rear_list = 0.0f;
+			float bicycle_res_dec_rate_list = 0.3f;
 
 			// default setting for pedestrians
 			RVO::Vector2 ped_position = RVO::Vector2(0.0f, 0.0f);
@@ -96,7 +120,7 @@ struct AgentParams{
 			float ped_pref_speed = 1.2f;
 
 			AgentParams ped = AgentParams(	ped_position, ped_neighborDist, ped_maxNeighbors, ped_timeHorizon, ped_timeHorizonObst, ped_radius, ped_maxSpeed, ped_velocity, ped_tag, 
-								ped_max_tracking_angle, ped_len_ref_to_front, ped_len_ref_to_side, ped_len_ref_to_back, ped_len_rear_axle_to_front_axle, ped_error_bound, ped_pref_speed);
+								ped_max_tracking_angle, ped_len_ref_to_front, ped_len_ref_to_side, ped_len_ref_to_back, ped_len_rear_axle_to_front_axle, ped_error_bound, ped_pref_speed, ped_r_front_list, ped_r_rear_list, ped_res_dec_rate_list);
 			
 
 			lookup[ped_tag]=ped;
@@ -121,7 +145,8 @@ struct AgentParams{
 			float scooter_pref_speed = 4.0f;
 
 			AgentParams scooter = AgentParams(	scooter_position, scooter_neighborDist, scooter_maxNeighbors, scooter_timeHorizon, scooter_timeHorizonObst, scooter_radius, scooter_maxSpeed, scooter_velocity, scooter_tag, 
-						scooter_max_tracking_angle, scooter_len_ref_to_front, scooter_len_ref_to_side, scooter_len_ref_to_back, scooter_len_rear_axle_to_front_axle, scooter_error_bound, scooter_pref_speed);
+						scooter_max_tracking_angle, scooter_len_ref_to_front, scooter_len_ref_to_side, scooter_len_ref_to_back, scooter_len_rear_axle_to_front_axle, scooter_error_bound, scooter_pref_speed
+						,bicycle_r_front_list, bicycle_r_rear_list, bicycle_res_dec_rate_list);
 			
 			lookup[scooter_tag]=scooter;
 
@@ -144,7 +169,8 @@ struct AgentParams{
 			float car_pref_speed = 4.0f;
 
 			AgentParams car = AgentParams(	car_position, car_neighborDist, car_maxNeighbors, car_timeHorizon, car_timeHorizonObst, car_radius, car_maxSpeed, car_velocity, car_tag, 
-								car_max_tracking_angle, car_len_ref_to_front, car_len_ref_to_side, car_len_ref_to_back, car_len_rear_axle_to_front_axle, car_error_bound, car_pref_speed);
+								car_max_tracking_angle, car_len_ref_to_front, car_len_ref_to_side, car_len_ref_to_back, car_len_rear_axle_to_front_axle, car_error_bound, car_pref_speed,
+								veh_r_front_list, veh_r_rear_list, veh_res_dec_rate_list);
 			
 			lookup[car_tag]=car;
 
@@ -168,7 +194,8 @@ struct AgentParams{
 			float van_pref_speed = 4.0f;
 
 			AgentParams van = AgentParams(	van_position, van_neighborDist, van_maxNeighbors, van_timeHorizon, van_timeHorizonObst, van_radius, van_maxSpeed, van_velocity, van_tag, 
-								van_max_tracking_angle, van_len_ref_to_front, van_len_ref_to_side, van_len_ref_to_back, van_len_rear_axle_to_front_axle, van_error_bound, van_pref_speed);
+								van_max_tracking_angle, van_len_ref_to_front, van_len_ref_to_side, van_len_ref_to_back, van_len_rear_axle_to_front_axle, van_error_bound, van_pref_speed
+								,veh_r_front_list, veh_r_rear_list, veh_res_dec_rate_list);
 			
 			lookup[van_tag]=van;
 
@@ -192,7 +219,8 @@ struct AgentParams{
 			float bus_pref_speed = 4.0f;
 
 			AgentParams bus = AgentParams(	bus_position, bus_neighborDist, bus_maxNeighbors, bus_timeHorizon, bus_timeHorizonObst, bus_radius, bus_maxSpeed, bus_velocity, bus_tag, 
-								bus_max_tracking_angle, bus_len_ref_to_front, bus_len_ref_to_side, bus_len_ref_to_back, bus_len_rear_axle_to_front_axle, bus_error_bound, bus_pref_speed);
+								bus_max_tracking_angle, bus_len_ref_to_front, bus_len_ref_to_side, bus_len_ref_to_back, bus_len_rear_axle_to_front_axle, bus_error_bound, bus_pref_speed
+								,veh_r_front_list, veh_r_rear_list, veh_res_dec_rate_list);
 			
 			lookup[bus_tag]=bus;
 
@@ -215,7 +243,8 @@ struct AgentParams{
 			float jeep_pref_speed = 4.0f;
 
 			AgentParams jeep = AgentParams( jeep_position, jeep_neighborDist, jeep_maxNeighbors, jeep_timeHorizon, jeep_timeHorizonObst, jeep_radius, jeep_maxSpeed, jeep_velocity, jeep_tag, 
-								jeep_max_tracking_angle, jeep_len_ref_to_front, jeep_len_ref_to_side, jeep_len_ref_to_back, jeep_len_rear_axle_to_front_axle, jeep_error_bound, jeep_pref_speed);
+								jeep_max_tracking_angle, jeep_len_ref_to_front, jeep_len_ref_to_side, jeep_len_ref_to_back, jeep_len_rear_axle_to_front_axle, jeep_error_bound, jeep_pref_speed
+								,veh_r_front_list, veh_r_rear_list, veh_res_dec_rate_list);
 			
 			lookup[jeep_tag]=jeep;
 
@@ -239,7 +268,8 @@ struct AgentParams{
 			float bicycle_pref_speed = 2.7f;
 
 			AgentParams bicycle = AgentParams(	bicycle_position, bicycle_neighborDist, bicycle_maxNeighbors, bicycle_timeHorizon, bicycle_timeHorizonObst, bicycle_radius, bicycle_maxSpeed, bicycle_velocity, bicycle_tag, 
-								bicycle_max_tracking_angle, bicycle_len_ref_to_front, bicycle_len_ref_to_side, bicycle_len_ref_to_back, bicycle_len_rear_axle_to_front_axle, bicycle_error_bound, bicycle_pref_speed);
+								bicycle_max_tracking_angle, bicycle_len_ref_to_front, bicycle_len_ref_to_side, bicycle_len_ref_to_back, bicycle_len_rear_axle_to_front_axle, bicycle_error_bound, bicycle_pref_speed
+								,bicycle_r_front_list, bicycle_r_rear_list, bicycle_res_dec_rate_list);
 			
 			lookup[bicycle_tag]=bicycle;
 
@@ -262,7 +292,8 @@ struct AgentParams{
 			float electric_tricycle_pref_speed = 4.0f;
 
 			AgentParams electric_tricycle = AgentParams(	electric_tricycle_position, electric_tricycle_neighborDist, electric_tricycle_maxNeighbors, electric_tricycle_timeHorizon, electric_tricycle_timeHorizonObst, electric_tricycle_radius, electric_tricycle_maxSpeed, electric_tricycle_velocity, electric_tricycle_tag, 
-								electric_tricycle_max_tracking_angle, electric_tricycle_len_ref_to_front, electric_tricycle_len_ref_to_side, electric_tricycle_len_ref_to_back, electric_tricycle_len_rear_axle_to_front_axle, electric_tricycle_error_bound, electric_tricycle_pref_speed);
+								electric_tricycle_max_tracking_angle, electric_tricycle_len_ref_to_front, electric_tricycle_len_ref_to_side, electric_tricycle_len_ref_to_back, electric_tricycle_len_rear_axle_to_front_axle, electric_tricycle_error_bound, electric_tricycle_pref_speed
+								,bicycle_r_front_list, bicycle_r_rear_list, bicycle_res_dec_rate_list);
 			
 			lookup[electric_tricycle_tag]=electric_tricycle;
 
@@ -286,7 +317,8 @@ struct AgentParams{
 			float gyro_scooter_pref_speed = 2.0f;
 
 			AgentParams gyro_scooter = AgentParams(	gyro_scooter_position, gyro_scooter_neighborDist, gyro_scooter_maxNeighbors, gyro_scooter_timeHorizon, gyro_scooter_timeHorizonObst, gyro_scooter_radius, gyro_scooter_maxSpeed, gyro_scooter_velocity, gyro_scooter_tag, 
-								gyro_scooter_max_tracking_angle, gyro_scooter_len_ref_to_front, gyro_scooter_len_ref_to_side, gyro_scooter_len_ref_to_back, gyro_scooter_len_rear_axle_to_front_axle, gyro_scooter_error_bound, gyro_scooter_pref_speed);
+								gyro_scooter_max_tracking_angle, gyro_scooter_len_ref_to_front, gyro_scooter_len_ref_to_side, gyro_scooter_len_ref_to_back, gyro_scooter_len_rear_axle_to_front_axle, gyro_scooter_error_bound, gyro_scooter_pref_speed
+								,bicycle_r_front_list, bicycle_r_rear_list, bicycle_res_dec_rate_list);
 			
 			lookup[gyro_scooter_tag]=gyro_scooter;
 

@@ -210,6 +210,9 @@ namespace RVO {
 
 		agent->tracking_id_ = tracking_id;
 
+		agent->r_front_ = agt.r_front;
+		agent->r_rear_ = agt.r_rear;
+		agent->res_dec_rate_ = agt.res_dec_rate;
 
 
 		agents_.push_back(agent);
@@ -235,6 +238,10 @@ namespace RVO {
 
 		agent->tag_ = agt.tag;
 		agent->max_tracking_angle_ = agt.max_tracking_angle;
+
+		agent->r_front_ = agt.r_front;
+		agent->r_rear_ = agt.r_rear;
+		agent->res_dec_rate_ = agt.res_dec_rate;
 
 		//agent->tracking_id_ = tracking_id;
 	}
