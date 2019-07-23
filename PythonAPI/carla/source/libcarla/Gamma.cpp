@@ -108,5 +108,6 @@ void export_gamma() {
     .def("set_agent_max_tracking_angle", &RVOSimulator::setAgentMaxTrackingAngle)
     .def("set_agent_attention_radius", &RVOSimulator::setAgentAttentionRadius)
     .def("set_agent_res_dec_rate", &RVOSimulator::setAgentResDecRate)
+    .def("set_agent", &RVOSimulator::setAgent)
   ;
 }
