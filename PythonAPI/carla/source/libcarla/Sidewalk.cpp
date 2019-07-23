@@ -28,7 +28,7 @@ void export_sidewalk() {
     .def_readwrite("polygon_id", &SidewalkRoutePoint::segment_id)
     .def_readwrite("segment_id", &SidewalkRoutePoint::offset)
     .def_readwrite("offset", &SidewalkRoutePoint::offset)
-    .def_readwrite("direction", &SidewalkRoutePoint::offset)
+    .def_readwrite("direction", &SidewalkRoutePoint::direction)
     .def(self_ns::str(self_ns::self))
   ;
   

@@ -92,17 +92,7 @@ occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
   
 geom::Vector2D Sidewalk::GetRoutePointPosition(const SidewalkRoutePoint& route_point) const {
   const geom::Vector2D segment_start = _polygons[route_point.polygon_id][route_point.segment_id]; 
-  
-  size_t segment_end_id;
-  if (route_point.direction) {
-    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
-  } else {
-    segment_end_id = route_point.segment_id;
-    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
-    else segment_end_id--;
-  }
-  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][segment_end_id];
-
+  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
   return segment_start + (segment_end - segment_start).MakeUnitVector() * route_point.offset;
 }
 
@@ -132,52 +122,57 @@ SidewalkRoutePoint Sidewalk::GetNearestRoutePoint(const geom::Vector2D& position
 }
   
 SidewalkRoutePoint Sidewalk::GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const {
-  const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
-
-  size_t segment_end_id;
-  float segment_length;
-
   if (route_point.direction) {
-    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
+    const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
+    const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
+    float segment_length = (segment_end - segment_start).Length();
+      
+    if (route_point.offset + lookahead_distance <= segment_length) {
+      return SidewalkRoutePoint(
+          route_point.polygon_id,
+          route_point.segment_id,
+          route_point.offset + lookahead_distance,
+          route_point.direction);
+    } else {
+      return GetNextRoutePoint(
+          SidewalkRoutePoint(
+            route_point.polygon_id, 
+            (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size(),
+            0,
+            route_point.direction),
+          lookahead_distance - (segment_length - route_point.offset));
+    }
   } else {
-    segment_end_id = route_point.segment_id;
-    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
-    else segment_end_id--;
-  }
-    
-  segment_length = (_polygons[route_point.polygon_id][segment_end_id] - segment_start).Length();
-    
-  if (route_point.offset + lookahead_distance <= segment_length) {
-    return SidewalkRoutePoint(
-        route_point.polygon_id,
-        route_point.segment_id,
-        route_point.offset + lookahead_distance,
-        route_point.direction);
-  } else {
-    return GetNextRoutePoint(
-        SidewalkRoutePoint(route_point.polygon_id, segment_end_id, 0, route_point.direction),
-        lookahead_distance - (segment_length - route_point.offset));
+    if (route_point.offset - lookahead_distance >= 0) {
+      return SidewalkRoutePoint(
+          route_point.polygon_id,
+          route_point.segment_id,
+          route_point.offset - lookahead_distance,
+          route_point.direction);
+    } else {
+      const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
+      size_t previous_segment_id = (route_point.segment_id == 0 ? _polygons[route_point.polygon_id].size() : route_point.segment_id) - 1;
+      const geom::Vector2D& previous_segment_start = _polygons[route_point.polygon_id][previous_segment_id];
+
+      return GetNextRoutePoint(
+          SidewalkRoutePoint(
+            route_point.polygon_id,
+            previous_segment_id,
+            (segment_start - previous_segment_start).Length(),
+            route_point.direction),
+          lookahead_distance - route_point.offset);
+    }
   }
 }
   
 std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point) const {
   const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
-  
-  size_t segment_end_id;
-  if (route_point.direction) {
-    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
-  } else {
-    segment_end_id = route_point.segment_id;
-    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
-    else segment_end_id--;
-  }
-  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][segment_end_id];
-  
+  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
   geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
-  geom::Vector2D normal = route_point.direction ? direction.Rotate(geom::Math::Pi<float>() / 2) : direction.Rotate(-geom::Math::Pi<float>() / 2);
+  geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
 
   geom::Vector2D ray_start = segment_start + route_point.offset * direction;
-  geom::Vector2D ray_end = ray_start + normal * _max_cross_distance;
+  geom::Vector2D ray_end = ray_start + _max_cross_distance * normal;
   
   rt_segment_t ray(
       rt_point_t(ray_start.x, ray_start.y),

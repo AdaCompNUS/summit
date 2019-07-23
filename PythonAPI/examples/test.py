@@ -73,7 +73,9 @@ class CrowdWalker:
         self.actor.apply_control(control)
 
     def add_closest_route_point_to_path(self):
-        self.path_route_points.append(self.sidewalk.get_nearest_route_point(self.get_position()))
+        route_point = self.sidewalk.get_nearest_route_point(self.get_position())
+        route_point.direction = False
+        self.path_route_points.append(route_point)
     
     def extend_path(self):
         self.path_route_points.append(self.sidewalk.get_next_route_point(self.path_route_points[-1], 1.0))
