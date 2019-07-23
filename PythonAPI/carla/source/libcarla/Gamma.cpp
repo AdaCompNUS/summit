@@ -43,6 +43,9 @@ void export_gamma() {
     .def_readwrite("len_rear_axle_to_front_axle", &AgentParams::len_rear_axle_to_front_axle)
     .def_readwrite("error_bound", &AgentParams::error_bound)
     .def_readwrite("pref_speed", &AgentParams::pref_speed)
+    .def_readwrite("r_front", &AgentParams::r_front)
+    .def_readwrite("r_rear", &AgentParams::r_rear)
+    .def_readwrite("res_dec_rate", &AgentParams::res_dec_rate)
   ;
 
 
