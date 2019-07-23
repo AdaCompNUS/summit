@@ -41,10 +41,12 @@ void export_sidewalk() {
     .def("__init__", 
         make_constructor(+[](SharedPtr<occupancy::OccupancyMap> occupancy_map, 
             const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max,
-            float width, float resolution) {
+            float width, float resolution,
+            float max_cross_distance) {
           return MakeShared<Sidewalk>(std::move(occupancy_map),
               bounds_min, bounds_max,
-              width, resolution);
+              width, resolution,
+              max_cross_distance);
         }))
     .def("create_occupancy_map",
         &Sidewalk::CreateOccupancyMap)
@@ -54,6 +56,8 @@ void export_sidewalk() {
         &Sidewalk::GetNearestRoutePoint)
     .def("get_next_route_point",
         &Sidewalk::GetNextRoutePoint)
+    .def("get_adjacent_route_points",
+        &Sidewalk::GetAdjacentRoutePoints)
   ;
   
   register_ptr_to_python<SharedPtr<Sidewalk>>();

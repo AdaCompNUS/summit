@@ -33,11 +33,27 @@ class CrowdWalker:
             pass
         if len(self.path_route_points) < 20:
             return None
+            
+        last_pos = self.sidewalk.get_route_point_position(self.path_route_points[-1])
+        world.debug.draw_point(
+            carla.Location(last_pos.x, last_pos.y),
+            0.2,
+            carla.Color(0, 0, 255),
+            0.4)
+
+        adjacent_route_points = self.sidewalk.get_adjacent_route_points(self.path_route_points[-1])
+        for route_point in adjacent_route_points:
+            pos = self.sidewalk.get_route_point_position(route_point)
+            world.debug.draw_point(
+                carla.Location(pos.x, pos.y),
+                0.2,
+                carla.Color(255, 0, 0),
+                0.4)
         
         cut_index = 0
         for i in range(len(self.path_route_points) / 2):
             route_point = self.path_route_points[i]
-            offset = position - sidewalk.get_route_point_position(route_point)
+            offset = position - self.sidewalk.get_route_point_position(route_point)
             offset = (offset.x**2 + offset.y**2)**0.5
             if offset < 1.0:
                 cut_index = i + 1
@@ -66,7 +82,7 @@ class CrowdWalker:
 def in_bounds(position):
     return -200 <= position.x <= 200 and -200 <= position.y <= 200
 
-NUM_WALKERS = 100
+NUM_WALKERS = 1
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
@@ -74,7 +90,8 @@ if __name__ == '__main__':
     sidewalk = carla.Sidewalk(
             occupancy_map,
             carla.Vector2D(-200, -200), carla.Vector2D(200, 200),
-            3.0, 0.1)
+            3.0, 0.1,
+            10.0)
     sidewalk_occupancy_map = sidewalk.create_occupancy_map()
 
     gamma = carla.RVOSimulator()

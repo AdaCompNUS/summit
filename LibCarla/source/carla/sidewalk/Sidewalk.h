@@ -4,6 +4,7 @@
 #include "carla/occupancy/OccupancyMap.h"
 #include "carla/Memory.h"
 #include <random>
+#include <boost/optional.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -41,12 +42,14 @@ public:
 
   Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map, 
       const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, 
-      float width, float resolution);
+      float width, float resolution,
+      float max_cross_distance);
 
   occupancy::OccupancyMap CreateOccupancyMap() const;
   geom::Vector2D GetRoutePointPosition(const SidewalkRoutePoint& route_point) const;
   SidewalkRoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   SidewalkRoutePoint GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;
+  std::vector<SidewalkRoutePoint> GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point) const;
 
 private:
   
@@ -59,6 +62,7 @@ private:
   geom::Vector2D _bounds_max;
   float _width;
   float _resolution;
+  float _max_cross_distance;
   std::vector<std::vector<geom::Vector2D>> _polygons;
   rt_tree_t _segments_index;
   std::mt19937 _rng;
