@@ -243,6 +243,8 @@ namespace RVO {
 
 		float getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b);
 
+		void setAgent(int agentNo, const AgentParams agt);
+
 		std::vector<Vector2> bicycleMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
 		std::vector<Vector2> holonomicMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
 

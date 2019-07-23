@@ -217,6 +217,28 @@ namespace RVO {
 		return agents_.size() - 1;
 	}
 
+	void RVOSimulator::setAgent(int agentNo, const AgentParams agt)
+	{
+		Agent *agent = agents_[static_cast<size_t>(agentNo)];
+
+		agent->position_ = agt.position;
+		agent->maxNeighbors_ = static_cast<size_t> (agt.maxNeighbors);
+		agent->maxSpeed_ = agt.maxSpeed;
+		agent->neighborDist_ = agt.neighborDist;
+		agent->radius_ = agt.radius;
+		agent->timeHorizon_ = agt.timeHorizon;
+		agent->timeHorizonObst_ = agt.timeHorizonObst;
+		
+		agent->velocity_ = agt.velocity;//?
+
+		//agent->id_ = agents_.size();
+
+		agent->tag_ = agt.tag;
+		agent->max_tracking_angle_ = agt.max_tracking_angle;
+
+		//agent->tracking_id_ = tracking_id;
+	}
+
 
 	void RVOSimulator::setAgentID(int agentNo, int tracking_id){
 		agents_[static_cast<size_t>(agentNo)]->tracking_id_ = tracking_id;
