@@ -95,7 +95,11 @@ void export_gamma() {
           return GammaToGeom(self.getAgentHeading(agent_no));
         })
     .def("set_agent_bounding_box_corners",
-        +[](RVOSimulator& self, int agent_no, const std::vector<geom::Vector2D>& corners) {
+        +[](RVOSimulator& self, int agent_no, const list& corners_py) {
+          std::vector<geom::Vector2D> corners{
+            stl_input_iterator<geom::Vector2D>(corners_py),
+            stl_input_iterator<geom::Vector2D>()};
+
           std::vector<Vector2> corners_gamma;
           for (const geom::Vector2D& corner : corners) {
             corners_gamma.emplace_back(GeomToGamma(corner));

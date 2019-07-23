@@ -7,9 +7,11 @@ namespace sidewalk {
 
 Sidewalk::Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map, 
     const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, 
-    float width, float resolution)
+    float width, float resolution,
+    float max_cross_distance)
   : _bounds_min(bounds_min), _bounds_max(bounds_max),
   _width(width), _resolution(resolution),
+  _max_cross_distance(max_cross_distance),
   _rng(std::random_device()()) {
 
   occupancy::OccupancyGrid occupancy_grid = occupancy_map->CreateOccupancyGrid(bounds_min, bounds_max, resolution);
@@ -21,7 +23,7 @@ Sidewalk::Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map,
       cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(kernel_size, kernel_size)));
       
   std::vector<std::vector<cv::Point>> contours;
-  findContours(occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+  findContours(occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_TC89_KCOS);
 
   std::vector<rt_value_t> index_entries;
   for (size_t i = 0; i < contours.size(); i++) {
@@ -90,7 +92,16 @@ occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
   
 geom::Vector2D Sidewalk::GetRoutePointPosition(const SidewalkRoutePoint& route_point) const {
   const geom::Vector2D segment_start = _polygons[route_point.polygon_id][route_point.segment_id]; 
-  const geom::Vector2D segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()]; 
+  
+  size_t segment_end_id;
+  if (route_point.direction) {
+    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
+  } else {
+    segment_end_id = route_point.segment_id;
+    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
+    else segment_end_id--;
+  }
+  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][segment_end_id];
 
   return segment_start + (segment_end - segment_start).MakeUnitVector() * route_point.offset;
 }
@@ -147,6 +158,68 @@ SidewalkRoutePoint Sidewalk::GetNextRoutePoint(const SidewalkRoutePoint& route_p
         SidewalkRoutePoint(route_point.polygon_id, segment_end_id, 0, route_point.direction),
         lookahead_distance - (segment_length - route_point.offset));
   }
+}
+  
+std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point) const {
+  const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
+  
+  size_t segment_end_id;
+  if (route_point.direction) {
+    segment_end_id = (route_point.segment_id + 1) % _polygons[route_point.polygon_id].size();
+  } else {
+    segment_end_id = route_point.segment_id;
+    if (segment_end_id == 0) segment_end_id = _polygons[route_point.polygon_id].size() - 1;
+    else segment_end_id--;
+  }
+  const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][segment_end_id];
+  
+  geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
+  geom::Vector2D normal = route_point.direction ? direction.Rotate(geom::Math::Pi<float>() / 2) : direction.Rotate(-geom::Math::Pi<float>() / 2);
+
+  geom::Vector2D ray_start = segment_start + route_point.offset * direction;
+  geom::Vector2D ray_end = ray_start + normal * _max_cross_distance;
+  
+  rt_segment_t ray(
+      rt_point_t(ray_start.x, ray_start.y),
+      rt_point_t(ray_end.x, ray_end.y));
+
+  std::vector<rt_value_t> results;
+  _segments_index.query(
+      boost::geometry::index::intersects(ray), 
+      std::back_inserter(results));
+
+  boost::optional<float> best_distance;
+  boost::optional<rt_value_t> best_result;
+  boost::optional<rt_point_t> best_intersection;
+
+  for (const rt_value_t& result : results) {
+    if (result.second.first == route_point.polygon_id && result.second.second == route_point.segment_id) continue;
+
+    std::vector<rt_point_t> intersection;
+    boost::geometry::intersection(result.first, ray, intersection);
+    float distance = static_cast<float>(boost::geometry::distance(ray.first, intersection[0]));
+    if (!best_distance || distance < best_distance) {
+      best_distance = boost::optional<float>(distance);
+      best_result = boost::optional<rt_value_t>(result);
+      best_intersection = boost::optional<rt_point_t>(intersection[0]);
+    }
+  }
+
+  std::vector<SidewalkRoutePoint> adjacent_route_points;
+
+  if (best_distance) {
+    size_t best_polygon_id = best_result->second.first;
+    size_t best_segment_id = best_result->second.second;
+    float best_offset = (geom::Vector2D(best_intersection->get<0>(), best_intersection->get<1>()) - _polygons[best_polygon_id][best_segment_id]).Length();
+
+    adjacent_route_points.emplace_back(
+        best_polygon_id,
+        best_segment_id,
+        best_offset,
+        true);
+  }
+
+  return adjacent_route_points;
 }
 
 }
