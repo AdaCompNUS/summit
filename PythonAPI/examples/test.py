@@ -38,7 +38,7 @@ class CrowdWalker:
             self.add_closest_route_point_to_path()
         
         while len(self.path_route_points) < 20:
-            if random.random() <= 0.02:
+            if random.random() <= 0.01:
                 adjacent_route_points = self.sidewalk.get_adjacent_route_points(self.path_route_points[-1])
                 if adjacent_route_points:
                     self.path_route_points.append(adjacent_route_points[0])
@@ -92,7 +92,7 @@ class CrowdWalker:
 def in_bounds(position):
     return -200 <= position.x <= 200 and -200 <= position.y <= 200
 
-NUM_WALKERS = 100
+NUM_WALKERS = 300
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
@@ -136,12 +136,12 @@ if __name__ == '__main__':
                     random.choice(walker_blueprints),
                     trans)
                 if actor:
-                    crowd_walkers.append(CrowdWalker(sidewalk, actor, 2.0))
+                    crowd_walkers.append(CrowdWalker(sidewalk, actor, 0.5 + random.random() * 3))
         world.wait_for_tick()
 
         next_crowd_walkers = []
         for (i, crowd_walker) in enumerate(crowd_walkers):
-            if not in_bounds(crowd_walker.get_position()):
+            if not in_bounds(crowd_walker.get_position()) or crowd_walker.actor.get_location().z < -50:
                 next_crowd_walkers.append(None)
                 crowd_walker.actor.destroy()
                 continue
