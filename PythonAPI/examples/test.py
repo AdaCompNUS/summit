@@ -19,6 +19,7 @@ class CrowdWalker:
         self.actor = actor
         self.max_speed = max_speed
         self.path_route_points = []
+        self.current_extend_direction = True
 
     def get_position(self):
         pos3D = self.actor.get_location()
@@ -26,29 +27,35 @@ class CrowdWalker:
 
     def get_preferred_velocity(self):
         position = self.get_position()
+        
+        #world.debug.draw_point(
+        #    carla.Location(position.x, position.y),
+        #    0.2,
+        #    carla.Color(0, 0, 255),
+        #    0.4)
 
         if len(self.path_route_points) == 0:
             self.add_closest_route_point_to_path()
-        while len(self.path_route_points) < 20 and self.extend_path():
-            pass
+        
+        while len(self.path_route_points) < 20:
+            if random.random() <= 0.01:
+                adjacent_route_points = self.sidewalk.get_adjacent_route_points(self.path_route_points[-1])
+                if adjacent_route_points:
+                    self.path_route_points.append(adjacent_route_points[0])
+                    self.current_extend_direction = random.randint(0, 1) == 1
+                    continue
+            if not self.extend_path():
+                break
         if len(self.path_route_points) < 20:
             return None
-            
+        
         last_pos = self.sidewalk.get_route_point_position(self.path_route_points[-1])
-        world.debug.draw_point(
-            carla.Location(last_pos.x, last_pos.y),
-            0.2,
-            carla.Color(0, 0, 255),
-            0.4)
-
-        adjacent_route_points = self.sidewalk.get_adjacent_route_points(self.path_route_points[-1])
-        for route_point in adjacent_route_points:
-            pos = self.sidewalk.get_route_point_position(route_point)
-            world.debug.draw_point(
-                carla.Location(pos.x, pos.y),
-                0.2,
-                carla.Color(255, 0, 0),
-                0.4)
+        
+        #world.debug.draw_point(
+        #    carla.Location(last_pos.x, last_pos.y),
+        #    0.2,
+        #    carla.Color(255, 0, 0),
+        #    0.4)
         
         cut_index = 0
         for i in range(len(self.path_route_points) / 2):
@@ -76,13 +83,16 @@ class CrowdWalker:
         self.path_route_points.append(self.sidewalk.get_nearest_route_point(self.get_position()))
     
     def extend_path(self):
-        self.path_route_points.append(self.sidewalk.get_next_route_point(self.path_route_points[-1], 1.0))
+        if self.current_extend_direction:
+            self.path_route_points.append(self.sidewalk.get_next_route_point(self.path_route_points[-1], 1.0))
+        else:
+            self.path_route_points.append(self.sidewalk.get_previous_route_point(self.path_route_points[-1], 1.0))
         return True
 
 def in_bounds(position):
     return -200 <= position.x <= 200 and -200 <= position.y <= 200
 
-NUM_WALKERS = 1
+NUM_WALKERS = 300
 
 if __name__ == '__main__':
     lane_network = carla.LaneNetwork.load('../../Data/network.ln')
@@ -126,12 +136,12 @@ if __name__ == '__main__':
                     random.choice(walker_blueprints),
                     trans)
                 if actor:
-                    crowd_walkers.append(CrowdWalker(sidewalk, actor, 2.0))
+                    crowd_walkers.append(CrowdWalker(sidewalk, actor, 0.5 + random.random() * 3))
         world.wait_for_tick()
 
         next_crowd_walkers = []
         for (i, crowd_walker) in enumerate(crowd_walkers):
-            if not in_bounds(crowd_walker.get_position()):
+            if not in_bounds(crowd_walker.get_position()) or crowd_walker.actor.get_location().z < -50:
                 next_crowd_walkers.append(None)
                 crowd_walker.actor.destroy()
                 continue

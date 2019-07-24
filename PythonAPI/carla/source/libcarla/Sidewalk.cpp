@@ -10,8 +10,7 @@ namespace sidewalk {
   std::ostream &operator<<(std::ostream &out, const SidewalkRoutePoint &route_point) {
     out << "SidewalkRoutePoint(polygon_id=" << route_point.polygon_id
         << ", segment_id=" << route_point.polygon_id
-        << ", offset=" << route_point.offset
-        << ", direction=" << route_point.direction << ')';
+        << ", offset=" << route_point.offset << ')';
     return out;
   }
 
@@ -23,12 +22,11 @@ void export_sidewalk() {
   using namespace carla;
   using namespace carla::sidewalk;
   
-  class_<SidewalkRoutePoint>("SidewalkRoutePoint", init<size_t, size_t, float, bool>())
+  class_<SidewalkRoutePoint>("SidewalkRoutePoint", init<size_t, size_t, float>())
     .def(init<const SidewalkRoutePoint &>((arg("rhs"))))
     .def_readwrite("polygon_id", &SidewalkRoutePoint::segment_id)
     .def_readwrite("segment_id", &SidewalkRoutePoint::offset)
     .def_readwrite("offset", &SidewalkRoutePoint::offset)
-    .def_readwrite("direction", &SidewalkRoutePoint::offset)
     .def(self_ns::str(self_ns::self))
   ;
   
@@ -56,6 +54,8 @@ void export_sidewalk() {
         &Sidewalk::GetNearestRoutePoint)
     .def("get_next_route_point",
         &Sidewalk::GetNextRoutePoint)
+    .def("get_previous_route_point",
+        &Sidewalk::GetPreviousRoutePoint)
     .def("get_adjacent_route_points",
         &Sidewalk::GetAdjacentRoutePoints)
   ;
