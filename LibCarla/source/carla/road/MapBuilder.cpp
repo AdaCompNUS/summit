@@ -387,22 +387,34 @@ namespace road {
   }
 
   void MapBuilder::AddRoadGeometryParamPoly3(
-      carla::road::Road * /*road*/,
-      const double /*s*/,
-      const double /*x*/,
-      const double /*y*/,
-      const double /*hdg*/,
-      const double /*length*/,
-      const double /*aU*/,
-      const double /*bU*/,
-      const double /*cU*/,
-      const double /*dU*/,
-      const double /*aV*/,
-      const double /*bV*/,
-      const double /*cV*/,
-      const double /*dV*/,
-      const std::string /*p_range*/) {
-    throw_exception(std::runtime_error("geometry poly3 not supported"));
+      carla::road::Road * road,
+      const double s,
+      const double x,
+      const double y,
+      const double hdg,
+      const double length,
+      const double aU,
+      const double bU,
+      const double cU,
+      const double dU,
+      const double aV,
+      const double bV,
+      const double cV,
+      const double dV,
+      const std::string p_range) {
+    DEBUG_ASSERT(road != nullptr);
+    const geom::Location location(static_cast<float>(x), static_cast<float>(y), 0.0f);
+    auto paramPoly3_geometry = std::make_unique<GeometryParamPoly3>(
+        s,
+        length,
+        hdg,
+        location,
+        aU, bU, cU, dU,
+        aV, bV, cV, dV,
+        p_range);
+
+    _temp_road_info_container[road].emplace_back(std::unique_ptr<RoadInfo>(new RoadInfoGeometry(s,
+        std::move(paramPoly3_geometry))));
   }
 
   void MapBuilder::AddJunction(const int32_t id, const std::string name) {
@@ -502,8 +514,12 @@ namespace road {
     }
 
     // get the lane
+    /*
     DEBUG_ASSERT(section != nullptr);
     return section->GetLane(lane_id);
+    */
+    
+    return section == nullptr ? nullptr : section->GetLane(lane_id);
   }
 
   // return a list of pointers to all lanes from a lane (using road and junction
@@ -623,8 +639,9 @@ namespace road {
           // add to each lane found, this as its predecessor
           for (auto next_lane : lane.second._next_lanes) {
             // add as previous
-            DEBUG_ASSERT(next_lane != nullptr);
-            next_lane->_prev_lanes.push_back(&lane.second);
+            if (next_lane != nullptr) {
+              next_lane->_prev_lanes.push_back(&lane.second);
+            }
           }
 
         }
@@ -638,12 +655,13 @@ namespace road {
 
           // add next roads
           for (auto next_lane : lane.second._next_lanes) {
-            DEBUG_ASSERT(next_lane != nullptr);
-            // avoid same road
-            if (next_lane->GetRoad() != &road.second) {
-              if (std::find(road.second._nexts.begin(), road.second._nexts.end(),
-                  next_lane->GetRoad()) == road.second._nexts.end()) {
-                road.second._nexts.push_back(next_lane->GetRoad());
+            if (next_lane != nullptr) {
+              // avoid same road
+              if (next_lane->GetRoad() != &road.second) {
+                if (std::find(road.second._nexts.begin(), road.second._nexts.end(),
+                    next_lane->GetRoad()) == road.second._nexts.end()) {
+                  road.second._nexts.push_back(next_lane->GetRoad());
+                }
               }
             }
           }
