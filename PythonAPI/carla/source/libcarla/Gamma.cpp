@@ -108,8 +108,8 @@ void export_gamma() {
         })
     .def("set_agent_heading",
         +[](RVOSimulator& self, int agent_no, const geom::Vector2D& heading) {
-          self.setAgentPosition(
-              static_cast<size_t>(agent_no),
+          self.setAgentHeading(
+              agent_no,
               GeomToGamma(heading));
         })
     .def("set_agent_max_tracking_angle", &RVOSimulator::setAgentMaxTrackingAngle)
