@@ -227,8 +227,15 @@ namespace element {
 
   private:
 
-    double _aU, _bU, _cU, _dU;
-    double _aV, _bV, _cV, _dV;
+    double _aU;
+    double _bU;
+    double _cU;
+    double _dU;
+
+    double _aV;
+    double _bV;
+    double _cV;
+    double _dV;
     std::string _p_range;
   };
 

@@ -82,7 +82,7 @@ namespace element {
   
   DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const {
     DEBUG_ASSERT(_length > 0.0);
-    dist = geom::Math::Clamp(dist, 0.0, _length);
+    dist = geom::Math::Clamp(dist / _length, 0.0, 1.0);
     DirectedPoint p(_start_position, _heading);
     constexpr double pi_half = geom::Math::Pi<double>() / 2.0;
     const double u = _aU + _bU * dist + _cU * dist * dist + _dU * dist * dist * dist;
@@ -92,11 +92,16 @@ namespace element {
     p.location.x += static_cast<float>(v * std::cos(p.tangent + pi_half));
     p.location.y += static_cast<float>(v * std::sin(p.tangent + pi_half));
 
+    const double du = _bU + 2 * _cU * dist + 3 * _dU * dist * dist;
+    const double dv = _bV + 2 * _cV * dist + 3 * _dV * dist * dist;
+    const double dheading = std::atan2(dv, du);
+    p.tangent += dheading;
+
     return p;
   }
 
   std::pair<float, float> GeometryParamPoly3::DistanceTo(const geom::Location &) const {
-    return std::make_pair(0.0f, 0.0f);
+    throw_exception(std::runtime_error("not implemented"));
   }
 
 } // namespace element

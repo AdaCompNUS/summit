@@ -635,7 +635,6 @@ namespace road {
 
           // assign the next lane pointers
           lane.second._next_lanes = GetLaneNext(road.first, section.second._id, lane.first);
-
           // add to each lane found, this as its predecessor
           for (auto next_lane : lane.second._next_lanes) {
             // add as previous
