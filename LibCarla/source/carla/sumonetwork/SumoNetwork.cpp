@@ -222,7 +222,7 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
     const Edge& edge = edge_entry.second;
     for (const Lane& lane : edge.lanes) {
       for (size_t i = 0; i < lane.shape.size() - 1; i++) {
-        FromSegment(lane.shape[i], lane.shape[i + 1], 3.40f);
+        FromSegment(lane.shape[i], lane.shape[i + 1], 3.40f); // Extra 0.20m to fill up gaps between roads.
       }
     }
   }
