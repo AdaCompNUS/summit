@@ -184,7 +184,7 @@ namespace road {
     const auto geometry = _info.GetInfo<element::RoadInfoGeometry>(clamped_s);
 
     const auto lane_offset = _info.GetInfo<element::RoadInfoLaneOffset>(clamped_s);
-    const auto offset = lane_offset == nullptr ? 0.0f : static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
+    const auto offset = static_cast<float>(lane_offset->GetPolynomial().Evaluate(clamped_s));
 
     // Apply road's lane offset record
     element::DirectedPoint p = geometry->GetGeometry().PosFromDist(clamped_s - geometry->GetDistance());
@@ -243,8 +243,6 @@ namespace road {
 
     DirectedPoint current_dp = dp_lane_zero;
     for (const auto &lane : right_lanes) {
-      if (lane.second == nullptr) continue;
-
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
       const auto half_width = static_cast<float>(lane_width_info->GetPolynomial().Evaluate(s)) * 0.5f;
 
@@ -268,8 +266,6 @@ namespace road {
 
     current_dp = dp_lane_zero;
     for (const auto &lane : left_lanes) {
-      if (lane.second == nullptr) continue;
-
       const auto lane_width_info = lane.second->GetInfo<RoadInfoLaneWidth>(s);
       const auto half_width = -static_cast<float>(lane_width_info->GetPolynomial().Evaluate(s)) * 0.5f;
 

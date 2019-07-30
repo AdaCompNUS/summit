@@ -189,55 +189,6 @@ namespace element {
     double _curve_start;
     double _curve_end;
   };
-  
-  class GeometryParamPoly3 final : public Geometry {
-  public:
-
-    GeometryParamPoly3(
-        double start_offset,
-        double length,
-        double heading,
-        const geom::Location &start_pos,
-        double aU, double bU, double cU, double dU,
-        double aV, double bV, double cV, double dV,
-        std::string p_range)
-      : Geometry(GeometryType::ARC, start_offset, length, heading, start_pos),
-        _aU(aU), _bU(bU), _cU(cU), _dU(dU),
-        _aV(aV), _bV(bV), _cV(cV), _dV(dV),
-        _p_range(p_range) {}
-
-    DirectedPoint PosFromDist(double dist) const override;
-
-    /// Returns a pair containing:
-    /// - @b first:  distance to the nearest point in this paramPoly3 from the
-    ///              begining of the shape.
-    /// - @b second: Euclidean distance from the nearest point in paramPoly3 arc to p.
-    ///   @param p point to calculate the distance
-    std::pair<float, float> DistanceTo(const geom::Location &p) const override;
-
-    double GetaU() const { return _aU; }
-    double GetbU() const { return _bU; }
-    double GetcU() const { return _cU; }
-    double GetdU() const { return _dU; }
-    
-    double GetaV() const { return _aV; }
-    double GetbV() const { return _bV; }
-    double GetcV() const { return _cV; }
-    double GetdV() const { return _dV; }
-
-  private:
-
-    double _aU;
-    double _bU;
-    double _cU;
-    double _dU;
-
-    double _aV;
-    double _bV;
-    double _cV;
-    double _dV;
-    std::string _p_range;
-  };
 
 } // namespace element
 } // namespace road
