@@ -28,6 +28,17 @@ inline bool operator!=(const Connection& lhs, const Connection& rhs) {
   return !(lhs == rhs);
 }
 
+inline bool operator==(const RoutePoint& lhs, const RoutePoint& rhs) {
+  return lhs.edge == rhs.edge &&
+    lhs.lane == rhs.lane &&
+    lhs.segment == rhs.segment &&
+    lhs.offset == rhs.offset;
+}
+
+inline bool operator!=(const RoutePoint& lhs, const RoutePoint& rhs) {
+  return !(lhs == rhs);
+}
+
 std::ostream &operator<<(std::ostream &out, const Function& function) {
   switch (function) {
   case Function::Normal:
@@ -163,6 +174,9 @@ void export_sumo_network() {
     .def_readwrite("offset", &RoutePoint::offset)
     .def(self_ns::str(self_ns::self))
   ;
+  class_<std::vector<RoutePoint>>("vector_of_routepoint")
+    .def(vector_indexing_suite<std::vector<RoutePoint>>())
+  ;
 
   class_<SumoNetwork>("SumoNetwork", no_init)
     .def("load", 
@@ -178,6 +192,7 @@ void export_sumo_network() {
         make_function(&SumoNetwork::Connections, return_internal_reference<>()))
     .def("get_route_point_position", &SumoNetwork::GetRoutePointPosition)
     .def("get_nearest_route_point", &SumoNetwork::GetNearestRoutePoint)
+    .def("get_next_route_points", &SumoNetwork::GetNextRoutePoints)
   ;
   register_ptr_to_python<SharedPtr<SumoNetwork>>();
 

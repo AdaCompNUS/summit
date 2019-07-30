@@ -74,6 +74,7 @@ public:
 
   geom::Vector2D GetRoutePointPosition(const RoutePoint& route_point) const;
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
+  std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float distance) const;
 
 private:
   
@@ -85,7 +86,11 @@ private:
   std::unordered_map<std::string, Edge> _edges;
   std::unordered_map<std::string, Junction> _junctions;
   std::vector<Connection> _connections;
+
   rt_tree_t _segments_index;
+  std::unordered_map<std::string, std::string> _lane_to_parent_edge_map;
+  std::unordered_map<std::string, const Connection*> _internal_edge_to_connection_map;
+  std::unordered_map<std::string, std::vector<const Connection*>> _outgoing_connections_map;
 
   void Build();
 };

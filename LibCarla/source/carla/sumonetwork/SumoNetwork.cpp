@@ -99,17 +99,27 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
 void SumoNetwork::Build() {
   std::vector<rt_value_t> index_entries;
   for (const auto& edge_entry : _edges) {
-    for (const Lane& lane : edge_entry.second.lanes) {
+    const Edge& edge = edge_entry.second;
+    for (const Lane& lane : edge.lanes) {
       for (size_t i = 0; i < lane.shape.size() - 1; i++) {
         index_entries.emplace_back(
             rt_segment_t(
               rt_point_t(lane.shape[i].x, lane.shape[i].y),
               rt_point_t(lane.shape[i + 1].x, lane.shape[i + 1].y)),
-            std::make_tuple(edge_entry.second.id, lane.index, i));
+            std::make_tuple(edge.id, lane.index, i));
       }
+      _lane_to_parent_edge_map[lane.id] = edge.id;
+      _outgoing_connections_map.emplace(lane.id, std::initializer_list<const Connection*>());
     }
   }
   _segments_index = rt_tree_t(index_entries);
+
+  for (const Connection& connection : _connections) {
+    if (!connection.via.empty()){
+      _internal_edge_to_connection_map[connection.via] = &connection;
+    }
+    _outgoing_connections_map.at(_edges[connection.from].lanes[connection.from_lane].id).emplace_back(&connection); 
+  }
 }
   
 geom::Vector2D SumoNetwork::GetRoutePointPosition(const RoutePoint& route_point) const {
@@ -141,6 +151,41 @@ RoutePoint SumoNetwork::GetNearestRoutePoint(const geom::Vector2D& position) con
     std::get<1>(result.second),
     std::get<2>(result.second),
     t};
+}
+  
+std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_point, float distance) const {
+  const Edge& edge = _edges.at(route_point.edge);
+  const Lane& lane = edge.lanes[route_point.lane];
+
+  const geom::Vector2D& segment_start = lane.shape[route_point.segment];
+  const geom::Vector2D& segment_end = lane.shape[route_point.segment + 1];
+  float segment_length = (segment_end - segment_start).Length();
+
+  if (route_point.offset + distance <= segment_length) {
+    return { {route_point.edge, route_point.lane, route_point.segment, route_point.offset + distance} };
+  } else if (route_point.segment < lane.shape.size() - 2) {
+    return GetNextRoutePoints(
+        RoutePoint{route_point.edge, route_point.lane, route_point.segment + 1, 0},
+        distance - (segment_length - route_point.offset));
+  } else {
+    std::vector<RoutePoint> next_route_points;
+    if (edge.function == Function::Internal) {
+      for (const Connection* connection : _outgoing_connections_map.at(lane.id)) {
+        std::vector<RoutePoint> results = GetNextRoutePoints(
+            RoutePoint{connection->to, connection->to_lane, 0, 0},
+            distance - (segment_length - route_point.offset));
+        next_route_points.insert(next_route_points.end(), results.begin(), results.end());
+      }
+    } else {
+      for (const Connection* connection : _outgoing_connections_map.at(lane.id)) {
+        std::vector<RoutePoint> results = GetNextRoutePoints(
+            RoutePoint{_lane_to_parent_edge_map.at(connection->via), 0, 0, 0},
+            distance - (segment_length - route_point.offset));
+        next_route_points.insert(next_route_points.end(), results.begin(), results.end());
+      }
+    }
+    return next_route_points;
+  }
 }
 
 }

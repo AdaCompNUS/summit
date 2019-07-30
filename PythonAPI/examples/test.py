@@ -70,12 +70,19 @@ if __name__ == '__main__':
                     stroke='black' if edge.function == carla.Function.Normal else 'blue',
                     stroke_width=0.25)
     
-    for _ in range(50000):
+    for _ in range(10000):
         position = carla.Vector2D(random.uniform(-5000, 5000), random.uniform(-5000, 5000))
         route_point = network.get_nearest_route_point(position)
         position = network.get_route_point_position(route_point)
-        add_circle(position, 1.0, stroke='red', stroke_width=1.0)
 
+        next_route_points = network.get_next_route_points(route_point, 1.0)
+
+        for next_route_point in next_route_points:
+            next_position = network.get_route_point_position(next_route_point)
+            print(str(position), str(next_position))
+            add_line(position, next_position,
+                stroke='red',
+                stroke_width=1.0)
     
     dwg.save()
                 
