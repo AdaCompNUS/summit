@@ -52,6 +52,10 @@ void export_occupancy() {
         }))
     .add_property("triangles", 
         make_function(&OccupancyMap::Triangles, return_internal_reference<>()))
+    .add_property("bounds_min", 
+        make_function(&OccupancyMap::BoundsMin))
+    .add_property("bounds_max", 
+        make_function(&OccupancyMap::BoundsMax))
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
     .def("create_polygon_table", &OccupancyMap::CreatePolygonTable)
   ;

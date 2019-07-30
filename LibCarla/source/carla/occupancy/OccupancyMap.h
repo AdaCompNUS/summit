@@ -17,6 +17,8 @@ public:
   OccupancyMap(const std::vector<geom::Triangle2D>& triangles);
 
   const std::vector<geom::Triangle2D>& Triangles() const { return _triangles; }
+  geom::Vector2D BoundsMin() const { return _bounds_min; }
+  geom::Vector2D BoundsMax() const { return _bounds_max; }
 
   OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
 
@@ -31,6 +33,8 @@ private:
 
   std::vector<geom::Triangle2D> _triangles;
   rt_index_t _triangles_index;
+  geom::Vector2D _bounds_min;
+  geom::Vector2D _bounds_max;
   
   std::vector<rt_value_t> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;
 };

@@ -1,4 +1,5 @@
 #include "carla/geom/Vector2D.h"
+#include "carla/occupancy/OccupancyMap.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -75,6 +76,8 @@ public:
   geom::Vector2D GetRoutePointPosition(const RoutePoint& route_point) const;
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float distance) const;
+
+  occupancy::OccupancyMap CreateOccupancyMap() const;
 
 private:
   

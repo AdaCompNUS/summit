@@ -1,5 +1,7 @@
 #include "SumoNetwork.h"
+#include "carla/geom/Math.h"
 #include <boost/algorithm/string.hpp>
+#include <mapbox/earcut.hpp>
 #include <pugixml/pugixml.hpp>
 #include <string>
 
@@ -186,6 +188,63 @@ std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_
     }
     return next_route_points;
   }
+}
+
+occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
+  std::vector<geom::Triangle2D> triangles;
+
+  auto FromSegment = [&triangles](const geom::Vector2D& start, const geom::Vector2D& end, float width) {
+    geom::Vector2D direction = (end - start).MakeUnitVector();
+    geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
+
+    geom::Vector2D v1 = start + normal * width / 2.0;
+    geom::Vector2D v2 = start - normal * width / 2.0;
+    geom::Vector2D v3 = end + normal * width / 2.0;
+    geom::Vector2D v4 = end - normal * width / 2.0;
+
+    triangles.emplace_back(v3, v2, v1);
+    triangles.emplace_back(v2, v3, v4);
+
+    for (int i = 0; i < 8; i++) {
+      v1 = end;
+      v2 = end + normal.Rotate(-geom::Math::Pi<float>() / 8.0f * (i + 1)) * width / 2.0;
+      v3 = end + normal.Rotate(-geom::Math::Pi<float>() / 8.0f * i) * width / 2.0;
+      triangles.emplace_back(v3, v2, v1);
+
+      v1 = start;
+      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 8.0f * i) * width / 2.0;
+      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 8.0f * (i + 1)) * width / 2.0;
+      triangles.emplace_back(v3, v2, v1);
+    }
+  };
+
+  for (const auto& edge_entry : _edges) {
+    const Edge& edge = edge_entry.second;
+    for (const Lane& lane : edge.lanes) {
+      for (size_t i = 0; i < lane.shape.size() - 1; i++) {
+        FromSegment(lane.shape[i], lane.shape[i + 1], 3.40f);
+      }
+    }
+  }
+
+  for (const auto& junction_entry : _junctions) {
+    const Junction& junction = junction_entry.second;
+    std::vector<std::array<float, 2>> perimeter;
+    for (const geom::Vector2D& vertex : junction.shape) {
+      perimeter.push_back({vertex.x, vertex.y});
+    }
+    std::vector<std::vector<std::array<float, 2>>> polygon{perimeter};
+    std::vector<size_t> triangle_indices = mapbox::earcut<size_t>(polygon);
+
+    for (size_t i = 0; i < triangle_indices.size(); i += 3) {
+      triangles.emplace_back(
+          junction.shape[triangle_indices[i + 2]],
+          junction.shape[triangle_indices[i + 1]],
+          junction.shape[triangle_indices[i]]);
+    }
+  }
+  
+  return occupancy::OccupancyMap(triangles);
 }
 
 }

@@ -193,6 +193,7 @@ void export_sumo_network() {
     .def("get_route_point_position", &SumoNetwork::GetRoutePointPosition)
     .def("get_nearest_route_point", &SumoNetwork::GetNearestRoutePoint)
     .def("get_next_route_points", &SumoNetwork::GetNextRoutePoints)
+    .def("create_occupancy_map", &SumoNetwork::CreateOccupancyMap)
   ;
   register_ptr_to_python<SharedPtr<SumoNetwork>>();
 

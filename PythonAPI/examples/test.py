@@ -13,6 +13,7 @@ import carla
 import numpy as np
 import svgwrite
 import random
+import cv2
 
 def rotate(v, radians):
     c, s = np.cos(radians), np.sin(radians)
@@ -60,29 +61,43 @@ if __name__ == '__main__':
         return np.array([pos.x, pos.y])
 
     network = carla.SumoNetwork.load(data)
-    for entry in network.edges:
-        edge = entry.data()
-        for lane in edge.lanes:
-            for i in range(len(lane.shape) - 1):
-                add_arrowed_line(
-                    lane.shape[i], 
-                    lane.shape[i + 1],
-                    stroke='black' if edge.function == carla.Function.Normal else 'blue',
-                    stroke_width=0.25)
+    occupancy_map = network.create_occupancy_map()
     
-    for _ in range(10000):
-        position = carla.Vector2D(random.uniform(-5000, 5000), random.uniform(-5000, 5000))
-        route_point = network.get_nearest_route_point(position)
-        position = network.get_route_point_position(route_point)
-
-        next_route_points = network.get_next_route_points(route_point, 1.0)
-
-        for next_route_point in next_route_points:
-            next_position = network.get_route_point_position(next_route_point)
-            print(str(position), str(next_position))
-            add_line(position, next_position,
-                stroke='red',
-                stroke_width=1.0)
+    client = carla.Client('127.0.0.1', 2000)
+    client.set_timeout(10.0)
+    world = client.get_world()
+    world.spawn_occupancy_map(
+        occupancy_map,
+        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt01')
     
-    dwg.save()
+    #print(len(occupancy_map.triangles))
+    #occupancy_grid = occupancy_map.create_occupancy_grid(
+    #    occupancy_map.bounds_min,
+    #    occupancy_map.bounds_max,
+    #    0.2)
+    #cv2.imwrite('test.bmp', occupancy_grid.data)
+
+    #for entry in network.edges:
+    #    edge = entry.data()
+    #    for lane in edge.lanes:
+    #        for i in range(len(lane.shape) - 1):
+    #            add_arrowed_line(
+    #                lane.shape[i], 
+    #                lane.shape[i + 1],
+    #                stroke='black' if edge.function == carla.Function.Normal else 'blue',
+    #                stroke_width=0.25)
+    #for _ in range(10000):
+    #    position = carla.Vector2D(random.uniform(-5000, 5000), random.uniform(-5000, 5000))
+    #    route_point = network.get_nearest_route_point(position)
+    #    position = network.get_route_point_position(route_point)
+    #
+    #        next_route_points = network.get_next_route_points(route_point, 1.0)
+    #
+    #    for next_route_point in next_route_points:
+    #        next_position = network.get_route_point_position(next_route_point)
+    #        print(str(position), str(next_position))
+    #        add_line(position, next_position,
+    #            stroke='red',
+    #            stroke_width=1.0)
+    #dwg.save()
                 
