@@ -17,7 +17,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Client")
   file(GLOB libcarla_test_sources
       "${libcarla_source_path}/test/*.cpp"
       "${libcarla_source_path}/test/*.h"
-      "${libcarla_source_path}/test/client/test_lanenetwork.cpp")
+      "${libcarla_source_path}/test/client/test_sumonetwork.cpp")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Server")
   file(GLOB libcarla_test_sources
       "${libcarla_source_path}/test/*.cpp"

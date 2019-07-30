@@ -8,37 +8,22 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
     sys.version_info.minor,
     'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
 
-import numpy as np
 import carla
-import random
-import time
 
+import numpy as np
 import svgwrite
+
+def rotate(v, radians):
+    c, s = np.cos(radians), np.sin(radians)
+    return np.array([v[0] * c - v[1] * s, v[0] * s + v[1] * c]) 
 
 if __name__ == '__main__':
 
-    with open('../../Data/map2.xodr', 'r') as file:
+    with open('../../Data/map2.net.xml', 'r') as file:
         data = file.read()
-
-    topology = carla.Map('map', data).get_topology()
-    waypoints = []
-    for pair in topology:
-        waypoints.extend(pair)
-
-    x_avg = sum(wp.transform.location.x for wp in waypoints) / len(waypoints)
-    y_avg = sum(wp.transform.location.y for wp in waypoints) / len(waypoints)
-    x_min = x_avg - 400
-    x_max = x_avg + 400
-    y_min = y_avg - 400
-    y_max = y_avg + 400
     
-    def tsp(pos):
-        return (pos[0] - x_min, pos[1] - y_min)
-
     dwg = svgwrite.Drawing(
-            'map.svg', 
-            width=int(y_max - y_min),
-            height=int(x_max - x_min),
+            'apple.svg', 
             profile='full')
     dwg.add(dwg.rect(
         insert=(0, 0), 
@@ -52,21 +37,37 @@ if __name__ == '__main__':
             tsp(start),
             tsp(end),
             **args))
-    
     def add_circle(point, r, **args):
         dwg.add(dwg.circle(tsp(point), r, **args))
+    def add_arrowed_line(start, end, **args):
+        start = tsp(start)
+        end = tsp(end)
+        direction = end - start
+        direction /= np.linalg.norm(direction)
+        normal = rotate(direction, math.pi / 2)
+        mid = (start + end) / 2 
+        dwg.add(dwg.line(start, end, **args))
+        dwg.add(dwg.line(
+            mid - 0.4 * direction + 0.4 * normal,
+            mid + 0.4 * direction,
+            **args))
+        dwg.add(dwg.line(
+            mid - 0.4 * direction - 0.4 * normal,
+            mid + 0.4 * direction,
+            **args))
+    def tsp(pos):
+        return np.array([pos.x, pos.y])
 
-    waypoints = carla.Map('map', data).generate_waypoints(1.0)
+    m = carla.SumoNetwork.load(data)
+    for entry in m.edges:
+        edge = entry.data()
+        for lane in edge.lanes:
+            for i in range(len(lane.shape) - 1):
+                add_arrowed_line(
+                    lane.shape[i], 
+                    lane.shape[i + 1],
+                    stroke='red' if edge.function == carla.Function.Normal else 'blue',
+                    stroke_width=0.5)
     
-    for wp in waypoints:
-        a = (wp.transform.location.x, wp.transform.location.y)
-        if not (x_min <= a[0] <= x_max and y_min <= a[1] <= y_max): continue
-
-        #add_circle(a, 0.2, stroke='red', stroke_width=0.2)
-        
-        for next_wp in wp.next(1.0):
-            b = (next_wp.transform.location.x, next_wp.transform.location.y)
-            if not (x_min <= b[0] <= x_max and y_min <= b[1] <= y_max): continue
-            add_line(a, b, stroke='red', stroke_width=0.2)
-
     dwg.save()
+                

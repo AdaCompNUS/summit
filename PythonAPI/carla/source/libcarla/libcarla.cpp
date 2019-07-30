@@ -202,6 +202,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "SensorData.cpp"
 #include "Sidewalk.cpp"
 #include "Snapshot.cpp"
+#include "SumoNetwork.cpp"
 #include "Weather.cpp"
 #include "World.cpp"
 #include "Commands.cpp"
@@ -213,6 +214,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   scope().attr("__path__") = "libcarla";
   export_geom();
   export_lane_network();
+  export_sumo_network();
   export_occupancy();
   export_control();
   export_gamma();

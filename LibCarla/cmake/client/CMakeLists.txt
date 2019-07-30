@@ -202,6 +202,12 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_sumonetwork_sources
+    "${libcarla_source_path}/carla/sumonetwork/*.cpp"
+    "${libcarla_source_path}/carla/sumonetwork/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_sumonetwork_sources}")
+install(FILES ${libcarla_carla_sumonetwork_sources} DESTINATION include/carla/sumonetwork)
+
 file(GLOB libcarla_cephes_sources
     "${libcarla_source_thirdparty_path}/cephes/*.cpp"
     "${libcarla_source_thirdparty_path}/cephes/*.h")

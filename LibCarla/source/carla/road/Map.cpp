@@ -182,6 +182,7 @@ namespace road {
         }
       }
     }
+
     // search for the nearest lane in nearest_dist
     Waypoint waypoint;
     auto nearest_lane_dist = std::numeric_limits<double>::max();
@@ -202,7 +203,7 @@ namespace road {
 
     const auto &road = _data.GetRoad(waypoint.road_id);
 
-    // Make sure 0.0 < waypoint.s < Road's length
+    // Make sure 0.0 < waipoint.s < Road's length
     constexpr double margin = 5.0 * EPSILON;
     DEBUG_ASSERT(margin < road.GetLength() - margin);
     waypoint.s = geom::Math::Clamp(waypoint.s, margin, road.GetLength() - margin);
@@ -280,7 +281,7 @@ namespace road {
 
     // compute the tangent of the laneOffset
     const auto lane_offset_info = road.GetInfo<RoadInfoLaneOffset>(waypoint.s);
-    const auto lane_offset_tangent = lane_offset_info == nullptr ? 0.0f : static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
+    const auto lane_offset_tangent = static_cast<float>(lane_offset_info->GetPolynomial().Tangent(waypoint.s));
 
     lane_tangent -= lane_offset_tangent;
 
@@ -371,13 +372,13 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      if (next_lane == nullptr) continue;
+      RELEASE_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      if (lane_id == 0) continue;
+      RELEASE_ASSERT(lane_id != 0);
       const auto *section = next_lane->GetLaneSection();
-      if (section == nullptr) continue;
+      RELEASE_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
-      if (road == nullptr) continue;
+      RELEASE_ASSERT(road != nullptr);
       const auto distance = GetDistanceAtStartOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -389,13 +390,13 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(prev_lanes.size());
     for (auto *next_lane : prev_lanes) {
-      if (next_lane == nullptr) continue;
+      RELEASE_ASSERT(next_lane != nullptr);
       const auto lane_id = next_lane->GetId();
-      if (lane_id == 0) continue;
+      RELEASE_ASSERT(lane_id != 0);
       const auto *section = next_lane->GetLaneSection();
-      if (section == nullptr) continue;
+      RELEASE_ASSERT(section != nullptr);
       const auto *road = next_lane->GetRoad();
-      if (road == nullptr) continue;
+      RELEASE_ASSERT(road != nullptr);
       const auto distance = GetDistanceAtEndOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
