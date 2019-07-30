@@ -1,4 +1,8 @@
 #include "carla/geom/Vector2D.h"
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -28,15 +32,15 @@ struct Edge {
 struct Lane {
   std::string id;
   uint32_t index;
-  double speed;
-  double length;
+  float speed;
+  float length;
   std::vector<geom::Vector2D> shape;
 };
 
 struct Junction {
   std::string id;
-  double x;
-  double y;
+  float x;
+  float y;
   std::vector<std::string> inc_lanes;
   std::vector<std::string> int_lanes;
   std::vector<geom::Vector2D> shape;
@@ -50,6 +54,13 @@ struct Connection {
   std::string via;
 };
 
+struct RoutePoint {
+  std::string edge;
+  uint32_t lane;
+  uint32_t segment;
+  float offset;
+};
+
 
 class SumoNetwork {
 
@@ -61,12 +72,22 @@ public:
   const std::unordered_map<std::string, Junction>& Junctions() const { return _junctions; }
   const std::vector<Connection>& Connections() const { return _connections; }
 
+  geom::Vector2D GetRoutePointPosition(const RoutePoint& route_point) const;
+  RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
+
 private:
+  
+  typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;
+  typedef boost::geometry::model::segment<rt_point_t> rt_segment_t;
+  typedef std::pair<rt_segment_t, std::tuple<std::string, uint32_t, uint32_t>> rt_value_t; // Segment -> (Edge, Lane Index, Segment Index)
+  typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16> > rt_tree_t;
 
   std::unordered_map<std::string, Edge> _edges;
   std::unordered_map<std::string, Junction> _junctions;
   std::vector<Connection> _connections;
+  rt_tree_t _segments_index;
 
+  void Build();
 };
 
 }

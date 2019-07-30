@@ -82,6 +82,14 @@ std::ostream &operator<<(std::ostream &out, const Connection& connection) {
   return out;
 }
 
+std::ostream &operator<<(std::ostream &out, const RoutePoint& route_point) {
+  out << "RoutePoint(edge=" << route_point.edge
+      << ", lane=" << route_point.lane
+      << ", segment=" << route_point.segment
+      << ", offset=" << route_point.offset << ')';
+  return out;
+}
+
 }
 }
 
@@ -147,6 +155,14 @@ void export_sumo_network() {
   class_<std::vector<Connection>>("vector_of_connection")
     .def(vector_indexing_suite<std::vector<Connection>>())
   ;
+  
+  class_<RoutePoint>("RoutePoint", no_init)
+    .def_readonly("edge", &RoutePoint::edge)
+    .def_readonly("lane", &RoutePoint::lane)
+    .def_readonly("segment", &RoutePoint::segment)
+    .def_readwrite("offset", &RoutePoint::offset)
+    .def(self_ns::str(self_ns::self))
+  ;
 
   class_<SumoNetwork>("SumoNetwork", no_init)
     .def("load", 
@@ -160,6 +176,8 @@ void export_sumo_network() {
         make_function(&SumoNetwork::Junctions, return_internal_reference<>()))
     .add_property("connections", 
         make_function(&SumoNetwork::Connections, return_internal_reference<>()))
+    .def("get_route_point_position", &SumoNetwork::GetRoutePointPosition)
+    .def("get_nearest_route_point", &SumoNetwork::GetNearestRoutePoint)
   ;
   register_ptr_to_python<SharedPtr<SumoNetwork>>();
 

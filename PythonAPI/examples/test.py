@@ -12,6 +12,7 @@ import carla
 
 import numpy as np
 import svgwrite
+import random
 
 def rotate(v, radians):
     c, s = np.cos(radians), np.sin(radians)
@@ -48,26 +49,33 @@ if __name__ == '__main__':
         mid = (start + end) / 2 
         dwg.add(dwg.line(start, end, **args))
         dwg.add(dwg.line(
-            mid - 0.4 * direction + 0.4 * normal,
-            mid + 0.4 * direction,
+            mid - 0.5 * direction + 0.5 * normal,
+            mid + 0.5 * direction,
             **args))
         dwg.add(dwg.line(
-            mid - 0.4 * direction - 0.4 * normal,
-            mid + 0.4 * direction,
+            mid - 0.5 * direction - 0.5 * normal,
+            mid + 0.5 * direction,
             **args))
     def tsp(pos):
         return np.array([pos.x, pos.y])
 
-    m = carla.SumoNetwork.load(data)
-    for entry in m.edges:
+    network = carla.SumoNetwork.load(data)
+    for entry in network.edges:
         edge = entry.data()
         for lane in edge.lanes:
             for i in range(len(lane.shape) - 1):
                 add_arrowed_line(
                     lane.shape[i], 
                     lane.shape[i + 1],
-                    stroke='red' if edge.function == carla.Function.Normal else 'blue',
-                    stroke_width=0.5)
+                    stroke='black' if edge.function == carla.Function.Normal else 'blue',
+                    stroke_width=0.25)
+    
+    for _ in range(50000):
+        position = carla.Vector2D(random.uniform(-5000, 5000), random.uniform(-5000, 5000))
+        route_point = network.get_nearest_route_point(position)
+        position = network.get_route_point_position(route_point)
+        add_circle(position, 1.0, stroke='red', stroke_width=1.0)
+
     
     dwg.save()
                 
