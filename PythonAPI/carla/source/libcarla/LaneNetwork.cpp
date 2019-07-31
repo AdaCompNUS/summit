@@ -195,6 +195,10 @@ void export_lane_network() {
   class_<std::vector<RoutePoint>>("vector_of_route_point")
        .def(vector_indexing_suite<std::vector<RoutePoint>>())
   ;
+
+  class_<std::vector<std::vector<RoutePoint>>>("vector_of_vector_of_route_point")
+      .def(vector_indexing_suite<std::vector<std::vector<RoutePoint>>>())
+  ;
   
   class_<RouteMap>("RouteMap", no_init)
     .def("__init__", 
@@ -205,6 +209,7 @@ void export_lane_network() {
     .def("rand_route_point", &RouteMap::RandRoutePoint)
     .def("get_nearest_route_point", &RouteMap::GetNearestRoutePoint)
     .def("get_next_route_points", &RouteMap::GetNextRoutePoints)
+    .def("get_next_route_paths", &RouteMap::GetNextRoutePaths)
   ;
   
   register_ptr_to_python<SharedPtr<RouteMap>>();

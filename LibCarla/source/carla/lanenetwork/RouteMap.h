@@ -31,6 +31,9 @@ struct RoutePoint {
 };
 
 class RouteMap {
+private:  
+  
+  typedef std::vector<RoutePoint> route_path_t;
 public:
 
   RouteMap(SharedPtr<const LaneNetwork> lane_network);
@@ -39,6 +42,8 @@ public:
   geom::Vector2D GetPosition(const RoutePoint& route_point) const;
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float lookahead_distance) const;
+
+  std::vector<route_path_t> GetNextRoutePaths(const RoutePoint& route_point, float lookahead_distance, float path_step = 1.0) const;
 
 private:
   

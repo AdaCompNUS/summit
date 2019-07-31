@@ -92,25 +92,30 @@ std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_poi
     queue.pop();
 
     const RoutePoint& current_route_point = queue_item.first;
-    network_segment_t current_segment = _segments[static_cast<size_t>(current_route_point.segment_id)];
+    network_segment_t current_segment = _segments[static_cast<size_t>(current_route_point.segment_id)]; // segment: <0:type, 1:lane/connection_id, 2,3:start_coord, end_coord >
 
     float offset = current_route_point.offset;
-    float distance = queue_item.second;
+    float distance = queue_item.second; // query distance
 
     if (std::get<0>(current_segment)) { // Segment is lane.
-      const Lane& lane = _lane_network->Lanes().at(std::get<1>(current_segment));
+      const Lane& lane = _lane_network->Lanes().at(std::get<1>(current_segment)); // a lane on the topology graph
+      // segments are in the route map
 
       const geom::Vector2D& start = std::get<2>(current_segment);
       const geom::Vector2D& end = std::get<3>(current_segment);
 
-      if (offset + distance <= (end - start).Length()) {
-        next_route_points.emplace_back(current_route_point.segment_id, offset + distance);
+      if (offset + distance <= (end - start).Length()) { // next point lies in the current segment
+        next_route_points.emplace_back(current_route_point.segment_id, offset + distance); // emplace_back? just to reduce memory copy
+        continue;
       }
 
-      for (int64_t outgoing_lane_connection_id : _lane_network->GetOutgoingLaneConnectionIds(lane)) {
-        const LaneConnection& outgoing_lane_connection = _lane_network->LaneConnections().at(outgoing_lane_connection_id);
 
-        float outgoing_offset = (end - start).Length() - outgoing_lane_connection.source_offset - _lane_network->GetLaneEndMinOffset(lane);
+      for (int64_t outgoing_lane_connection_id : _lane_network->GetOutgoingLaneConnectionIds(lane)) { // get neighboors on the graph, they have to be connections
+        const LaneConnection& outgoing_lane_connection = _lane_network->LaneConnections().at(outgoing_lane_connection_id); 
+        // Lane connection? source_offset: offset at source lane to end; destination_offset: offset at des lane from start
+
+        float outgoing_offset = (end - start).Length() - (outgoing_lane_connection.source_offset - _lane_network->GetLaneEndMinOffset(lane)); 
+        // GetLaneStartMinOffset? GetLaneEndMinOffset: end part of the lane that has no connection (wasted).
 
         if (outgoing_offset >= offset && outgoing_offset - offset < distance) {
           queue.push(std::pair<RoutePoint, float>(
@@ -120,11 +125,11 @@ std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_poi
                 distance - (outgoing_offset - offset)));
         }
       }
-    } else {
+    } else { // A lane connection
       const LaneConnection& lane_connection = _lane_network->LaneConnections().at(std::get<1>(current_segment));
 
-      geom::Vector2D source = std::get<2>(current_segment);
-      geom::Vector2D destination = std::get<3>(current_segment);
+      geom::Vector2D source = std::get<2>(current_segment); // start pos
+      geom::Vector2D destination = std::get<3>(current_segment); // end pos
 
       if (offset + distance <= (destination - source).Length()) {
         next_route_points.emplace_back(current_route_point.segment_id, offset + distance);
@@ -139,6 +144,108 @@ std::vector<RoutePoint> RouteMap::GetNextRoutePoints(const RoutePoint& route_poi
   }
 
   return next_route_points;
+}
+
+std::vector<RouteMap::route_path_t> RouteMap::GetNextRoutePaths(const RoutePoint& route_point, float lookahead_distance, float path_step) const {
+  std::vector<RouteMap::route_path_t> route_paths;
+
+  route_paths.emplace_back(std::initializer_list<RoutePoint>{route_point}); // initial path with the current point
+
+  std::queue<std::tuple<RoutePoint, float, float, std::size_t>> queue;
+  queue.push(std::tuple<RoutePoint, float, float, std::size_t>(
+    route_point, lookahead_distance, path_step, 0)); 
+  // the last is the list of path indices 
+
+  while (!queue.empty()) {
+    std::tuple<RoutePoint, float, float, std::size_t> queue_item = queue.front();
+    queue.pop();
+
+    const RoutePoint& current_route_point = std::get<0>(queue_item);
+    network_segment_t current_segment = _segments[static_cast<size_t>(current_route_point.segment_id)]; // segment: <0:type, 1:lane/connection_id, 2,3:start_coord, end_coord >
+
+    float offset = current_route_point.offset;
+    float global_distance = std::get<1>(queue_item);
+    float local_distance = std::get<2>(queue_item);
+    std::size_t path_id = std::get<3>(queue_item);
+
+    if (std::get<0>(current_segment)) { // Segment is lane.
+      const Lane& lane = _lane_network->Lanes().at(std::get<1>(current_segment)); // a lane on the topology graph
+      // segments are in the route map
+
+      const geom::Vector2D& start = std::get<2>(current_segment);
+      const geom::Vector2D& end = std::get<3>(current_segment);
+      float segment_effective_len = (end - start).Length();
+
+      float move_distance = local_distance;
+
+      // construct path towards the end of segment or the final route_point
+      while (offset + move_distance <= segment_effective_len && move_distance <= global_distance){
+        route_paths[path_id].emplace_back(current_route_point.segment_id, offset + move_distance); 
+        move_distance += path_step;
+      }
+
+      if (offset + global_distance <= segment_effective_len ) { // query point lies in the current segment
+        if (move_distance < global_distance + path_step - 1e-1)
+          route_paths[path_id].emplace_back(current_route_point.segment_id, offset + global_distance); 
+        continue;
+      }
+
+      int connection_id = 0;
+      for (int64_t outgoing_lane_connection_id : _lane_network->GetOutgoingLaneConnectionIds(lane)) { // get neighboors on the graph, they have to be lane_connections
+        const LaneConnection& outgoing_lane_connection = _lane_network->LaneConnections().at(outgoing_lane_connection_id); 
+
+        std::size_t new_path_id = path_id;
+        if (connection_id > 0){
+          route_paths.emplace_back(route_paths[path_id]);
+          new_path_id = route_paths.size()-1;
+        }
+
+        // Lane connection? source_offset: offset at source lane to end; destination_offset: offset at des lane from start
+
+        float outgoing_offset = segment_effective_len - (outgoing_lane_connection.source_offset - _lane_network->GetLaneEndMinOffset(lane)); // the exit offset measured from start
+
+        if (outgoing_offset >= offset && outgoing_offset - offset < global_distance) {
+          queue.push(std::tuple<RoutePoint, float, float, std::size_t>(
+                RoutePoint(
+                  static_cast<int64_t>(_lane_connection_id_to_segment_id_map.at(outgoing_lane_connection_id)), 
+                  0.0f),
+                global_distance - (outgoing_offset - offset), 
+                move_distance - (outgoing_offset - offset),
+                new_path_id) 
+          );
+        }
+        connection_id += 1;
+      }
+    } else { // A lane connection
+      const LaneConnection& lane_connection = _lane_network->LaneConnections().at(std::get<1>(current_segment));
+
+      geom::Vector2D source = std::get<2>(current_segment); // start pos
+      geom::Vector2D destination = std::get<3>(current_segment); // end pos
+
+      float segment_effective_len = (destination - source).Length();
+
+      float move_distance = local_distance;
+      while (offset + move_distance <= segment_effective_len && move_distance <= global_distance){
+        route_paths[path_id].emplace_back(current_route_point.segment_id, offset + move_distance); 
+        move_distance += path_step;
+      }
+
+      if (offset + global_distance <= segment_effective_len ) { // query point lies in the current segment
+        if (move_distance < global_distance + path_step - 1e-1)
+          route_paths[path_id].emplace_back(current_route_point.segment_id, offset + global_distance); 
+      } else {
+        queue.push(std::tuple<RoutePoint, float, float, std::size_t>(
+              RoutePoint(
+                static_cast<int64_t>(_lane_id_to_segment_id_map.at(lane_connection.destination_lane_id)),
+                lane_connection.destination_offset - _lane_network->GetLaneStartMinOffset(_lane_network->Lanes().at(lane_connection.destination_lane_id))),
+              global_distance - (segment_effective_len - offset),
+              move_distance - (segment_effective_len - offset),
+              path_id));
+      }
+    }
+  }
+
+  return route_paths;
 }
 
 }
