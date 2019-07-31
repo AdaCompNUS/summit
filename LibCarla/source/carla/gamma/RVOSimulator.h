@@ -237,11 +237,11 @@ namespace RVO {
 
 		void setAgentMaxTrackingAngle(int agentNo, float max_tracking_angle);
 
+		void setAgentVelocityConvex(int agentNo, std::vector<Vector2> velocity_convex);
+
 		void setAgentAttentionRadius(int agentNo, float r_front, float r_rear);
 
 		void setAgentResDecRate(int agentNo, float res_dec_rate);
-
-		float getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b);
 
 		void setAgent(int agentNo, const AgentParams agt);
 

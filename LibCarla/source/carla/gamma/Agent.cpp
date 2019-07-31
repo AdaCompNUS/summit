@@ -523,7 +523,8 @@ namespace RVO {
 		}
 
 		if (GammaParams::consider_kinematics) {
-			computeKinematicVelSet (max_tracking_angle_);
+			//computeKinematicVelSet (max_tracking_angle_);
+			computeKinematicVelSet ();
 		}
 
 		size_t lineFail = linearProgram2(orcaLines_, maxSpeed_, prefVelocity_, false, newVelocity_);
@@ -572,6 +573,30 @@ namespace RVO {
 			line.direction = normalize(heading_.rotate(-_max_tracking_bound)); // rotate clockwise by |_max_tracking_bound| angle
 			orcaLines_.push_back(line);
 			line.direction = normalize(heading_.rotate(-(180.0f-_max_tracking_bound)));
+			orcaLines_.push_back(line);
+		}
+	}
+
+	void Agent::computeKinematicVelSet (){
+		if(velocity_convex_.size() >= 3) {
+
+			std::vector<Vector2> estimated_k; //estimated_k is the estimated kinematically feasible velocity set, which is the velocity_convex_ rotated to current heading of the agent
+
+			float angle_diff = 57.296f * getSignedAngleRadOfTwoVector(heading_, Vector2(0.0f, 1.0f)); // 57.296f = 180.0f / 3.1415926f
+			for(size_t i=0; i<velocity_convex_.size(); i++){
+				estimated_k.push_back(velocity_convex_[i].rotate(angle_diff));
+			}
+
+			for(size_t i=0; i<estimated_k.size()-1; i++){
+				Line line;
+				line.point = estimated_k[i];
+				line.direction = normalize(estimated_k[i+1] - estimated_k[i]); 
+				orcaLines_.push_back(line);
+			}
+
+			Line line;
+			line.point = estimated_k[estimated_k.size()-1];
+			line.direction = normalize(estimated_k[0] - estimated_k[estimated_k.size()-1]); 
 			orcaLines_.push_back(line);
 		}
 	}

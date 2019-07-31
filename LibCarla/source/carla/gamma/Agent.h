@@ -94,6 +94,7 @@ namespace RVO {
 		void computeAgentOrcaLinesDisc ();
 		void computeAgentOrcaLinesPoly ();
 		void computeKinematicVelSet (float _max_tracking_bound);
+		void computeKinematicVelSet ();
 		float computeAttention(const Agent *other);
 		float computeResponsibility(const Agent *other);
 		bool inCollision(std::vector<Vector2> &minkowski_diff);
@@ -131,6 +132,7 @@ namespace RVO {
 		// float res_dec_rate_ = 0.1f;
 
 		std::vector<Vector2> bounding_corners_;
+		std::vector<Vector2> velocity_convex_;
 		std::string tag_;
 		float max_tracking_angle_;
 		Vector2 heading_;

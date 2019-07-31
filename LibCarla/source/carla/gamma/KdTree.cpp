@@ -45,12 +45,12 @@ namespace RVO {
 	}
 
 	void KdTree::clearAllAgents(){
-		for(size_t i=0; i<agents_.size(); i++){
-			if(agents_[i] != NULL) {
-				delete agents_[i];
-				agents_[i]=NULL;
-			}
-		}
+		// for(size_t i=0; i<agents_.size(); i++){
+		// 	if(agents_[i] != NULL) {
+		// 		delete agents_[i];
+		// 		agents_[i]=NULL;
+		// 	}
+		// }
 		agents_.clear();
 	}
 
@@ -61,7 +61,6 @@ namespace RVO {
 			for (size_t i = agents_.size(); i < sim_->agents_.size(); ++i) {
 				agents_.push_back(sim_->agents_[i]);
 			}
-
 			agentTree_.resize(2 * agents_.size() - 1);
 		}
 

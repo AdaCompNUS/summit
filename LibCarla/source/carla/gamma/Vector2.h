@@ -413,6 +413,16 @@ namespace RVO {
 		return absSq(vector3 - (vector1 + r * (vector2 - vector1)));
 	}
 
+	inline float getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b){
+		float theta = static_cast<float>(atan2 (a.y (), a.x ()) - atan2 (b.y (), b.x ()));
+		if (theta > 3.14159266f)
+			theta -= 6.28318532f; //2 * GammaParams::GAMMA_PI;
+		if (theta < - 3.14159266f)
+			theta += 6.28318532f; //2 * GammaParams::GAMMA_PI;
+
+		return theta;
+	}
+
 }
 
 #endif /* RVO_VECTOR2_H_ */

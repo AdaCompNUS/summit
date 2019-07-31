@@ -214,6 +214,7 @@ namespace RVO {
 		agent->r_rear_ = agt.r_rear;
 		agent->res_dec_rate_ = agt.res_dec_rate;
 
+		agent->velocity_convex_.clear();
 
 		agents_.push_back(agent);
 
@@ -242,6 +243,8 @@ namespace RVO {
 		agent->r_front_ = agt.r_front;
 		agent->r_rear_ = agt.r_rear;
 		agent->res_dec_rate_ = agt.res_dec_rate;
+
+		agent->velocity_convex_.clear();
 
 		//agent->tracking_id_ = tracking_id;
 	}
@@ -274,6 +277,10 @@ namespace RVO {
 
 	void RVOSimulator::setAgentMaxTrackingAngle(int agentNo, float max_tracking_angle){
 		agents_[static_cast<size_t>(agentNo)]->max_tracking_angle_ = max_tracking_angle;
+	}
+
+	void RVOSimulator::setAgentVelocityConvex(int agentNo, std::vector<Vector2> velocity_convex){
+		agents_[static_cast<size_t>(agentNo)]->velocity_convex_ = velocity_convex;
 	}
 
 	void RVOSimulator::setAgentAttentionRadius(int agentNo, float r_front, float r_rear){
@@ -346,16 +353,6 @@ namespace RVO {
 		}
 
 		globalTime_ += timeStep_;
-	}
-
-	float RVOSimulator::getSignedAngleRadOfTwoVector(Vector2 a, Vector2 b){
-		float theta = static_cast<float>(atan2 (a.y (), a.x ()) - atan2 (b.y (), b.x ()));
-		if (theta > GammaParams::GAMMA_PI)
-			theta -= 2 * GammaParams::GAMMA_PI;
-		if (theta < - GammaParams::GAMMA_PI)
-			theta += 2 * GammaParams::GAMMA_PI;
-
-		return theta;
 	}
 
 	// return next position and heading for tracking pref_vel by applying bicycle model for dt time
