@@ -156,8 +156,8 @@ void export_sumo_network() {
   ;
 
   class_<Connection>("Connection", no_init)
-    .def_readonly("from", &Connection::from)
-    .def_readonly("to", &Connection::to)
+    .def_readonly("from_edge", &Connection::from) // Using from_edge instead because from is a reserved keyword in python.
+    .def_readonly("to_edge", &Connection::to)
     .def_readonly("from_lane", &Connection::from_lane)
     .def_readonly("to_lane", &Connection::to_lane)
     .def_readonly("via", &Connection::via)

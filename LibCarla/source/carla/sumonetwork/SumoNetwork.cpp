@@ -87,8 +87,8 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
     Connection connection;
     connection.from = connection_node.attribute("from").value();
     connection.to = connection_node.attribute("to").value();
-    connection.from_lane = connection_node.attribute("from_lane").as_uint();
-    connection.to_lane = connection_node.attribute("to_lane").as_uint();
+    connection.from_lane = connection_node.attribute("fromLane").as_uint();
+    connection.to_lane = connection_node.attribute("toLane").as_uint();
     connection.via = connection_node.attribute("via").value();
     sumo_network._connections.emplace_back(std::move(connection));
   }
