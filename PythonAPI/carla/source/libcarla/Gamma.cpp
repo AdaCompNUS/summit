@@ -122,5 +122,18 @@ void export_gamma() {
               static_cast<size_t>(agent_no),
               GeomToGamma(velocity));
         })
+    .def("set_agent_velocity_convex",
+        +[](RVOSimulator& self, int agent_no, const list& velocity_convex_py) {
+          std::vector<geom::Vector2D> velocity_convex{
+            stl_input_iterator<geom::Vector2D>(velocity_convex_py),
+            stl_input_iterator<geom::Vector2D>()};
+
+          std::vector<Vector2> velocity_convex_gamma;
+          for (const geom::Vector2D& v : velocity_convex) {
+            velocity_convex_gamma.emplace_back(GeomToGamma(v));
+          }
+          
+          self.setAgentVelocityConvex(agent_no, velocity_convex_gamma);
+        })
   ;
 }
