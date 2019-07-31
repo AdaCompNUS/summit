@@ -18,28 +18,27 @@ def rotate(v, radians):
     c, s = np.cos(radians), np.sin(radians)
     return np.array([v[0] * c - v[1] * s, v[0] * s + v[1] * c]) 
 
+def unit_vector(v):
+    norm = np.linalg.norm(v)
+    if norm == 0:
+        return v - v
+    else:
+        return v / norm
+
 if __name__ == '__main__':
 
-    with open('../../Data/map2.net.xml', 'r') as file:
+    with open('../../Data/map.net.xml', 'r') as file:
         data = file.read()
 
     print('Loading map...')
     network = carla.SumoNetwork.load(data)
     occupancy_map = network.create_occupancy_map()
 
-    print('Drawing occupancy grid...')
-    occupancy_grid = occupancy_map.create_occupancy_grid(
-        occupancy_map.bounds_min,
-        occupancy_map.bounds_max,
-        0.2)
-    cv2.imwrite('map2.bmp', cv2.transpose(occupancy_grid.data[::-1,::-1]))
-   
     print('Drawing topology...')
-    dwg = svgwrite.Drawing('map2.svg', profile='full')
+    dwg = svgwrite.Drawing('map.svg', profile='full')
     dwg.add(dwg.rect(size=('100%', '100%'), fill='white'))
     def add_arrowed_line(start, end, **args):
-        direction = end - start
-        direction /= np.linalg.norm(direction)
+        direction = unit_vector(end - start)
         normal = rotate(direction, math.pi / 2)
         mid = (start + end) / 2 
         dwg.add(dwg.line(start, end, **args))
@@ -52,18 +51,32 @@ if __name__ == '__main__':
             mid + 0.5 * direction,
             **args))
 
+    lanes_with_connections = set()
+    lanes_with_connections.update(network.edges[c.from_edge].lanes[c.from_lane].id for c in network.connections)
+    
     for entry in network.edges:
         edge = entry.data()
         for lane in edge.lanes:
             for i in range(len(lane.shape) - 1):
+                stroke = 'black'
+                stroke_width = 0.25
+                if edge.function != carla.Function.Normal:
+                    stroke = 'blue'
+                if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
+                    stroke = 'red'
+                    stroke_width = 2.0
+
                 add_arrowed_line(
-                    np.array([
-                        lane.shape[i].x - occupancy_map.bounds_min.x, 
-                        occupancy_map.bounds_max.y - lane.shape[i].y]),
-                    np.array([
-                        lane.shape[i + 1].x - occupancy_map.bounds_min.x,
-                        occupancy_map.bounds_max.y - lane.shape[i + 1].y]),
-                    stroke='blue' if edge.function == carla.Function.Normal else 'red',
-                    stroke_width=0.25)
+                    np.array([lane.shape[i].x, lane.shape[i].y),
+                    np.array([lane.shape[i + 1].x, lane.shape[i + 1].y]),
+                    stroke=stroke,
+                    stroke_width=stroke_width)
     dwg.save()
                 
+    print('Drawing occupancy grid...')
+    occupancy_grid = occupancy_map.create_occupancy_grid(
+        occupancy_map.bounds_min,
+        occupancy_map.bounds_max,
+        1.0)
+    cv2.imwrite('map.bmp', occupancy_grid.data)
+   
