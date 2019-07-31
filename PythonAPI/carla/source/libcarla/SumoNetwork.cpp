@@ -177,6 +177,10 @@ void export_sumo_network() {
   class_<std::vector<RoutePoint>>("vector_of_routepoint")
     .def(vector_indexing_suite<std::vector<RoutePoint>>())
   ;
+  
+  class_<std::vector<std::vector<RoutePoint>>>("vector_of_vector_of_route_point")
+      .def(vector_indexing_suite<std::vector<std::vector<RoutePoint>>>())
+  ;
 
   class_<SumoNetwork>("SumoNetwork", no_init)
     .def("load", 
@@ -193,6 +197,7 @@ void export_sumo_network() {
     .def("get_route_point_position", &SumoNetwork::GetRoutePointPosition)
     .def("get_nearest_route_point", &SumoNetwork::GetNearestRoutePoint)
     .def("get_next_route_points", &SumoNetwork::GetNextRoutePoints)
+    .def("get_next_route_paths", &SumoNetwork::GetNextRoutePaths)
     .def("create_occupancy_map", &SumoNetwork::CreateOccupancyMap)
   ;
   register_ptr_to_python<SharedPtr<SumoNetwork>>();

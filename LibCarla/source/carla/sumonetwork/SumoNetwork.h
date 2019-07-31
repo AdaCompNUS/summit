@@ -76,6 +76,7 @@ public:
   geom::Vector2D GetRoutePointPosition(const RoutePoint& route_point) const;
   RoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   std::vector<RoutePoint> GetNextRoutePoints(const RoutePoint& route_point, float distance) const;
+  std::vector<std::vector<RoutePoint>> GetNextRoutePaths(const RoutePoint& route_point, float distance, float interval) const;
 
   occupancy::OccupancyMap CreateOccupancyMap() const;
 

@@ -156,6 +156,10 @@ RoutePoint SumoNetwork::GetNearestRoutePoint(const geom::Vector2D& position) con
 }
   
 std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_point, float distance) const {
+  auto it_edge = _edges.find(route_point.edge);
+  if (it_edge == _edges.end()) {
+    std::cout << "Edge does not exist." << std::endl;
+  }
   const Edge& edge = _edges.at(route_point.edge);
   const Lane& lane = edge.lanes[route_point.lane];
 
@@ -188,6 +192,23 @@ std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_
     }
     return next_route_points;
   }
+}
+
+std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RoutePoint& route_point, float distance, float interval) const {
+  if (distance < interval) return {{route_point}};
+
+  std::vector<std::vector<RoutePoint>> result;
+  for (const RoutePoint& next_route_point : GetNextRoutePoints(route_point, interval)) {
+    std::vector<std::vector<RoutePoint>> next_route_paths = GetNextRoutePaths(next_route_point, distance - interval, interval);
+    result.reserve(next_route_paths.size());
+    for (const std::vector<RoutePoint>& next_route_path : next_route_paths) {
+      result.emplace_back();
+      result.back().reserve(1 + next_route_path.size());
+      result.back().emplace_back(route_point);
+      result.back().insert(result.back().end(), next_route_path.begin(), next_route_path.end());
+    }
+  }
+  return result;
 }
 
 occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
