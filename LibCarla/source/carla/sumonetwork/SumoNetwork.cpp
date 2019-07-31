@@ -21,8 +21,8 @@ static std::vector<geom::Vector2D> parse_position_list(const std::string& s) {
   std::vector<geom::Vector2D> position_list;
   for (size_t i = 0; i < split_list.size(); i += 2) {
     position_list.emplace_back(
-        std::stof(split_list[i]), 
-        std::stof(split_list[i + 1]));
+        std::stof(split_list[i + 1]),       // Swap for SUMO -> CARLA.
+        std::stof(split_list[i]));  // Swap for SUMO -> CARLA.
   }
 
   return position_list;
@@ -75,8 +75,8 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
   for (pugi::xml_node junction_node : net_node.children("junction")) {
     Junction junction;
     junction.id = junction_node.attribute("id").value();
-    junction.x = junction_node.attribute("x").as_float();
-    junction.y = junction_node.attribute("y").as_float();
+    junction.x = junction_node.attribute("y").as_float(); // Swap for SUMO -> CARLA.
+    junction.y = junction_node.attribute("x").as_float(); // Swap for SUMO -> CARLA.
     junction.inc_lanes = parse_string_list(junction_node.attribute("incLanes").value());
     junction.int_lanes = parse_string_list(junction_node.attribute("intLanes").value());
     junction.shape = parse_position_list(junction_node.attribute("shape").value());
