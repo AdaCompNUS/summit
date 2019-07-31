@@ -306,6 +306,33 @@ fi
 unset OPENCV_BASENAME
 
 # ==============================================================================
+# -- Get Earcut ----------------------------------------------------------------
+# ==============================================================================
+
+EARCUT_VERSION=v0.12.4
+EARCUT_BASENAME=earcut-${EARCUT_VERSION}-${CXX_TAG}
+
+EARCUT_INCLUDE=${PWD}/${EARCUT_BASENAME}-install/include
+
+if [[ -d "${EARCUT_BASENAME}-install" ]] ; then
+  log "${EARCUT_BASENAME} already installed."
+else
+  rm -Rf ${EARCUT_BASENAME}-source
+
+  log "Retrieving earcut."
+
+  git clone -b ${EARCUT_VERSION} https://github.com/mapbox/earcut.hpp.git ${EARCUT_BASENAME}-source
+  
+  mkdir -p ${EARCUT_BASENAME}-install
+
+  cp -r ${EARCUT_BASENAME}-source/include ${EARCUT_BASENAME}-install/include
+
+  rm -Rf ${EARCUT_BASENAME}-source
+fi
+
+unset RPCLIB_BASENAME
+
+# ==============================================================================
 # -- Get GTest and compile it with libc++ --------------------------------------
 # ==============================================================================
 
@@ -504,6 +531,7 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
+set(EARCUT_INCLUDE_PATH "${EARCUT_INCLUDE}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.

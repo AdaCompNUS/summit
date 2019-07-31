@@ -24,6 +24,9 @@ install(FILES ${opencv_libraries} DESTINATION lib)
 file(GLOB opencv_third_party_libraries "${OPENCV_THIRD_PARTY_LIB_PATH}/*.*")
 install(FILES ${opencv_third_party_libraries} DESTINATION lib)
 
+# Install earcut headers (install in system folder to avoid extra warnings).
+install(DIRECTORY "${EARCUT_INCLUDE_PATH}/mapbox" DESTINATION include/system)
+
 # Windows need libpng alongside with zlib to be installed
 if (WIN32)
     # Install zlib headers.
@@ -202,6 +205,12 @@ file(GLOB libcarla_carla_streaming_low_level_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_streaming_low_level_sources}")
 install(FILES ${libcarla_carla_streaming_low_level_sources} DESTINATION include/carla/streaming/low_level)
 
+file(GLOB libcarla_carla_sumonetwork_sources
+    "${libcarla_source_path}/carla/sumonetwork/*.cpp"
+    "${libcarla_source_path}/carla/sumonetwork/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_sumonetwork_sources}")
+install(FILES ${libcarla_carla_sumonetwork_sources} DESTINATION include/carla/sumonetwork)
+
 file(GLOB libcarla_cephes_sources
     "${libcarla_source_thirdparty_path}/cephes/*.cpp"
     "${libcarla_source_thirdparty_path}/cephes/*.h")
@@ -231,6 +240,7 @@ if (LIBCARLA_BUILD_RELEASE)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${OPENCV_INCLUDE_PATH}"
+      "${EARCUT_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
@@ -264,6 +274,7 @@ if (LIBCARLA_BUILD_DEBUG)
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
       "${OPENCV_INCLUDE_PATH}"
+      "${EARCUT_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)

@@ -6,6 +6,10 @@ namespace carla {
 namespace occupancy {
   
 OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _triangles(triangles) {
+  if (triangles.empty()) {
+    throw_exception(std::invalid_argument("empty occupancy map not allowed"));
+  }
+
   std::vector<rt_value_t> index_entries;
 
   for (unsigned int i = 0; i < _triangles.size(); i++) {
@@ -21,6 +25,10 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _tr
   }
 
   _triangles_index = rt_index_t(index_entries);
+  _bounds_min.x = boost::geometry::get<0>(_triangles_index.bounds().min_corner());
+  _bounds_min.y = boost::geometry::get<1>(_triangles_index.bounds().min_corner());
+  _bounds_max.x = boost::geometry::get<0>(_triangles_index.bounds().max_corner());
+  _bounds_max.y = boost::geometry::get<1>(_triangles_index.bounds().max_corner());
 }
 
 std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {

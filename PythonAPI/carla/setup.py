@@ -133,7 +133,7 @@ setup(
     name='carla',
     version='0.9.6',
     package_dir={'': 'source'},
-    packages=['carla', 'adacomp'],
+    packages=['carla'],
     ext_modules=get_libcarla_extensions(),
     license='MIT License',
     description='Python API for communicating with the CARLA server.',
