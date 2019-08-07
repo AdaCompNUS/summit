@@ -61,13 +61,18 @@ void export_gamma() {
           return static_cast<int>(self.addAgent(params, agent_id));
         })
     .def("add_obstacle",
-        +[](RVOSimulator& self, const std::vector<geom::Vector2D>& vertices) {
+        +[](RVOSimulator& self, const list& vertices_py) {
+          std::vector<geom::Vector2D> vertices{
+            stl_input_iterator<geom::Vector2D>(vertices_py),
+            stl_input_iterator<geom::Vector2D>()};
+
           std::vector<Vector2> vertices_gamma;
           for (const geom::Vector2D& vertex : vertices) {
             vertices_gamma.emplace_back(GeomToGamma(vertex));
           }
           self.addObstacle(vertices_gamma);
         })
+    .def("process_obstacles", &RVOSimulator::processObstacles)
     .def("do_step", &RVOSimulator::doStep)
     .def("set_agent_position",
         +[](RVOSimulator& self, int agent_no, const geom::Vector2D& position) {
