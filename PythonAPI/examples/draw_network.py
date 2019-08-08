@@ -64,8 +64,8 @@ if __name__ == '__main__':
                 if edge.function != carla.Function.Normal:
                     stroke = 'blue'
                 if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
-                    stroke = 'blue'
-                    stroke_width = 0.25
+                    stroke = 'red'
+                    stroke_width = 1.0
 
                 add_arrowed_line(
                     np.array([
@@ -97,6 +97,7 @@ if __name__ == '__main__':
     #            stroke_width=1.0)
 
     dwg.save()
+    exit()
                 
     print('Drawing occupancy grid...')
     occupancy_grid = occupancy_map.create_occupancy_grid(
