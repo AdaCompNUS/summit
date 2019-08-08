@@ -53,7 +53,7 @@ namespace RVO {
 		}
 	}
 
-	void Agent::computeObstacleOrcaLines(){
+	void Agent::computeObstacleOrcaLinesDisc(){
 		const float invTimeHorizonObst = 1.0f / timeHorizonObst_;
 
 		/* Create obstacle ORCA lines. */
@@ -117,6 +117,232 @@ namespace RVO {
 				continue;
 			}
 			else if (s >= 0.0f && s < 1.0f && distSqLine <= radiusSq) {
+				/* Collision with obstacle segment. */
+				line.point = Vector2(0.0f, 0.0f);
+				line.direction = -obstacle1->unitDir_;
+				orcaLines_.push_back(line);
+				continue;
+			}
+
+			/*
+			 * No collision.
+			 * Compute legs. When obliquely viewed, both legs can come from a single
+			 * vertex. Legs extend cut-off line when nonconvex vertex.
+			 */
+
+			Vector2 leftLegDirection, rightLegDirection;
+
+			if (s < 0.0f && distSqLine <= radiusSq) {
+				/*
+				 * Obstacle viewed obliquely so that left vertex
+				 * defines velocity obstacle.
+				 */
+				if (!obstacle1->isConvex_) {
+					/* Ignore obstacle. */
+					continue;
+				}
+
+				obstacle2 = obstacle1;
+
+				const float leg1 = std::sqrt(distSq1 - radiusSq);
+				leftLegDirection = Vector2(relativePosition1.x() * leg1 - relativePosition1.y() * radius_, relativePosition1.x() * radius_ + relativePosition1.y() * leg1) / distSq1;
+				rightLegDirection = Vector2(relativePosition1.x() * leg1 + relativePosition1.y() * radius_, -relativePosition1.x() * radius_ + relativePosition1.y() * leg1) / distSq1;
+			}
+			else if (s > 1.0f && distSqLine <= radiusSq) {
+				/*
+				 * Obstacle viewed obliquely so that
+				 * right vertex defines velocity obstacle.
+				 */
+				if (!obstacle2->isConvex_) {
+					/* Ignore obstacle. */
+					continue;
+				}
+
+				obstacle1 = obstacle2;
+
+				const float leg2 = std::sqrt(distSq2 - radiusSq);
+				leftLegDirection = Vector2(relativePosition2.x() * leg2 - relativePosition2.y() * radius_, relativePosition2.x() * radius_ + relativePosition2.y() * leg2) / distSq2;
+				rightLegDirection = Vector2(relativePosition2.x() * leg2 + relativePosition2.y() * radius_, -relativePosition2.x() * radius_ + relativePosition2.y() * leg2) / distSq2;
+			}
+			else {
+				/* Usual situation. */
+				if (obstacle1->isConvex_) {
+					const float leg1 = std::sqrt(distSq1 - radiusSq);
+					leftLegDirection = Vector2(relativePosition1.x() * leg1 - relativePosition1.y() * radius_, relativePosition1.x() * radius_ + relativePosition1.y() * leg1) / distSq1;
+				}
+				else {
+					/* Left vertex non-convex; left leg extends cut-off line. */
+					leftLegDirection = -obstacle1->unitDir_;
+				}
+
+				if (obstacle2->isConvex_) {
+					const float leg2 = std::sqrt(distSq2 - radiusSq);
+					rightLegDirection = Vector2(relativePosition2.x() * leg2 + relativePosition2.y() * radius_, -relativePosition2.x() * radius_ + relativePosition2.y() * leg2) / distSq2;
+				}
+				else {
+					/* Right vertex non-convex; right leg extends cut-off line. */
+					rightLegDirection = obstacle1->unitDir_;
+				}
+			}
+
+			/*
+			 * Legs can never point into neighboring edge when convex vertex,
+			 * take cutoff-line of neighboring edge instead. If velocity projected on
+			 * "foreign" leg, no constraint is added.
+			 */
+
+			const Obstacle *const leftNeighbor = obstacle1->prevObstacle_;
+
+			bool isLeftLegForeign = false;
+			bool isRightLegForeign = false;
+
+			if (obstacle1->isConvex_ && det(leftLegDirection, -leftNeighbor->unitDir_) >= 0.0f) {
+				/* Left leg points into obstacle. */
+				leftLegDirection = -leftNeighbor->unitDir_;
+				isLeftLegForeign = true;
+			}
+
+			if (obstacle2->isConvex_ && det(rightLegDirection, obstacle2->unitDir_) <= 0.0f) {
+				/* Right leg points into obstacle. */
+				rightLegDirection = obstacle2->unitDir_;
+				isRightLegForeign = true;
+			}
+
+			/* Compute cut-off centers. */
+			const Vector2 leftCutoff = invTimeHorizonObst * (obstacle1->point_ - position_);
+			const Vector2 rightCutoff = invTimeHorizonObst * (obstacle2->point_ - position_);
+			const Vector2 cutoffVec = rightCutoff - leftCutoff;
+
+			/* Project current velocity on velocity obstacle. */
+
+			/* Check if current velocity is projected on cutoff circles. */
+			const float t = (obstacle1 == obstacle2 ? 0.5f : ((velocity_ - leftCutoff) * cutoffVec) / absSq(cutoffVec));
+			const float tLeft = ((velocity_ - leftCutoff) * leftLegDirection);
+			const float tRight = ((velocity_ - rightCutoff) * rightLegDirection);
+
+			if ((t < 0.0f && tLeft < 0.0f) || (obstacle1 == obstacle2 && tLeft < 0.0f && tRight < 0.0f)) {
+				/* Project on left cut-off circle. */
+				const Vector2 unitW = normalize(velocity_ - leftCutoff);
+
+				line.direction = Vector2(unitW.y(), -unitW.x());
+				line.point = leftCutoff + radius_ * invTimeHorizonObst * unitW;
+				orcaLines_.push_back(line);
+				continue;
+			}
+			else if (t > 1.0f && tRight < 0.0f) {
+				/* Project on right cut-off circle. */
+				const Vector2 unitW = normalize(velocity_ - rightCutoff);
+
+				line.direction = Vector2(unitW.y(), -unitW.x());
+				line.point = rightCutoff + radius_ * invTimeHorizonObst * unitW;
+				orcaLines_.push_back(line);
+				continue;
+			}
+
+			/*
+			 * Project on left leg, right leg, or cut-off line, whichever is closest
+			 * to velocity.
+			 */
+			const float distSqCutoff = ((t < 0.0f || t > 1.0f || obstacle1 == obstacle2) ? std::numeric_limits<float>::infinity() : absSq(velocity_ - (leftCutoff + t * cutoffVec)));
+			const float distSqLeft = ((tLeft < 0.0f) ? std::numeric_limits<float>::infinity() : absSq(velocity_ - (leftCutoff + tLeft * leftLegDirection)));
+			const float distSqRight = ((tRight < 0.0f) ? std::numeric_limits<float>::infinity() : absSq(velocity_ - (rightCutoff + tRight * rightLegDirection)));
+
+			if (distSqCutoff <= distSqLeft && distSqCutoff <= distSqRight) {
+				/* Project on cut-off line. */
+				line.direction = -obstacle1->unitDir_;
+				line.point = leftCutoff + radius_ * invTimeHorizonObst * Vector2(-line.direction.y(), line.direction.x());
+				orcaLines_.push_back(line);
+				continue;
+			}
+			else if (distSqLeft <= distSqRight) {
+				/* Project on left leg. */
+				if (isLeftLegForeign) {
+					continue;
+				}
+
+				line.direction = leftLegDirection;
+				line.point = leftCutoff + radius_ * invTimeHorizonObst * Vector2(-line.direction.y(), line.direction.x());
+				orcaLines_.push_back(line);
+				continue;
+			}
+			else {
+				/* Project on right leg. */
+				if (isRightLegForeign) {
+					continue;
+				}
+
+				line.direction = -rightLegDirection;
+				line.point = rightCutoff + radius_ * invTimeHorizonObst * Vector2(-line.direction.y(), line.direction.x());
+				orcaLines_.push_back(line);
+				continue;
+			}
+		}
+	}
+
+	void Agent::computeObstacleOrcaLinesPoly(){
+		const float invTimeHorizonObst = 1.0f / timeHorizonObst_;
+
+		/* Create obstacle ORCA lines. */
+		for (size_t i = 0; i < obstacleNeighbors_.size(); ++i) {
+
+			const Obstacle *obstacle1 = obstacleNeighbors_[i].second;
+			const Obstacle *obstacle2 = obstacle1->nextObstacle_;
+
+			const Vector2 relativePosition1 = obstacle1->point_ - position_;
+			const Vector2 relativePosition2 = obstacle2->point_ - position_;
+
+			/*
+			 * Check if velocity obstacle of obstacle is already taken care of by
+			 * previously constructed obstacle ORCA lines.
+			 */
+			bool alreadyCovered = false;
+
+			for (size_t j = 0; j < orcaLines_.size(); ++j) {
+				if (det(invTimeHorizonObst * relativePosition1 - orcaLines_[j].point, orcaLines_[j].direction) - invTimeHorizonObst * radius_ >= -RVO_EPSILON && det(invTimeHorizonObst * relativePosition2 - orcaLines_[j].point, orcaLines_[j].direction) - invTimeHorizonObst * radius_ >=  -RVO_EPSILON) {
+					alreadyCovered = true;
+					break;
+				}
+			}
+
+			if (alreadyCovered) {
+				continue;
+			}
+
+			/* Not yet covered. Check for collisions. */
+
+			const float distSq1 = absSq(relativePosition1);
+			const float distSq2 = absSq(relativePosition2);
+
+			const float radiusSq = sqr(radius_);
+
+			const Vector2 obstacleVector = obstacle2->point_ - obstacle1->point_;
+			const float s = (-relativePosition1 * obstacleVector) / absSq(obstacleVector);
+			const float distSqLine = absSq(-relativePosition1 - s * obstacleVector);
+
+			Line line;
+
+			if (s < 0.0f && inCollision(bounding_corners_, obstacle1->point_)) {
+				/* Collision with left vertex. Ignore if non-convex. */
+				if (obstacle1->isConvex_) {
+					line.point = Vector2(0.0f, 0.0f);
+					line.direction = normalize(Vector2(-relativePosition1.y(), relativePosition1.x()));
+					orcaLines_.push_back(line);
+				}
+
+				continue;
+			}
+			else if (s > 1.0f && inCollision(bounding_corners_, obstacle2->point_)) {
+				/* Collision with right vertex. Ignore if non-convex
+				 * or if it will be taken care of by neighoring obstace */
+				if (obstacle2->isConvex_ && det(relativePosition2, obstacle2->unitDir_) >= 0.0f) {
+					line.point = Vector2(0.0f, 0.0f);
+					line.direction = normalize(Vector2(-relativePosition2.y(), relativePosition2.x()));
+					orcaLines_.push_back(line);
+				}
+
+				continue;
+			}
+			else if (s >= 0.0f && inCollision(bounding_corners_, relativePosition1 + s * obstacleVector + position_)) {
 				/* Collision with obstacle segment. */
 				line.point = Vector2(0.0f, 0.0f);
 				line.direction = -obstacle1->unitDir_;
@@ -353,6 +579,162 @@ namespace RVO {
 		}
 	}
 
+	// void Agent::computeAgentOrcaLinesPoly(){
+
+	// 	const float invTimeHorizon = 1.0f / timeHorizon_;
+
+	// 	/* Create agent ORCA lines. */
+	// 	for (size_t i = 0; i < agentNeighbors_.size(); ++i) {
+
+	// 		const Agent *const other = agentNeighbors_[i].second;
+
+	// 		float attention = computeAttention (other);
+	// 		if (attention == 0.0f)
+	// 			continue;
+
+	// 		std::vector<Vector2> minkowski_diff = Minkowski::Diff(other->bounding_corners_, bounding_corners_);
+
+	// 		bool in_collision = inCollision (minkowski_diff, Vector2(0,0));
+
+	// 		const Vector2 relativeVelocity = velocity_ - other->velocity_;
+
+	// 		Line line;
+	// 		Vector2 u;
+
+	// 		if (!in_collision) {
+	// 			Vector2 left_most_vector = Vector2 (0.0f, 0.0f);
+	// 			Vector2 right_most_vector = Vector2 (0.0f, 0.0f);
+
+	// 			computeLeftAndRightMostVector (left_most_vector, right_most_vector, minkowski_diff);
+
+	// 			float shortest_dist_sq = std::numeric_limits<float>::infinity();
+	// 			float tmp_shortest_dist_sq;
+	// 			Vector2 nearest_point = Vector2 (0.0f, 0.0f);
+	// 			Vector2 tmp_nearest_point = Vector2 (0.0f, 0.0f);
+
+	// 			size_t shortest_line_idx = 0;
+
+	// 			for(size_t j=0; j<minkowski_diff.size() - 1; j++){
+	// 				if (leftOf (right_most_vector, left_most_vector, minkowski_diff [j]) < 0 || minkowski_diff [j] == right_most_vector) {
+	// 					//it is okay not to multiply invTimeHorizon in the condition, because it is only used for pruning out the the unnecessary edges of the minkowski diff
+	// 					continue;
+	// 				}
+						
+	// 				tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * minkowski_diff[j], invTimeHorizon * minkowski_diff[j+1], relativeVelocity, tmp_nearest_point);
+	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 					shortest_dist_sq = tmp_shortest_dist_sq;
+	// 					nearest_point = tmp_nearest_point;
+	// 					shortest_line_idx = j;
+	// 				}
+	// 			}
+
+	// 			if (leftOf (right_most_vector, left_most_vector, minkowski_diff [minkowski_diff.size() - 1]) < 0 || minkowski_diff [minkowski_diff.size() - 1] == right_most_vector) {
+	// 				;
+	// 			} else {
+	// 				tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * minkowski_diff[minkowski_diff.size() - 1], invTimeHorizon * minkowski_diff[0], relativeVelocity, tmp_nearest_point);
+	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 					shortest_dist_sq = tmp_shortest_dist_sq;
+	// 					nearest_point = tmp_nearest_point;
+	// 					shortest_line_idx = minkowski_diff.size() - 1;
+	// 				}
+	// 			}
+
+	// 			// note that both right_most_vector and left_most_vector go through origin
+	// 			tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * right_most_vector, 10000 * invTimeHorizon * right_most_vector, relativeVelocity, tmp_nearest_point);
+	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 				shortest_dist_sq = tmp_shortest_dist_sq;
+	// 				nearest_point = tmp_nearest_point;
+	// 				shortest_line_idx = minkowski_diff.size();
+	// 			}
+
+	// 			tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * left_most_vector, 10000 * invTimeHorizon * left_most_vector, relativeVelocity, tmp_nearest_point);
+	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 				shortest_dist_sq = tmp_shortest_dist_sq;
+	// 				nearest_point = tmp_nearest_point;
+	// 				shortest_line_idx = minkowski_diff.size() + 1 ;
+	// 			}
+
+
+	// 			//shortest_line_start and shortest_line_end are used to tell whether relative velocity is on 
+	// 			// the left side or the right side of the nearest edge, hence we don't need to multiply invTimeHorizon
+	// 			Vector2 shortest_line_start = Vector2 (0, 0);
+	// 			Vector2 shortest_line_end = Vector2 (0, 0);
+	// 			if (shortest_line_idx < minkowski_diff.size() - 1) {
+	// 				shortest_line_start = minkowski_diff [shortest_line_idx];
+	// 				shortest_line_end = minkowski_diff [shortest_line_idx + 1];
+	// 			} else if (shortest_line_idx == minkowski_diff.size() - 1) {
+	// 				shortest_line_start = minkowski_diff [shortest_line_idx];
+	// 				shortest_line_end = minkowski_diff [0];
+	// 			} else if (shortest_line_idx == minkowski_diff.size()) {
+	// 				shortest_line_start = right_most_vector;
+	// 				shortest_line_end = 10000*right_most_vector;
+	// 			} else if (shortest_line_idx == minkowski_diff.size() + 1) {
+	// 				shortest_line_start = 10000*left_most_vector;
+	// 				shortest_line_end = left_most_vector;
+	// 			}
+
+	// 			u = nearest_point - relativeVelocity;
+	// 			float uLength = abs (u);
+	// 			Vector2 unitU = u / uLength;
+	// 			if (leftOf (shortest_line_start, shortest_line_end, relativeVelocity) > 0) {
+	// 				line.direction = Vector2 (unitU.y (), -unitU.x ()); //rotate 90 degree clockwisely
+	// 			} else {
+	// 				line.direction = Vector2 (-unitU.y (), unitU.x ()); //rotate 90 degree counter-clockwisely
+	// 			}
+
+	// 			line.point = velocity_ + computeResponsibility(other) * u;
+
+	// 		} else {
+	// 			/* Collision. Project on cut-off circle of time timeStep. */
+	// 			const float invTimeStep = 1.0f / sim_->timeStep_;
+
+	// 			float shortest_dist_sq = std::numeric_limits<float>::infinity();
+	// 			float tmp_shortest_dist_sq;
+	// 			Vector2 nearest_point = Vector2 (0.0f, 0.0f);
+	// 			Vector2 tmp_nearest_point = Vector2 (0.0f, 0.0f);
+
+	// 			size_t shortest_line_idx = 0;
+
+	// 			for(size_t j=0; j<minkowski_diff.size() - 1; j++){
+	// 				tmp_shortest_dist_sq = distSqPointLineSegment(invTimeStep * minkowski_diff[j], invTimeStep * minkowski_diff[j+1], Vector2 (0.0f, 0.0f), tmp_nearest_point);
+	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 					shortest_dist_sq = tmp_shortest_dist_sq;
+	// 					nearest_point = tmp_nearest_point;
+	// 					shortest_line_idx = j;
+	// 				}
+	// 			}
+
+	// 			tmp_shortest_dist_sq = distSqPointLineSegment(invTimeStep * minkowski_diff[minkowski_diff.size() - 1], invTimeStep * minkowski_diff[0], Vector2 (0.0f, 0.0f), tmp_nearest_point);
+	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
+	// 				shortest_dist_sq = tmp_shortest_dist_sq;
+	// 				nearest_point = tmp_nearest_point;
+	// 				shortest_line_idx = minkowski_diff.size() - 1;
+	// 			}
+
+	// 			Vector2 shortest_line_start = minkowski_diff[shortest_line_idx];
+	// 			Vector2 shortest_line_end = Vector2 (0, 0);
+	// 			if (shortest_line_idx == minkowski_diff.size() - 1) {
+	// 				shortest_line_end = minkowski_diff [0];
+	// 			} else {
+	// 				shortest_line_end = minkowski_diff [shortest_line_idx + 1];
+	// 			}
+
+	// 			u = nearest_point - Vector2 (0.0f, 0.0f);
+	// 			float uLength = abs (u);
+	// 			Vector2 unitU = u / uLength;
+	// 			if (leftOf (shortest_line_start, shortest_line_end, Vector2 (0.0f, 0.0f)) > 0) {
+	// 				line.direction = Vector2 (unitU.y (), -unitU.x ()); //rotate 90 degree clockwisely
+	// 			} else {
+	// 				line.direction = Vector2 (-unitU.y (), unitU.x ()); //rotate 90 degree counter-clockwisely
+	// 			}
+
+	// 			line.point = Vector2 (0.0f, 0.0f);
+	// 		}
+
+			
+	// 		orcaLines_.push_back(line);
+	// 	}
+	// }
 
 	void Agent::computeAgentOrcaLinesPoly(){
 
@@ -369,7 +751,7 @@ namespace RVO {
 
 			std::vector<Vector2> minkowski_diff = Minkowski::Diff(other->bounding_corners_, bounding_corners_);
 
-			bool in_collision = inCollision (minkowski_diff);
+			bool in_collision = inCollision (minkowski_diff, Vector2(0,0));
 
 			const Vector2 relativeVelocity = velocity_ - other->velocity_;
 
@@ -512,7 +894,14 @@ namespace RVO {
 	{
 		orcaLines_.clear();
 
-		computeObstacleOrcaLines ();
+		if(tag_ != "People"){
+			if (GammaParams::use_polygon) {
+				computeObstacleOrcaLinesPoly ();
+			} else {
+				computeObstacleOrcaLinesDisc ();
+			}
+		}
+			
 
 		const size_t numObstLines = orcaLines_.size();
 
@@ -551,15 +940,15 @@ namespace RVO {
 		}
 	}
 
-	bool Agent::inCollision(std::vector<Vector2> &minkowski_diff){
 
-		Vector2 ref_point = Vector2 (0.0f, 0.0f);
-		for(size_t i=0; i<minkowski_diff.size()-1; i++){
-			if (leftOf (minkowski_diff[i], minkowski_diff[i+1], ref_point) < 0) // the reference point (origin) is outside the minkowski diff geometry
+	bool Agent::inCollision(const std::vector<Vector2> &polygon, const Vector2 &ref_point){
+
+		for(size_t i=0; i<polygon.size()-1; i++){
+			if (leftOf (polygon[i], polygon[i+1], ref_point) < 0) // the reference point is outside the polygon
 				return false;
 		}
 
-		if (leftOf (minkowski_diff [minkowski_diff.size() - 1], minkowski_diff [0], ref_point) < 0)
+		if (leftOf (polygon [polygon.size() - 1], polygon [0], ref_point) < 0)
 			return false;
 
 		return true;

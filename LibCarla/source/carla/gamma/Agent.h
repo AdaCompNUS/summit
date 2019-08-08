@@ -90,14 +90,15 @@ namespace RVO {
 		void update();
 
 
-		void computeObstacleOrcaLines ();
+		void computeObstacleOrcaLinesDisc ();
+		void computeObstacleOrcaLinesPoly ();
 		void computeAgentOrcaLinesDisc ();
 		void computeAgentOrcaLinesPoly ();
 		void computeKinematicVelSet (float _max_tracking_bound);
 		void computeKinematicVelSet ();
 		float computeAttention(const Agent *other);
 		float computeResponsibility(const Agent *other);
-		bool inCollision(std::vector<Vector2> &minkowski_diff);
+		bool inCollision(const std::vector<Vector2> &polygon, const Vector2 &ref_point);
         void computeLeftAndRightMostVector(Vector2 &left_most_vector, Vector2 &right_most_vector, std::vector<Vector2> &minkowski_diff);
 
 

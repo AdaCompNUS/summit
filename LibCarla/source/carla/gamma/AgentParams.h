@@ -35,7 +35,7 @@ struct AgentParams{
 		neighborDist = 8.0f;
 		maxNeighbors = 5;
 		timeHorizon = 3.0f;
-		timeHorizonObst = 5.0f;
+		timeHorizonObst = 0.01f;
 		radius = 0.25f;
 		maxSpeed = 5.0f;
 		velocity = RVO::Vector2(0.0f, 0.0f);
@@ -90,15 +90,15 @@ struct AgentParams{
 			std::unordered_map<std::string, AgentParams> lookup;
 
 			float ped_r_front_list = 6.0f; 
-			float ped_r_rear_list = 0.0f; 
+			float ped_r_rear_list = 2.0f; 
 			float ped_res_dec_rate_list = 0.6f;
 
 			float veh_r_front_list = 8.0f;
-			float veh_r_rear_list = 0.0f;
-			float veh_res_dec_rate_list = 0.1f;
+			float veh_r_rear_list = 4.0f;
+			float veh_res_dec_rate_list = 0.01f;
 
 			float bicycle_r_front_list = 8.0f;
-			float bicycle_r_rear_list = 0.0f;
+			float bicycle_r_rear_list = 3.0f;
 			float bicycle_res_dec_rate_list = 0.3f;
 
 			// default setting for pedestrians
@@ -106,7 +106,7 @@ struct AgentParams{
 			float ped_neighborDist = 8.0f;
 			int ped_maxNeighbors = 5;
 			float ped_timeHorizon = 3.0f;
-			float ped_timeHorizonObst = 5.0f;
+			float ped_timeHorizonObst = 0.01f;
 			float ped_radius = 0.25f;
 			float ped_maxSpeed = 5.0f;
 			RVO::Vector2 ped_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -131,7 +131,7 @@ struct AgentParams{
 			float scooter_neighborDist = 8.0f;
 			int scooter_maxNeighbors = 5;
 			float scooter_timeHorizon = 5.0f;
-			float scooter_timeHorizonObst = 5.0f;
+			float scooter_timeHorizonObst = 0.01f;
 			float scooter_radius = 1.0f;
 			float scooter_maxSpeed = 10.0f;
 			RVO::Vector2 scooter_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -155,7 +155,7 @@ struct AgentParams{
 			float car_neighborDist = 11.0f;
 			int car_maxNeighbors = 5;
 			float car_timeHorizon = 4.0f;
-			float car_timeHorizonObst = 5.0f;
+			float car_timeHorizonObst = 0.01f;
 			float car_radius = 2.5f;
 			float car_maxSpeed = 10.0f;
 			RVO::Vector2 car_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -180,7 +180,7 @@ struct AgentParams{
 			float van_neighborDist = 12.0f;
 			int van_maxNeighbors = 5;
 			float van_timeHorizon = 5.0f;
-			float van_timeHorizonObst = 8.0f;
+			float van_timeHorizonObst = 0.01f;
 			float van_radius = 3.0f;
 			float van_maxSpeed = 10.0f;
 			RVO::Vector2 van_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -205,7 +205,7 @@ struct AgentParams{
 			float bus_neighborDist = 15.0f;
 			int bus_maxNeighbors = 5;
 			float bus_timeHorizon = 5.0f;
-			float bus_timeHorizonObst = 8.0f;
+			float bus_timeHorizonObst = 0.01f;
 			float bus_radius = 5.0f;
 			float bus_maxSpeed = 10.0f;
 			RVO::Vector2 bus_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -229,7 +229,7 @@ struct AgentParams{
 			float jeep_neighborDist = 12.0f;
 			int jeep_maxNeighbors = 5;
 			float jeep_timeHorizon = 5.0f;
-			float jeep_timeHorizonObst = 8.0f;
+			float jeep_timeHorizonObst = 0.01f;
 			float jeep_radius = 2.5f;
 			float jeep_maxSpeed = 10.0f;
 			RVO::Vector2 jeep_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -254,7 +254,7 @@ struct AgentParams{
 			float bicycle_neighborDist = 8.0f;
 			int bicycle_maxNeighbors = 5;
 			float bicycle_timeHorizon = 5.0f;
-			float bicycle_timeHorizonObst = 5.0f;
+			float bicycle_timeHorizonObst = 0.01f;
 			float bicycle_radius = 1.0f;
 			float bicycle_maxSpeed = 5.0f;
 			RVO::Vector2 bicycle_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -278,7 +278,7 @@ struct AgentParams{
 			float electric_tricycle_neighborDist = 8.0f;
 			int electric_tricycle_maxNeighbors = 5;
 			float electric_tricycle_timeHorizon = 5.0f;
-			float electric_tricycle_timeHorizonObst = 5.0f;
+			float electric_tricycle_timeHorizonObst = 0.01f;
 			float electric_tricycle_radius = 1.5f;
 			float electric_tricycle_maxSpeed = 8.0f;
 			RVO::Vector2 electric_tricycle_velocity = RVO::Vector2(0.0f, 0.0f);
@@ -303,7 +303,7 @@ struct AgentParams{
 			float gyro_scooter_neighborDist = 8.0f;
 			int gyro_scooter_maxNeighbors = 5;
 			float gyro_scooter_timeHorizon = 5.0f;
-			float gyro_scooter_timeHorizonObst = 5.0f;
+			float gyro_scooter_timeHorizonObst = 0.01f;
 			float gyro_scooter_radius = 0.25f;
 			float gyro_scooter_maxSpeed = 2.0f;
 			RVO::Vector2 gyro_scooter_velocity = RVO::Vector2(0.0f, 0.0f);
