@@ -55,6 +55,10 @@ namespace client {
   void Actor::SetSimulatePhysics(const bool enabled) {
     GetEpisode().Lock()->SetActorSimulatePhysics(*this, enabled);
   }
+  
+  void Actor::SetCollisionEnabled(const bool enabled) {
+    GetEpisode().Lock()->SetActorCollisionEnabled(*this, enabled);
+  }
 
   bool Actor::Destroy() {
     if (IsAlive()) {

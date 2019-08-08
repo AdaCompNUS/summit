@@ -301,6 +301,10 @@ namespace detail {
     void SetActorSimulatePhysics(Actor &actor, bool enabled) {
       _client.SetActorSimulatePhysics(actor.GetId(), enabled);
     }
+    
+    void SetActorCollisionEnabled(Actor &actor, bool enabled) {
+      _client.SetActorCollisionEnabled(actor.GetId(), enabled);
+    }
 
     /// @}
     // =========================================================================

@@ -139,6 +139,10 @@ namespace detail {
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
+    
+    void SetActorCollisionEnabled(
+        rpc::ActorId actor,
+        bool enabled);
 
     void SetActorAutopilot(
         rpc::ActorId vehicle,

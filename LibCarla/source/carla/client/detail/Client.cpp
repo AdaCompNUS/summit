@@ -239,6 +239,10 @@ namespace detail {
   void Client::SetActorSimulatePhysics(rpc::ActorId actor, const bool enabled) {
     _pimpl->AsyncCall("set_actor_simulate_physics", actor, enabled);
   }
+  
+  void Client::SetActorCollisionEnabled(rpc::ActorId actor, const bool enabled) {
+    _pimpl->AsyncCall("set_actor_collision_enabled", actor, enabled);
+  }
 
   void Client::SetActorAutopilot(rpc::ActorId vehicle, const bool enabled) {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);

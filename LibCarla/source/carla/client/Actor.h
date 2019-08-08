@@ -72,6 +72,9 @@ namespace client {
 
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
+    
+    /// Enable or disable collision on this actor.
+    void SetCollisionEnabled(bool enabled = true);
 
     /// Set the angular velocity of the actor
     void SetAngularVelocity(const geom::Vector3D &vector);
