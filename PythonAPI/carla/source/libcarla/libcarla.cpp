@@ -189,7 +189,6 @@ static auto MakeCallback(boost::python::object callback) {
 }
 
 #include "Geom.cpp"
-#include "LaneNetwork.cpp"
 #include "Occupancy.cpp"
 #include "Gamma.cpp"
 #include "Actor.cpp"
@@ -213,7 +212,6 @@ BOOST_PYTHON_MODULE(libcarla) {
   numpy::initialize();
   scope().attr("__path__") = "libcarla";
   export_geom();
-  export_lane_network();
   export_sumo_network();
   export_occupancy();
   export_control();
