@@ -111,16 +111,18 @@ void SumoNetwork::Build() {
             std::make_tuple(edge.id, lane.index, i));
       }
       _lane_to_parent_edge_map[lane.id] = edge.id;
-      _outgoing_connections_map.emplace(lane.id, std::initializer_list<const Connection*>());
+      _outgoing_connections_map.emplace(lane.id, std::vector<size_t>());
     }
   }
   _segments_index = rt_tree_t(index_entries);
 
-  for (const Connection& connection : _connections) {
+  for (size_t i = 0; i < _connections.size(); i++) {
+    const Connection& connection = _connections[i];
+
     if (!connection.via.empty()){
-      _internal_edge_to_connection_map[connection.via] = &connection;
+      _internal_edge_to_connection_map[connection.via] = i;
     }
-    _outgoing_connections_map.at(_edges[connection.from].lanes[connection.from_lane].id).emplace_back(&connection); 
+    _outgoing_connections_map.at(_edges[connection.from].lanes[connection.from_lane].id).emplace_back(i); 
   }
 }
   
@@ -156,10 +158,6 @@ RoutePoint SumoNetwork::GetNearestRoutePoint(const geom::Vector2D& position) con
 }
   
 std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_point, float distance) const {
-  auto it_edge = _edges.find(route_point.edge);
-  if (it_edge == _edges.end()) {
-    std::cout << "Edge does not exist." << std::endl;
-  }
   const Edge& edge = _edges.at(route_point.edge);
   const Lane& lane = edge.lanes[route_point.lane];
 
@@ -176,16 +174,18 @@ std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_
   } else {
     std::vector<RoutePoint> next_route_points;
     if (edge.function == Function::Internal) {
-      for (const Connection* connection : _outgoing_connections_map.at(lane.id)) {
+      for (size_t connection_index : _outgoing_connections_map.at(lane.id)) {
+        const Connection& connection = _connections[connection_index];
         std::vector<RoutePoint> results = GetNextRoutePoints(
-            RoutePoint{connection->to, connection->to_lane, 0, 0},
+            RoutePoint{connection.to, connection.to_lane, 0, 0},
             distance - (segment_length - route_point.offset));
         next_route_points.insert(next_route_points.end(), results.begin(), results.end());
       }
     } else {
-      for (const Connection* connection : _outgoing_connections_map.at(lane.id)) {
+      for (size_t connection_index : _outgoing_connections_map.at(lane.id)) {
+        const Connection& connection = _connections[connection_index];
         std::vector<RoutePoint> results = GetNextRoutePoints(
-            RoutePoint{_lane_to_parent_edge_map.at(connection->via), 0, 0, 0},
+            RoutePoint{_lane_to_parent_edge_map.at(connection.via), 0, 0, 0},
             distance - (segment_length - route_point.offset));
         next_route_points.insert(next_route_points.end(), results.begin(), results.end());
       }
