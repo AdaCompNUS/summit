@@ -5,7 +5,7 @@
 namespace carla {
 namespace sidewalk {
 
-Sidewalk::Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map, 
+Sidewalk::Sidewalk(const occupancy::OccupancyMap& occupancy_map, 
     const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, 
     float width, float resolution,
     float max_cross_distance)
@@ -14,7 +14,7 @@ Sidewalk::Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map,
   _max_cross_distance(max_cross_distance),
   _rng(std::random_device()()) {
 
-  occupancy::OccupancyGrid occupancy_grid = occupancy_map->CreateOccupancyGrid(bounds_min, bounds_max, resolution);
+  occupancy::OccupancyGrid occupancy_grid = occupancy_map.CreateOccupancyGrid(bounds_min, bounds_max, resolution);
   cv::bitwise_not(occupancy_grid.Mat(), occupancy_grid.Mat());
   int kernel_size = static_cast<int>(std::ceil(width / resolution));
   cv::erode(

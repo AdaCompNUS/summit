@@ -38,7 +38,7 @@ class Sidewalk {
 
 public:
 
-  Sidewalk(SharedPtr<const occupancy::OccupancyMap> occupancy_map, 
+  Sidewalk(const occupancy::OccupancyMap& occupancy_map, 
       const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, 
       float width, float resolution,
       float max_cross_distance);

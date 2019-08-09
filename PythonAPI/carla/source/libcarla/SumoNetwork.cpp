@@ -183,10 +183,7 @@ void export_sumo_network() {
   ;
 
   class_<SumoNetwork>("SumoNetwork", no_init)
-    .def("load", 
-        +[](const std::string& data) { 
-          return MakeShared<SumoNetwork>(SumoNetwork::Load(data)); 
-        })
+    .def("load", &SumoNetwork::Load)
     .staticmethod("load")
     .add_property("edges", 
         make_function(&SumoNetwork::Edges, return_internal_reference<>()))
@@ -200,6 +197,4 @@ void export_sumo_network() {
     .def("get_next_route_paths", &SumoNetwork::GetNextRoutePaths)
     .def("create_occupancy_map", &SumoNetwork::CreateOccupancyMap)
   ;
-  register_ptr_to_python<SharedPtr<SumoNetwork>>();
-
 }

@@ -49,12 +49,7 @@ void export_gamma() {
   ;
 
 
-  class_<RVOSimulator>("RVOSimulator", no_init)
-    .def("__init__", 
-        make_constructor(+[]() {
-          return MakeShared<RVOSimulator>();
-        }))
-    
+  class_<RVOSimulator>("RVOSimulator", init<>())
     // RVO2
     .def("add_agent", 
         +[](RVOSimulator& self, const AgentParams& params, int agent_id) {

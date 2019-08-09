@@ -22,7 +22,7 @@ void export_sidewalk() {
   using namespace carla;
   using namespace carla::sidewalk;
   
-  class_<SidewalkRoutePoint>("SidewalkRoutePoint", init<size_t, size_t, float>())
+  class_<SidewalkRoutePoint>("SidewalkRoutePoint", no_init)
     .def(init<const SidewalkRoutePoint &>((arg("rhs"))))
     .def_readwrite("polygon_id", &SidewalkRoutePoint::segment_id)
     .def_readwrite("segment_id", &SidewalkRoutePoint::offset)
@@ -30,22 +30,11 @@ void export_sidewalk() {
     .def(self_ns::str(self_ns::self))
   ;
   
-  // Required because getting next route points returns a vector.
   class_<std::vector<SidewalkRoutePoint>>("vector_of_sidewalk_route_point")
        .def(vector_indexing_suite<std::vector<SidewalkRoutePoint>>())
   ;
 
-  class_<Sidewalk>("Sidewalk", no_init)
-    .def("__init__", 
-        make_constructor(+[](SharedPtr<occupancy::OccupancyMap> occupancy_map, 
-            const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max,
-            float width, float resolution,
-            float max_cross_distance) {
-          return MakeShared<Sidewalk>(std::move(occupancy_map),
-              bounds_min, bounds_max,
-              width, resolution,
-              max_cross_distance);
-        }))
+  class_<Sidewalk>("Sidewalk", init<const occupancy::OccupancyMap&, const geom::Vector2D&, const geom::Vector2D&, float, float, float>())
     .def("create_occupancy_map",
         &Sidewalk::CreateOccupancyMap)
     .def("get_route_point_position",
@@ -59,6 +48,4 @@ void export_sidewalk() {
     .def("get_adjacent_route_points",
         &Sidewalk::GetAdjacentRoutePoints)
   ;
-  
-  register_ptr_to_python<SharedPtr<Sidewalk>>();
 }
