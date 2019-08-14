@@ -123,6 +123,12 @@ void export_geom() {
     .def(self /= double())
     .def(self / double())
     .def(double() / self)
+    .def("squared_length", &cg::Vector2D::SquaredLength)
+    .def("length", &cg::Vector2D::Length)
+    .def("make_unit_vector", &cg::Vector2D::MakeUnitVector)
+    .def("rotate", &cg::Vector2D::Rotate)
+    .def("dot_product", &cg::Vector2D::DotProduct)
+    .staticmethod("dot_product")
     .def(self_ns::str(self_ns::self))
   ;
 

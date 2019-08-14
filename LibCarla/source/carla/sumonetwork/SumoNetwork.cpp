@@ -194,12 +194,12 @@ std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_
   }
 }
 
-std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RoutePoint& route_point, float distance, float interval) const {
-  if (distance < interval) return {{route_point}};
+std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RoutePoint& route_point, size_t num_points, float interval) const {
+  if (num_points == 0) return {{route_point}};
 
   std::vector<std::vector<RoutePoint>> result;
   for (const RoutePoint& next_route_point : GetNextRoutePoints(route_point, interval)) {
-    std::vector<std::vector<RoutePoint>> next_route_paths = GetNextRoutePaths(next_route_point, distance - interval, interval);
+    std::vector<std::vector<RoutePoint>> next_route_paths = GetNextRoutePaths(next_route_point, num_points - 1, interval);
     result.reserve(next_route_paths.size());
     for (const std::vector<RoutePoint>& next_route_path : next_route_paths) {
       result.emplace_back();
