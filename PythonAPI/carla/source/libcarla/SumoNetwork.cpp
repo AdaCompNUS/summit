@@ -167,10 +167,10 @@ void export_sumo_network() {
     .def(vector_indexing_suite<std::vector<Connection>>())
   ;
   
-  class_<RoutePoint>("RoutePoint", no_init)
-    .def_readonly("edge", &RoutePoint::edge)
-    .def_readonly("lane", &RoutePoint::lane)
-    .def_readonly("segment", &RoutePoint::segment)
+  class_<RoutePoint>("RoutePoint", init<std::string, uint32_t, uint32_t,  )
+    .def_readwrite("edge", &RoutePoint::edge)
+    .def_readwrite("lane", &RoutePoint::lane)
+    .def_readwrite("segment", &RoutePoint::segment)
     .def_readwrite("offset", &RoutePoint::offset)
     .def(self_ns::str(self_ns::self))
   ;
