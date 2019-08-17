@@ -234,16 +234,22 @@ void FCarlaServer::FPimpl::BindActions()
     return GFrameCounter;
   };
 
-  BIND_SYNC(spawn_mesh) << [this](const std::vector<cg::Vector3D> &triangles, std::string material) -> R<void>
+  BIND_SYNC(spawn_dynamic_mesh) << [this](const std::vector<cg::Vector3D> &triangles, std::string material) -> R<uint32_t>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<FVector> Triangles;
     for (const cg::Vector3D& triangle : triangles) {
       Triangles.Emplace(triangle.x * 100.0f, triangle.y * 100.0f, triangle.z * 100.0f);
     }
-    Episode->SpawnMesh(Triangles, FString(material.c_str()));
-    return R<void>::Success();
+    return Episode->SpawnDynamicMesh(Triangles, FString(material.c_str()));
   };
+  
+  BIND_SYNC(destroy_dynamic_mesh) << [this](uint32_t id) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return Episode->DestroyDynamicMesh(id);
+  };
+
 
   BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>
   {

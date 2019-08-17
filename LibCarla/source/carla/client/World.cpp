@@ -41,14 +41,12 @@ namespace client {
     return _episode.Lock()->SetEpisodeSettings(settings);
   }
     
-  void World::SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map, std::string material) {
-    std::vector<geom::Vector3D> triangles;
-    for (const geom::Triangle2D& t : occupancy_map.Triangles()) {
-      triangles.emplace_back(t.v0.x, t.v0.y, 0);
-      triangles.emplace_back(t.v1.x, t.v1.y, 0);
-      triangles.emplace_back(t.v2.x, t.v2.y, 0);
-    }
-    _episode.Lock()->SpawnMesh(triangles, material);
+  uint32_t World::SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
+    return _episode.Lock()->SpawnDynamicMesh(triangles, material);
+  }
+    
+  bool World::DestroyDynamicMesh(uint32_t id) {
+    return _episode.Lock()->DestroyDynamicMesh(id);
   }
 
   rpc::WeatherParameters World::GetWeather() const {

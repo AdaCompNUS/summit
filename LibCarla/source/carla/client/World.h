@@ -66,8 +66,12 @@ namespace client {
     /// @return The id of the frame when the settings were applied.
     uint64_t ApplySettings(const rpc::EpisodeSettings &settings);
 
-    // Spawns an occupancy map in the world.
-    void SpawnOccupancyMap(const occupancy::OccupancyMap &occupancy_map, std::string material);
+    // Spawns a dynamic mesh in the world.
+    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material);
+    
+    // Destroys a dynamic mesh in the world.
+    bool DestroyDynamicMesh(uint32_t id);
+
 
     /// Retrieve the weather parameters currently active in the world.
     rpc::WeatherParameters GetWeather() const;

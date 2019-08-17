@@ -9,7 +9,6 @@
 
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
-#include "Carla/Util/DynamicMeshActor.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 
@@ -45,6 +44,7 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
+  DynamicMeshDispatcher = CreateDefaultSubobject<UDynamicMeshDispatcher>(TEXT("DynamicMeshDispatcher"));
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)
@@ -136,11 +136,13 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   return Actor;
 }
 
-void UCarlaEpisode::SpawnMesh(const TArray<FVector>& Triangles, const FString& Material)
+uint32_t UCarlaEpisode::SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material)
 {
-  ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
-  DynamicMeshActor->SetMaterial(Material);
-  DynamicMeshActor->SetTriangles(Triangles);
+  return DynamicMeshDispatcher->SpawnDynamicMesh(Triangles, Material);
+}
+  
+bool UCarlaEpisode::DestroyDynamicMesh(uint32_t id) {
+  return DynamicMeshDispatcher->DestroyDynamicMesh(id);
 }
 
 void UCarlaEpisode::AttachActors(

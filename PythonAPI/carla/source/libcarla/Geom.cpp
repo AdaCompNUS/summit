@@ -135,6 +135,16 @@ void export_geom() {
   implicitly_convertible<cg::Vector3D, cg::Location>();
   implicitly_convertible<cg::Location, cg::Vector3D>();
 
+  class_<std::vector<cg::Vector3D>>("vector_of_vector3D")
+      .def(boost::python::vector_indexing_suite<std::vector<cg::Vector3D>>())
+      .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<std::vector<std::vector<cg::Vector3D>>>("vector_of_vector_of_vector3D")
+      .def(boost::python::vector_indexing_suite<std::vector<std::vector<cg::Vector3D>>>())
+      .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Vector3D>("Vector3D")
     .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
     .def(init<const cg::Location &>((arg("rhs"))))

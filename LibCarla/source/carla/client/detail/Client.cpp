@@ -144,8 +144,12 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
-  void Client::SpawnMesh(const std::vector<geom::Vector3D>& triangles, std::string material) {
-    _pimpl->CallAndWait<void>("spawn_mesh", triangles, material);
+  uint32_t Client::SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material) {
+    return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_mesh", triangles, material);
+  }
+    
+  bool Client::DestroyDynamicMesh(uint32_t id) {
+    return _pimpl->CallAndWait<bool>("destroy_dynamic_mesh", id);
   }
 
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {

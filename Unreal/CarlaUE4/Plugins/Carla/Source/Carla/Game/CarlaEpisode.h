@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Actor/ActorDispatcher.h"
+#include "Carla/DynamicMesh/DynamicMeshDispatcher.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Server/CarlaServer.h"
@@ -210,7 +211,9 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  void SpawnMesh(const TArray<FVector>& Triangles, const FString& Material);
+  uint32_t SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material);
+  
+  bool DestroyDynamicMesh(uint32_t id);
 
   /// Attach @a Child to @a Parent.
   ///
@@ -307,6 +310,8 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   UActorDispatcher *ActorDispatcher = nullptr;
+  
+  UDynamicMeshDispatcher *DynamicMeshDispatcher = nullptr;
 
   UPROPERTY(VisibleAnywhere)
   APawn *Spectator = nullptr;

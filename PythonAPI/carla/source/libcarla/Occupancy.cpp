@@ -42,6 +42,7 @@ void export_occupancy() {
         make_function(&OccupancyMap::BoundsMin))
     .add_property("bounds_max", 
         make_function(&OccupancyMap::BoundsMax))
+    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
     .def("create_polygon_table", &OccupancyMap::CreatePolygonTable)
   ;

@@ -104,8 +104,12 @@ namespace detail {
       return _client.GetAvailableMaps();
     }
 
-    void SpawnMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
-      _client.SpawnMesh(triangles, material);
+    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
+      return _client.SpawnDynamicMesh(triangles, material);
+    }
+
+    bool DestroyDynamicMesh(uint32_t id) {
+      return _client.DestroyDynamicMesh(id);
     }
 
     /// @}

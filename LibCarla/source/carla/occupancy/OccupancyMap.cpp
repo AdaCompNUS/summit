@@ -12,7 +12,7 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _tr
 
   std::vector<rt_value_t> index_entries;
 
-  for (unsigned int i = 0; i < _triangles.size(); i++) {
+  for (size_t i = 0; i < _triangles.size(); i++) {
     const geom::Triangle2D& t = _triangles[i];
     float minx = std::min(t.v0.x, std::min(t.v1.x, t.v2.x));
     float miny = std::min(t.v0.y, std::min(t.v1.y, t.v2.y));
@@ -29,6 +29,16 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _tr
   _bounds_min.y = boost::geometry::get<1>(_triangles_index.bounds().min_corner());
   _bounds_max.x = boost::geometry::get<0>(_triangles_index.bounds().max_corner());
   _bounds_max.y = boost::geometry::get<1>(_triangles_index.bounds().max_corner());
+}
+  
+std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
+  std::vector<geom::Vector3D> mesh_triangles;
+  for (const geom::Triangle2D& t : _triangles) {
+    mesh_triangles.emplace_back(t.v0.x, t.v0.y, 0);
+    mesh_triangles.emplace_back(t.v1.x, t.v1.y, 0);
+    mesh_triangles.emplace_back(t.v2.x, t.v2.y, 0);
+  }
+  return mesh_triangles;
 }
 
 std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {

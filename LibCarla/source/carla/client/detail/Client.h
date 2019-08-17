@@ -81,7 +81,9 @@ namespace detail {
 
     std::vector<std::string> GetAvailableMaps();
 
-    void SpawnMesh(const std::vector<geom::Vector3D>& triangles, std::string material);
+    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material);
+    
+    bool DestroyDynamicMesh(uint32_t id);
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 

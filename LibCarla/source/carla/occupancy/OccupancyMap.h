@@ -1,6 +1,7 @@
 #pragma once
 
 #include "carla/geom/Triangle2D.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyGrid.h"
 #include "carla/occupancy/PolygonTable.h"
 #include <boost/geometry.hpp>
@@ -19,6 +20,8 @@ public:
   const std::vector<geom::Triangle2D>& Triangles() const { return _triangles; }
   geom::Vector2D BoundsMin() const { return _bounds_min; }
   geom::Vector2D BoundsMax() const { return _bounds_max; }
+
+  std::vector<geom::Vector3D> GetMeshTriangles() const;
 
   OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
 
