@@ -14,24 +14,9 @@ namespace carla {
 namespace sidewalk {
 
 struct SidewalkRoutePoint {
-
   size_t polygon_id;
   size_t segment_id;
   float offset;
-
-  SidewalkRoutePoint(size_t polygon_id, size_t segment_id, float offset)
-    : polygon_id(polygon_id), segment_id(segment_id), offset(offset) { }
-  
-  bool operator==(const SidewalkRoutePoint &rhs) const {
-    return polygon_id == rhs.polygon_id &&
-      segment_id == rhs.segment_id &&
-      offset == rhs.offset;
-  }
-
-  bool operator!=(const SidewalkRoutePoint &rhs) const {
-    return !(*this == rhs);
-  }
-
 };
 
 class Sidewalk {

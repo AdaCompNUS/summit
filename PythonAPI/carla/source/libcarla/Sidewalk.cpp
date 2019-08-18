@@ -13,6 +13,16 @@ namespace sidewalk {
         << ", offset=" << route_point.offset << ')';
     return out;
   }
+  
+  inline bool operator==(const SidewalkRoutePoint &lhs, const SidewalkRoutePoint &rhs) {
+    return lhs.polygon_id == rhs.polygon_id &&
+      lhs.segment_id == rhs.segment_id &&
+      lhs.offset == rhs.offset;
+  }
+
+  inline bool operator!=(const SidewalkRoutePoint &lhs, const SidewalkRoutePoint &rhs) {
+    return !(lhs == rhs);
+  }
 
 }
 }
@@ -22,8 +32,7 @@ void export_sidewalk() {
   using namespace carla;
   using namespace carla::sidewalk;
   
-  class_<SidewalkRoutePoint>("SidewalkRoutePoint", no_init)
-    .def(init<const SidewalkRoutePoint &>((arg("rhs"))))
+  class_<SidewalkRoutePoint>("SidewalkRoutePoint", init<>())
     .def_readwrite("polygon_id", &SidewalkRoutePoint::segment_id)
     .def_readwrite("segment_id", &SidewalkRoutePoint::offset)
     .def_readwrite("offset", &SidewalkRoutePoint::offset)

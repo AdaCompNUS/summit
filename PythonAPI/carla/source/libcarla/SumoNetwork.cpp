@@ -167,7 +167,7 @@ void export_sumo_network() {
     .def(vector_indexing_suite<std::vector<Connection>>())
   ;
   
-  class_<RoutePoint>("RoutePoint", no_init)
+  class_<RoutePoint>("SumoNetworkRoutePoint", init<>())
     .def_readwrite("edge", &RoutePoint::edge)
     .def_readwrite("lane", &RoutePoint::lane)
     .def_readwrite("segment", &RoutePoint::segment)
