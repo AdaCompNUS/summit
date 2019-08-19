@@ -902,9 +902,8 @@ namespace RVO {
 			}
 		}
 
-		// if(tag_ != "People"){
-		// 	computeLaneConstrains ();
-		// }
+
+		computeLaneConstrains ();
 			
 
 		const size_t numObstLines = orcaLines_.size();
