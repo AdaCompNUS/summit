@@ -649,7 +649,7 @@ namespace RVO {
 		agents_[agentNo]->right_lane_constrained_ = right_lane_constrained;
 	}
 
-	void RVOSimulator::setAgentHeading(size_t agentNo, Vector2 path_forward){
+	void RVOSimulator::setAgentPathForward(size_t agentNo, Vector2 path_forward){
 		agents_[agentNo]->path_forward_ = path_forward;
 	}
 
