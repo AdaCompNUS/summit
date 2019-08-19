@@ -21,5 +21,6 @@ public:
 
 private:
 
+  UPROPERTY()
   UMaterial* MeshMaterial;
 };

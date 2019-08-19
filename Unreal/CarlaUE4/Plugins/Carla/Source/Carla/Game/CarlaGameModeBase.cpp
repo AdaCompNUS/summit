@@ -9,6 +9,7 @@
 #include "Carla/OpenDrive/OpenDrive.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include "Carla/Game/CarlaHUD.h"
+#include "Carla/DynamicMesh/DynamicMeshDispatcher.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
@@ -88,6 +89,8 @@ void ACarlaGameModeBase::InitGame(
   GameInstance->NotifyInitGame();
 
   SpawnActorFactories();
+
+  Episode->DynamicMeshDispatcher = World->SpawnActor<ADynamicMeshDispatcher>();
 
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);

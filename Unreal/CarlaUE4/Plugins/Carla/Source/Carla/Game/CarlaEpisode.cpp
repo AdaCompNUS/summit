@@ -44,7 +44,6 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
     Id(URandomEngine::GenerateRandomId())
 {
   ActorDispatcher = CreateDefaultSubobject<UActorDispatcher>(TEXT("ActorDispatcher"));
-  DynamicMeshDispatcher = CreateDefaultSubobject<UDynamicMeshDispatcher>(TEXT("DynamicMeshDispatcher"));
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString)

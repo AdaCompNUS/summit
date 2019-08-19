@@ -311,7 +311,8 @@ private:
   UPROPERTY(VisibleAnywhere)
   UActorDispatcher *ActorDispatcher = nullptr;
   
-  UDynamicMeshDispatcher *DynamicMeshDispatcher = nullptr;
+  UPROPERTY(VisibleAnywhere)
+  ADynamicMeshDispatcher *DynamicMeshDispatcher = nullptr;
 
   UPROPERTY(VisibleAnywhere)
   APawn *Spectator = nullptr;
