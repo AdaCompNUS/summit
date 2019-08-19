@@ -901,6 +901,10 @@ namespace RVO {
 				computeObstacleOrcaLinesDisc ();
 			}
 		}
+
+		// if(tag_ != "People"){
+		// 	computeLaneConstrains ();
+		// }
 			
 
 		const size_t numObstLines = orcaLines_.size();
@@ -920,6 +924,35 @@ namespace RVO {
 
 		if (lineFail < orcaLines_.size()) {
 			linearProgram3(orcaLines_, numObstLines, lineFail, maxSpeed_, newVelocity_);
+		}
+	}
+
+	void Agent::computeLaneConstrains (){
+
+		float max_sideward_speed_allowed = 0.1f;
+		if(left_lane_constrained_ && path_forward_ != Vector2(0.0f, 0.0f)){
+			Vector2 left_sideward_vec = normalize(path_forward_.rotate(90.0f));
+			Line line;
+			line.point = Vector2(0.0f, 0.0f) + max_sideward_speed_allowed * left_sideward_vec;
+			// the feasible space is on the left side of a vector
+			line.direction = normalize(path_forward_.rotate(180.0f));
+			orcaLines_.push_back(line);
+
+			path_forward_ = Vector2(0.0f, 0.0f);
+			left_lane_constrained_ = false;
+		}
+
+
+		if(right_lane_constrained_  && path_forward_ != Vector2(0.0f, 0.0f) ){
+			Vector2 right_sideward_vec = normalize(path_forward_.rotate(-90.0f));
+			Line line;
+			line.point = Vector2(0.0f, 0.0f) + max_sideward_speed_allowed * right_sideward_vec;
+			// the feasible space is on the left side of a vector
+			line.direction = normalize(path_forward_);
+			orcaLines_.push_back(line);
+
+			path_forward_ = Vector2(0.0f, 0.0f);
+			right_lane_constrained_ = false;
 		}
 	}
 
