@@ -112,6 +112,10 @@ namespace RVO {
 
 		agent->id_ = agents_.size();
 
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
+
 		agents_.push_back(agent);
 
 		return agents_.size() - 1;
@@ -131,6 +135,11 @@ namespace RVO {
 		agent->velocity_ = velocity;
 
 		agent->id_ = agents_.size();
+
+
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
 
 		agents_.push_back(agent);
 
@@ -155,6 +164,9 @@ namespace RVO {
 		agent->tag_ = tag;
 		agent->max_tracking_angle_ = max_tracking_angle;
 
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
 
 		agents_.push_back(agent);
 
@@ -182,7 +194,9 @@ namespace RVO {
 
 		agent->tracking_id_ = tracking_id;
 
-
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
 
 		agents_.push_back(agent);
 
@@ -216,6 +230,10 @@ namespace RVO {
 
 		agent->velocity_convex_.clear();
 
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
+
 		agents_.push_back(agent);
 
 		return agents_.size() - 1;
@@ -243,6 +261,10 @@ namespace RVO {
 		agent->r_front_ = agt.r_front;
 		agent->r_rear_ = agt.r_rear;
 		agent->res_dec_rate_ = agt.res_dec_rate;
+
+		agent->path_forward_ = Vector2(0.0f, 0.0f);
+		agent->left_lane_constrained_ = false;
+		agent->right_lane_constrained_ = false;
 
 		agent->velocity_convex_.clear();
 
@@ -619,6 +641,16 @@ namespace RVO {
 	void RVOSimulator::setAgentVelocity(size_t agentNo, const Vector2 &velocity)
 	{
 		agents_[agentNo]->velocity_ = velocity;
+	}
+
+	void RVOSimulator::setAgentLaneConstraints(size_t agentNo, bool left_lane_constrained, bool right_lane_constrained)
+	{
+		agents_[agentNo]->left_lane_constrained_ = left_lane_constrained;
+		agents_[agentNo]->right_lane_constrained_ = right_lane_constrained;
+	}
+
+	void RVOSimulator::setAgentHeading(size_t agentNo, Vector2 path_forward){
+		agents_[agentNo]->path_forward_ = path_forward;
 	}
 
 	void RVOSimulator::setTimeStep(float timeStep)
