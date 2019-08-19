@@ -77,32 +77,12 @@ if __name__ == '__main__':
                         stroke=stroke,
                         stroke_width=stroke_width)
 
-    #rand_position = carla.Vector2D(
-    #    random.uniform(occupancy_map.bounds_min.x, occupancy_map.bounds_max.x),
-    #    random.uniform(occupancy_map.bounds_min.y, occupancy_map.bounds_max.y))
-    #rand_route_point = network.get_nearest_route_point(rand_position)
-    #rand_position = network.get_route_point_position(rand_route_point)
-    #
-    #for path in network.get_next_route_paths(rand_route_point, 500.0, 5.0):
-    #    path = [network.get_route_point_position(rp) for rp in path]
-    #    for i in range(len(path) - 1):
-    #        add_arrowed_line(
-    #            np.array([
-    #                path[i].x - occupancy_map.bounds_min.x, 
-    #                occupancy_map.bounds_max.y - path[i].y]),
-    #            np.array([
-    #                path[i + 1].x - occupancy_map.bounds_min.x, 
-    #                occupancy_map.bounds_max.y - path[i + 1].y]),
-    #            stroke='magenta',
-    #            stroke_width=1.0)
-
     dwg.save()
-    exit()
                 
     print('Drawing occupancy grid...')
     occupancy_grid = occupancy_map.create_occupancy_grid(
         occupancy_map.bounds_min,
         occupancy_map.bounds_max,
-        1.0)
+        0.25)
     cv2.imwrite('map.bmp', occupancy_grid.data)
    
