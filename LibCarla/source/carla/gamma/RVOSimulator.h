@@ -247,7 +247,7 @@ namespace RVO {
 
 		void setAgentLaneConstraints(size_t agentNo, bool left_lane_constrained, bool right_lane_constrained);
 
-		void setAgentHeading(size_t agentNo, Vector2 path_forward);
+		void setAgentPathForward(size_t agentNo, Vector2 path_forward);
 
 		std::vector<Vector2> bicycleMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
 		std::vector<Vector2> holonomicMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
