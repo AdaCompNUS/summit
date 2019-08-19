@@ -141,7 +141,7 @@ void export_gamma() {
         })
     .def("set_agent_path_forward",
         +[](RVOSimulator& self, size_t agent_no, const geom::Vector2D& path_forward) {
-          self.setAgentVelocity(
+          self.setAgentPathForward(
               agent_no,
               GeomToGamma(path_forward));
         })
