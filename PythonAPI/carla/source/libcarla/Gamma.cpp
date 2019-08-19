@@ -135,5 +135,15 @@ void export_gamma() {
           
           self.setAgentVelocityConvex(agent_no, velocity_convex_gamma);
         })
+    .def("set_agent_lane_constraints",
+        +[](RVOSimulator& self, size_t agent_no, bool left_lane_constrained, bool right_lane_constrained) {
+          self.setAgentLaneConstraints(agent_no, left_lane_constrained, right_lane_constrained);
+        })
+    .def("set_agent_path_forward",
+        +[](RVOSimulator& self, size_t agent_no, const geom::Vector2D& path_forward) {
+          self.setAgentVelocity(
+              agent_no,
+              GeomToGamma(path_forward));
+        })
   ;
 }
