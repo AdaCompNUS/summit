@@ -210,6 +210,19 @@ std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkR
 
   return adjacent_route_points;
 }
+  
+bool Sidewalk::Intersects(const geom::Vector2D& segment_start, const geom::Vector2D& segment_end) const {
+  rt_segment_t segment(
+      rt_point_t(segment_start.x, segment_start.y),
+      rt_point_t(segment_end.x, segment_end.y));
+
+  std::vector<rt_value_t> results;
+  _segments_index.query(
+      boost::geometry::index::intersects(segment), 
+      std::back_inserter(results));
+
+  return results.size() > 0;
+}
 
 }
 }

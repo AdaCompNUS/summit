@@ -56,5 +56,7 @@ void export_sidewalk() {
         &Sidewalk::GetPreviousRoutePoint)
     .def("get_adjacent_route_points",
         &Sidewalk::GetAdjacentRoutePoints)
+    .def("intersects",
+        &Sidewalk::Intersects)
   ;
 }
