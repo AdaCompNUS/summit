@@ -27,6 +27,9 @@ install(FILES ${opencv_third_party_libraries} DESTINATION lib)
 # Install earcut headers (install in system folder to avoid extra warnings).
 install(DIRECTORY "${EARCUT_INCLUDE_PATH}/mapbox" DESTINATION include/system)
 
+# Install libosmium headers (install in system folder to avoid extra warnings).
+install(DIRECTORY "${LIBOSMIUM_INCLUDE_PATH}/osmium" DESTINATION include/system)
+
 # Windows need libpng alongside with zlib to be installed
 if (WIN32)
     # Install zlib headers.
@@ -74,6 +77,12 @@ file(GLOB libcarla_carla_image_sources
     "${libcarla_source_path}/carla/image/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
+
+file(GLOB libcarla_carla_landmarkmap_sources
+    "${libcarla_source_path}/carla/landmarkmap/*.cpp"
+    "${libcarla_source_path}/carla/landmarkmap/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_landmarkmap_sources}")
+install(FILES ${libcarla_carla_landmarkmap_sources} DESTINATION include/carla/landmarkmap)
 
 file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.cpp"
@@ -241,6 +250,7 @@ if (LIBCARLA_BUILD_RELEASE)
       "${RPCLIB_INCLUDE_PATH}"
       "${OPENCV_INCLUDE_PATH}"
       "${EARCUT_INCLUDE_PATH}"
+      "${LIBOSMIUM_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client DESTINATION lib)
@@ -275,6 +285,7 @@ if (LIBCARLA_BUILD_DEBUG)
       "${RPCLIB_INCLUDE_PATH}"
       "${OPENCV_INCLUDE_PATH}"
       "${EARCUT_INCLUDE_PATH}"
+      "${LIBOSMIUM_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
 
   install(TARGETS carla_client_debug DESTINATION lib)

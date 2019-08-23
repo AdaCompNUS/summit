@@ -330,7 +330,54 @@ else
   rm -Rf ${EARCUT_BASENAME}-source
 fi
 
-unset RPCLIB_BASENAME
+unset EARCUT_BASENAME
+
+# ==============================================================================
+# -- Get Libosmium -------------------------------------------------------------
+# ==============================================================================
+
+LIBOSMIUM_VERSION=v2.13.1
+LIBOSMIUM_BASENAME=libosmium-${LIBOSMIUM_VERSION}-${CXX_TAG}
+
+LIBOSMIUM_LIBSTDCXX_INCLUDE=${PWD}/${LIBOSMIUM_BASENAME}-libstdcxx-install/include
+
+if [[ -d "${LIBOSMIUM_BASENAME}-libstdcxx-install" ]] ; then
+  log "${LIBOSMIUM_BASENAME} already installed."
+else
+  rm -Rf \
+      ${LIBOSMIUM_BASENAME}-libstdcxx-build \
+      ${LIBOSMIUM_BASENAME}-libstdcxx-install
+
+  if [[ ! -d "${LIBOSMIUM_BASENAME}-source" ]]; then
+    log "Retrieving libosmium."
+    git clone -b ${LIBOSMIUM_VERSION} https://github.com/osmcode/libosmium.git ${LIBOSMIUM_BASENAME}-source
+  fi
+
+  log "Building libosmium with libstdc++."
+
+  mkdir -p ${LIBOSMIUM_BASENAME}-libstdcxx-build
+
+  pushd ${LIBOSMIUM_BASENAME}-libstdcxx-build >/dev/null
+
+  cmake -G "Ninja" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+      -DCMAKE_INSTALL_PREFIX="../${LIBOSMIUM_BASENAME}-libstdcxx-install/" \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_TESTING=OFF \
+      ../${LIBOSMIUM_BASENAME}-source
+
+  ninja
+
+  ninja install
+
+  popd >/dev/null
+
+  rm -Rf ${LIBOSMIUM_BASENAME}-libstdcxx-build
+
+fi
+
+unset LIBOSMIUM_BASENAME
 
 # ==============================================================================
 # -- Get GTest and compile it with libc++ --------------------------------------
@@ -549,6 +596,7 @@ elseif (CMAKE_BUILD_TYPE STREQUAL "Client")
   set(OPENCV_LIB_PATH "${OPENCV_LIBSTDCXX_LIBPATH}")
   set(OPENCV_THIRD_PARTY_LIB_PATH "${OPENCV_LIBSTDCXX_THIRD_PARTY_LIBPATH}")
   set(OPENCV_CMAKE_PATH "${OPENCV_LIBSTDCXX_CMAKE_PATH}")
+  set(LIBOSMIUM_INCLUDE_PATH "${LIBOSMIUM_LIBSTDCXX_INCLUDE}")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBSTDCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBSTDCXX_LIBPATH}")
   set(BOOST_LIB_PATH "${BOOST_LIBPATH}")
