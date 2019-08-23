@@ -363,6 +363,9 @@ else
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${LIBOSMIUM_BASENAME}-libstdcxx-install/" \
       -DCMAKE_BUILD_TYPE=Release \
+      -DINSTALL_GDALCPP=OFF \
+      -DINSTALL_PROTOZERO=ON \
+      -DINSTALL_UTFCPP=ON \
       -DBUILD_EXAMPLES=OFF \
       -DBUILD_TESTING=OFF \
       ../${LIBOSMIUM_BASENAME}-source

@@ -29,6 +29,8 @@ install(DIRECTORY "${EARCUT_INCLUDE_PATH}/mapbox" DESTINATION include/system)
 
 # Install libosmium headers (install in system folder to avoid extra warnings).
 install(DIRECTORY "${LIBOSMIUM_INCLUDE_PATH}/osmium" DESTINATION include/system)
+install(DIRECTORY "${LIBOSMIUM_INCLUDE_PATH}/protozero" DESTINATION include/system)
+install(DIRECTORY "${LIBOSMIUM_INCLUDE_PATH}/utf8" DESTINATION include/system)
 
 # Windows need libpng alongside with zlib to be installed
 if (WIN32)
@@ -78,11 +80,11 @@ file(GLOB libcarla_carla_image_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
 
-file(GLOB libcarla_carla_landmarkmap_sources
-    "${libcarla_source_path}/carla/landmarkmap/*.cpp"
-    "${libcarla_source_path}/carla/landmarkmap/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_landmarkmap_sources}")
-install(FILES ${libcarla_carla_landmarkmap_sources} DESTINATION include/carla/landmarkmap)
+file(GLOB libcarla_carla_landmark_sources
+    "${libcarla_source_path}/carla/landmark/*.cpp"
+    "${libcarla_source_path}/carla/landmark/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_landmark_sources}")
+install(FILES ${libcarla_carla_landmark_sources} DESTINATION include/carla/landmark)
 
 file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.cpp"

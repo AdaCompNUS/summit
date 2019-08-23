@@ -49,6 +49,10 @@ def get_libcarla_extensions():
             extra_link_args += [
                 '-lopencv_imgproc', '-lopencv_core', '-lzlib', '-ldl', '-lm', 
                 '-lpthread', '-lrt']
+            
+            # LibOsmium link libraries. @todo Get order from pkg-config or cmake.
+            extra_link_args += [
+                '-lbz2', '-lexpat']
 
             extra_compile_args = [
                 '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
