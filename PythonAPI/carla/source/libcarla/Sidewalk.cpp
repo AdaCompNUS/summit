@@ -9,7 +9,7 @@ namespace sidewalk {
 
   std::ostream &operator<<(std::ostream &out, const SidewalkRoutePoint &route_point) {
     out << "SidewalkRoutePoint(polygon_id=" << route_point.polygon_id
-        << ", segment_id=" << route_point.polygon_id
+        << ", segment_id=" << route_point.segment_id
         << ", offset=" << route_point.offset << ')';
     return out;
   }
@@ -33,8 +33,8 @@ void export_sidewalk() {
   using namespace carla::sidewalk;
   
   class_<SidewalkRoutePoint>("SidewalkRoutePoint", init<>())
-    .def_readwrite("polygon_id", &SidewalkRoutePoint::segment_id)
-    .def_readwrite("segment_id", &SidewalkRoutePoint::offset)
+    .def_readwrite("polygon_id", &SidewalkRoutePoint::polygon_id)
+    .def_readwrite("segment_id", &SidewalkRoutePoint::segment_id)
     .def_readwrite("offset", &SidewalkRoutePoint::offset)
     .def(self_ns::str(self_ns::self))
   ;
