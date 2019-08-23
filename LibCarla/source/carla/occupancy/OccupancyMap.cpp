@@ -37,6 +37,10 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
     mesh_triangles.emplace_back(t.v0.x, t.v0.y, 0);
     mesh_triangles.emplace_back(t.v1.x, t.v1.y, 0);
     mesh_triangles.emplace_back(t.v2.x, t.v2.y, 0);
+    
+    mesh_triangles.emplace_back(t.v2.x, t.v2.y, 0);
+    mesh_triangles.emplace_back(t.v1.x, t.v1.y, 0);
+    mesh_triangles.emplace_back(t.v0.x, t.v0.y, 0);
   }
   return mesh_triangles;
 }

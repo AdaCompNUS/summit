@@ -10,94 +10,20 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
-import numpy as np
-import svgwrite
-import random
-import cv2
+client = carla.Client('127.0.0.1', 2000)
+client.set_timeout(10.0)
 
-def rotate(v, radians):
-    c, s = np.cos(radians), np.sin(radians)
-    return np.array([v[0] * c - v[1] * s, v[0] * s + v[1] * c]) 
-
-if __name__ == '__main__':
-
-    with open('../../Data/map2.net.xml', 'r') as file:
-        data = file.read()
-    
-    dwg = svgwrite.Drawing(
-            'apple.svg', 
-            profile='full')
-    dwg.add(dwg.rect(
-        insert=(0, 0), 
-        size=('100%', '100%'), 
-        rx=None, 
-        ry=None, 
-        fill='white'))
-
-    def add_line(start, end, **args):
-        dwg.add(dwg.line(
-            tsp(start),
-            tsp(end),
-            **args))
-    def add_circle(point, r, **args):
-        dwg.add(dwg.circle(tsp(point), r, **args))
-    def add_arrowed_line(start, end, **args):
-        start = tsp(start)
-        end = tsp(end)
-        direction = end - start
-        direction /= np.linalg.norm(direction)
-        normal = rotate(direction, math.pi / 2)
-        mid = (start + end) / 2 
-        dwg.add(dwg.line(start, end, **args))
-        dwg.add(dwg.line(
-            mid - 0.5 * direction + 0.5 * normal,
-            mid + 0.5 * direction,
-            **args))
-        dwg.add(dwg.line(
-            mid - 0.5 * direction - 0.5 * normal,
-            mid + 0.5 * direction,
-            **args))
-    def tsp(pos):
-        return np.array([pos.x, pos.y])
-
-    network = carla.SumoNetwork.load(data)
-    occupancy_map = network.create_occupancy_map()
-    
-    client = carla.Client('127.0.0.1', 2000)
-    client.set_timeout(10.0)
-    world = client.get_world()
-    world.spawn_occupancy_map(
-        occupancy_map,
+landmark_map = carla.LandmarkMap.load(
+        '/home/leeyiyuan/carla/Data/map.osm',
+        carla.Vector2D(-11551102.28, -143022.13))
+client.get_world().spawn_dynamic_mesh(
+        landmark_map.get_mesh_triangles(20),
         '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt01')
-    
-    #print(len(occupancy_map.triangles))
-    #occupancy_grid = occupancy_map.create_occupancy_grid(
-    #    occupancy_map.bounds_min,
-    #    occupancy_map.bounds_max,
-    #    0.2)
-    #cv2.imwrite('test.bmp', occupancy_grid.data)
-
-    #for entry in network.edges:
-    #    edge = entry.data()
-    #    for lane in edge.lanes:
-    #        for i in range(len(lane.shape) - 1):
-    #            add_arrowed_line(
-    #                lane.shape[i], 
-    #                lane.shape[i + 1],
-    #                stroke='black' if edge.function == carla.Function.Normal else 'blue',
-    #                stroke_width=0.25)
-    #for _ in range(10000):
-    #    position = carla.Vector2D(random.uniform(-5000, 5000), random.uniform(-5000, 5000))
-    #    route_point = network.get_nearest_route_point(position)
-    #    position = network.get_route_point_position(route_point)
-    #
-    #        next_route_points = network.get_next_route_points(route_point, 1.0)
-    #
-    #    for next_route_point in next_route_points:
-    #        next_position = network.get_route_point_position(next_route_point)
-    #        print(str(position), str(next_position))
-    #        add_line(position, next_position,
-    #            stroke='red',
-    #            stroke_width=1.0)
-    #dwg.save()
-                
+        
+with open('/home/leeyiyuan/carla/Data/map.net.xml', 'r') as file:
+    map_data = file.read()
+network = carla.SumoNetwork.load(map_data)
+network_occupancy_map = network.create_occupancy_map()
+client.get_world().spawn_dynamic_mesh(
+        network_occupancy_map.get_mesh_triangles(),
+        '/Game/Carla/Static/GenericMaterials/Asphalt/M_Asphalt01')
