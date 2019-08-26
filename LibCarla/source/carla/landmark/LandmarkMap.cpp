@@ -1,5 +1,6 @@
 #include "LandmarkMap.h"
 
+#include "carla/geom/Triangulation.h"
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -42,7 +43,6 @@ LandmarkMap LandmarkMap::Load(const std::string& file, const geom::Vector2D& off
 
   osmium::apply(reader, location_handler, handler);
 
-  std::cerr << handler.landmark_map._landmarks.size() << std::endl;
   return handler.landmark_map;
 }
   
@@ -50,6 +50,7 @@ std::vector<geom::Vector3D> LandmarkMap::GetMeshTriangles(float height) const {
   std::vector<geom::Vector3D> triangles;
 
   for (const std::vector<geom::Vector2D> landmark : _landmarks) {
+    // Add walls.
     for (size_t i = 0; i < landmark.size(); i++) {
       const geom::Vector2D& start = landmark[i];
       const geom::Vector2D& end = landmark[(i + 1) % landmark.size()];
@@ -70,6 +71,28 @@ std::vector<geom::Vector3D> LandmarkMap::GetMeshTriangles(float height) const {
       triangles.emplace_back(start.x, start.y, height);
       triangles.emplace_back(start.x, start.y, 0);
     }
+
+    // Add ground and roof.
+    std::vector<size_t> triangulation = geom::Triangulation::triangulate(landmark);
+    for (size_t i = 0; i < triangulation.size(); i += 3) {
+      triangles.emplace_back(landmark[triangulation[i]].x, landmark[triangulation[i]].y, 0);
+      triangles.emplace_back(landmark[triangulation[i + 1]].x, landmark[triangulation[i + 1]].y, 0);
+      triangles.emplace_back(landmark[triangulation[i + 2]].x, landmark[triangulation[i + 2]].y, 0);
+
+      triangles.emplace_back(landmark[triangulation[i + 2]].x, landmark[triangulation[i + 2]].y, 0);
+      triangles.emplace_back(landmark[triangulation[i + 1]].x, landmark[triangulation[i + 1]].y, 0);
+      triangles.emplace_back(landmark[triangulation[i]].x, landmark[triangulation[i]].y, 0);
+
+      triangles.emplace_back(landmark[triangulation[i]].x, landmark[triangulation[i]].y, height);
+      triangles.emplace_back(landmark[triangulation[i + 1]].x, landmark[triangulation[i + 1]].y, height);
+      triangles.emplace_back(landmark[triangulation[i + 2]].x, landmark[triangulation[i + 2]].y, height);
+
+      triangles.emplace_back(landmark[triangulation[i + 2]].x, landmark[triangulation[i + 2]].y, height);
+      triangles.emplace_back(landmark[triangulation[i + 1]].x, landmark[triangulation[i + 1]].y, height);
+      triangles.emplace_back(landmark[triangulation[i]].x, landmark[triangulation[i]].y, height);
+    }
+
+
   }
 
   return triangles;

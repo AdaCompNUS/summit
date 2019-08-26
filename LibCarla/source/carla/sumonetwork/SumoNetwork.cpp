@@ -1,7 +1,7 @@
 #include "SumoNetwork.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Triangulation.h"
 #include <boost/algorithm/string.hpp>
-#include <mapbox/earcut.hpp>
 #include <pugixml/pugixml.hpp>
 #include <string>
 
@@ -250,12 +250,7 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
 
   for (const auto& junction_entry : _junctions) {
     const Junction& junction = junction_entry.second;
-    std::vector<std::array<float, 2>> perimeter;
-    for (const geom::Vector2D& vertex : junction.shape) {
-      perimeter.push_back({vertex.x, vertex.y});
-    }
-    std::vector<std::vector<std::array<float, 2>>> polygon{perimeter};
-    std::vector<size_t> triangle_indices = mapbox::earcut<size_t>(polygon);
+    std::vector<size_t> triangle_indices = geom::Triangulation::triangulate(junction.shape);
 
     for (size_t i = 0; i < triangle_indices.size(); i += 3) {
       triangles.emplace_back(

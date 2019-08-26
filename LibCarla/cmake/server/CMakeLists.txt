@@ -10,6 +10,9 @@ install(DIRECTORY "${RPCLIB_INCLUDE_PATH}/rpc" DESTINATION include)
 file(GLOB libcarla_carla_rpclib "${RPCLIB_LIB_PATH}/*.*")
 install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
+# Install earcut headers (install in system folder to avoid extra warnings).
+install(DIRECTORY "${EARCUT_INCLUDE_PATH}/mapbox" DESTINATION include/system)
+
 # Install headers.
 
 install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
@@ -128,7 +131,8 @@ if (LIBCARLA_BUILD_RELEASE)
 
   target_include_directories(carla_server SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${EARCUT_INCLUDE_PATH}")
 
   install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
@@ -142,7 +146,8 @@ if (LIBCARLA_BUILD_DEBUG)
 
   target_include_directories(carla_server_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
+      "${RPCLIB_INCLUDE_PATH}"
+      "${EARCUT_INCLUDE_PATH}")
 
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 
