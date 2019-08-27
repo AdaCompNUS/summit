@@ -20,7 +20,15 @@ void ADynamicMeshActor::SetTriangles(const TArray<FVector>& Triangles) {
     VertexIndices[I] = I;
   }
 
+  TArray<FVector> Normals;
+  Normals.SetNum(Triangles.Num(), true);
+  for (int I = 0; I < Triangles.Num(); I += 3) {
+    Normals[I] = FVector::CrossProduct(Triangles[I + 2] - Triangles[I], Triangles[I + 1] - Triangles[I]).GetSafeNormal();
+    Normals[I + 1] = FVector::CrossProduct(Triangles[I] - Triangles[I + 1], Triangles[I + 2] - Triangles[I + 1]).GetSafeNormal();
+    Normals[I + 2] = FVector::CrossProduct(Triangles[I + 1] - Triangles[I + 2], Triangles[I] - Triangles[I + 2]).GetSafeNormal();
+  }
+
   MeshComponent->bUseComplexAsSimpleCollision = true;
-  MeshComponent->CreateMeshSection_LinearColor(0, Triangles, VertexIndices, {}, {}, {}, {}, true);
+  MeshComponent->CreateMeshSection_LinearColor(0, Triangles, VertexIndices, Normals, {}, {}, {}, true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
 }
