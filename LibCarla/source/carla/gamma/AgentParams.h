@@ -49,7 +49,7 @@ struct AgentParams{
 		pref_speed = 1.2f;
 
 		r_front = 6.0f;
-		r_rear = 0.0f;
+		r_rear = 2.0f;
 		res_dec_rate = 0.6f;
 	}
 
@@ -95,7 +95,7 @@ struct AgentParams{
 
 			float veh_r_front_list = 8.0f;
 			float veh_r_rear_list = 4.0f;
-			float veh_res_dec_rate_list = 0.01f;
+			float veh_res_dec_rate_list = 0.3f;
 
 			float bicycle_r_front_list = 8.0f;
 			float bicycle_r_rear_list = 3.0f;
