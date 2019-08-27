@@ -98,5 +98,15 @@ std::vector<geom::Vector3D> LandmarkMap::GetMeshTriangles(float height) const {
   return triangles;
 }
 
+LandmarkMap LandmarkMap::Filter(const occupancy::OccupancyMap& occupancy_map) const {
+  LandmarkMap filtered_map;
+  for (const std::vector<geom::Vector2D>& landmark : this->_landmarks) {
+    if (!occupancy_map.Intersects(landmark)) {
+      filtered_map._landmarks.emplace_back(landmark);
+    }
+  }
+  return filtered_map;
+}
+
 }
 }

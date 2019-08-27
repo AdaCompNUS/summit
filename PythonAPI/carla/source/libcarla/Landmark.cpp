@@ -17,5 +17,6 @@ void export_landmark() {
         })
     .staticmethod("load")
     .def("get_mesh_triangles", &LandmarkMap::GetMeshTriangles)
+    .def("filter", &LandmarkMap::Filter)
   ;
 }

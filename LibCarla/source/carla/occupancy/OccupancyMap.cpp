@@ -113,5 +113,58 @@ PolygonTable OccupancyMap::CreatePolygonTable(const geom::Vector2D& bounds_min, 
   return table;
 }
 
+// https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
+bool PointInPolygon(const std::vector<geom::Vector2D>& vertices, const geom::Vector2D& test)
+{
+  size_t i, j, c = 0;
+  for (i = 0, j = vertices.size() - 1; i < vertices.size(); j = i++) {
+    if ( ((vertices[i].y>test.y) != (vertices[j].y>test.y)) &&
+        (test.x < (vertices[j].x-vertices[i].x) * (test.y-vertices[i].y) / (vertices[j].y-vertices[i].y) + vertices[i].x) )
+      c = !c;
+  }
+  return c == 1;
+}
+
+bool PolygonPolygonIntersects(const std::vector<geom::Vector2D>& vertices_a, const std::vector<geom::Vector2D>& vertices_b) {
+  for (const geom::Vector2D& point : vertices_a) {
+    if (PointInPolygon(vertices_b, point)) {
+      return true;
+    }
+  }
+  
+  for (const geom::Vector2D& point : vertices_b) {
+    if (PointInPolygon(vertices_a, point)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool OccupancyMap::Intersects(const std::vector<geom::Vector2D>& polygon) const {
+  if (polygon.size() < 3) {
+    return false;
+  }
+
+  geom::Vector2D bounds_min{polygon[0]};
+  geom::Vector2D bounds_max{polygon[1]};
+
+  for (size_t i = 1; i < polygon.size(); i++) {
+    bounds_min.x = std::min(bounds_min.x, polygon[i].x);
+    bounds_min.y = std::min(bounds_min.y, polygon[i].y);
+    bounds_max.x = std::max(bounds_max.x, polygon[i].x);
+    bounds_max.y = std::max(bounds_max.y, polygon[i].y);
+  }
+
+  for (const rt_value_t& entry : QueryIntersect(bounds_min, bounds_max)) {
+    const geom::Triangle2D& triangle = _triangles[entry.second];
+    if (PolygonPolygonIntersects(polygon, {triangle.v0, triangle.v1, triangle.v2})) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }
 }

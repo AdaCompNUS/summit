@@ -22,10 +22,9 @@ public:
   geom::Vector2D BoundsMax() const { return _bounds_max; }
 
   std::vector<geom::Vector3D> GetMeshTriangles() const;
-
   OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
-
   PolygonTable CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float cell_size, float resolution) const;
+  bool Intersects(const std::vector<geom::Vector2D>& polygon) const;
 
 private:
     
