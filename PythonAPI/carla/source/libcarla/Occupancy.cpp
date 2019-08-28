@@ -45,5 +45,6 @@ void export_occupancy() {
     .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
     .def("create_occupancy_grid", &OccupancyMap::CreateOccupancyGrid)
     .def("create_polygon_table", &OccupancyMap::CreatePolygonTable)
+    .def("intersects", &OccupancyMap::Intersects)
   ;
 }
