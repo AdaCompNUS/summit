@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/PythonUtil.h>
+#include <carla/geom/Vector3D.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 
@@ -65,6 +66,19 @@ void export_commands() {
       return self.HasError() ? self.GetError().What() : std::string("");
     })
     .def("has_error", &cr::CommandResponse::HasError)
+  ;
+
+  class_<cr::Command::SpawnDynamicMesh>("SpawnDynamicMesh")
+    .def("__init__", &command_impl::CustomInit<const std::vector<carla::geom::Vector3D>&, std::string>, (arg("triangles"), arg("material")))
+    .def(init<const std::vector<carla::geom::Vector3D>&, std::string>((arg("triangles"), arg("material"))))
+    .def_readwrite("triangles", &cr::Command::SpawnDynamicMesh::triangles)
+    .def_readwrite("material", &cr::Command::SpawnDynamicMesh::material)
+  ;
+
+  class_<cr::Command::DestroyDynamicMesh>("DestroyDynamicMesh")
+    .def("__init__", &command_impl::CustomInit<uint32_t>, (arg("id")))
+    .def(init<uint32_t>((arg("id"))))
+    .def_readwrite("id", &cr::Command::DestroyDynamicMesh::id)
   ;
 
   class_<cr::Command::SpawnActor>("SpawnActor")
@@ -156,6 +170,8 @@ void export_commands() {
     .def_readwrite("enabled", &cr::Command::SetAutopilot::enabled)
   ;
 
+  implicitly_convertible<cr::Command::SpawnDynamicMesh, cr::Command>();
+  implicitly_convertible<cr::Command::DestroyDynamicMesh, cr::Command>();
   implicitly_convertible<cr::Command::SpawnActor, cr::Command>();
   implicitly_convertible<cr::Command::DestroyActor, cr::Command>();
   implicitly_convertible<cr::Command::ApplyVehicleControl, cr::Command>();

@@ -55,6 +55,24 @@ namespace rpc {
       MSGPACK_DEFINE_ARRAY(actor);
     };
 
+    struct SpawnDynamicMesh : CommandBase<SpawnDynamicMesh> {
+      SpawnDynamicMesh() = default;
+      SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material)
+        : triangles(triangles),
+        material(material) {}
+      std::vector<geom::Vector3D> triangles;
+      std::string material;
+      MSGPACK_DEFINE_ARRAY(triangles, material);
+    };
+    
+    struct DestroyDynamicMesh : CommandBase<DestroyDynamicMesh> {
+      DestroyDynamicMesh() = default;
+      DestroyDynamicMesh(uint32_t id)
+        : id(id) {}
+      uint32_t id;
+      MSGPACK_DEFINE_ARRAY(id);
+    };
+
     struct ApplyVehicleControl : CommandBase<ApplyVehicleControl> {
       ApplyVehicleControl() = default;
       ApplyVehicleControl(ActorId id, const VehicleControl &value)
@@ -147,6 +165,8 @@ namespace rpc {
     using CommandType = boost::variant<
         SpawnActor,
         DestroyActor,
+        SpawnDynamicMesh,
+        DestroyDynamicMesh,
         ApplyVehicleControl,
         ApplyWalkerControl,
         ApplyTransform,

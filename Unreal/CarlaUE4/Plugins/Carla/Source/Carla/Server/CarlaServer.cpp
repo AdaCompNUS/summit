@@ -934,6 +934,8 @@ void FCarlaServer::FPimpl::BindActions()
           ActorId id = result.Get().id;
           auto set_id = carla::Functional::MakeOverload(
               [](C::SpawnActor &) {},
+              [](C::SpawnDynamicMesh &) {},
+              [](C::DestroyDynamicMesh &) {},
               [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
@@ -945,6 +947,18 @@ void FCarlaServer::FPimpl::BindActions()
         return result.GetError();
       },
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
+      [=](auto, const C::SpawnDynamicMesh &c) { 
+        auto result = spawn_dynamic_mesh(c.triangles, c.material);
+        return CR{result.Get()};
+      },
+      [=](auto, const C::DestroyDynamicMesh &c) { 
+        auto result = destroy_dynamic_mesh(c.id);
+        if (result.Get()) {
+          return CR{c.id};
+        } else {
+          return CR{carla::rpc::ResponseError("internal error: unable to destroy dynamic mesh")};
+        }
+      },
       [=](auto, const C::ApplyVehicleControl &c) {  MAKE_RESULT(apply_control_to_vehicle(c.actor, c.control)); },
       [=](auto, const C::ApplyWalkerControl &c) {   MAKE_RESULT(apply_control_to_walker(c.actor, c.control)); },
       [=](auto, const C::ApplyTransform &c) {       MAKE_RESULT(set_actor_transform(c.actor, c.transform)); },
