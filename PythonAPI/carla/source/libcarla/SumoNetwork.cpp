@@ -196,5 +196,7 @@ void export_sumo_network() {
     .def("get_next_route_points", &SumoNetwork::GetNextRoutePoints)
     .def("get_next_route_paths", &SumoNetwork::GetNextRoutePaths)
     .def("create_occupancy_map", &SumoNetwork::CreateOccupancyMap)
+    .def("GetRoadmarkMeshTriangles", &SumoNetwork::GetRoadmarkMeshTriangles)
+    .def("query_intersect", &SumoNetwork::QueryIntersect)
   ;
 }

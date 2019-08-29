@@ -1,4 +1,5 @@
 #include "carla/geom/Vector2D.h"
+#include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyMap.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
@@ -79,11 +80,15 @@ public:
   std::vector<std::vector<RoutePoint>> GetNextRoutePaths(const RoutePoint& route_point, size_t num_points, float interval) const;
 
   occupancy::OccupancyMap CreateOccupancyMap() const;
+  std::vector<geom::Vector3D> GetRoadmarkMeshTriangles() const;
+  
+  std::vector<RoutePoint> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;
 
 private:
   
   typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;
   typedef boost::geometry::model::segment<rt_point_t> rt_segment_t;
+  typedef boost::geometry::model::box<rt_point_t> rt_box_t;
   typedef std::pair<rt_segment_t, std::tuple<std::string, uint32_t, uint32_t>> rt_value_t; // Segment -> (Edge, Lane Index, Segment Index)
   typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16> > rt_tree_t;
 
