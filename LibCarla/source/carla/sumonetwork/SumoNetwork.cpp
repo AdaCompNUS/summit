@@ -60,6 +60,10 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
     else if (function == "crossing") edge.function = Function::Crossing;
     else if (function == "walkingarea") edge.function = Function::WalkingArea;
     else edge.function = Function::Normal;
+
+    // Temp vector required because order of lanes read do not necessarily match
+    // order of their indexes.
+    std::vector<Lane> lanes_temp;
     for (pugi::xml_node lane_node : edge_node.children("lane")) {
       Lane lane;
       lane.id = lane_node.attribute("id").value();
@@ -67,8 +71,15 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
       lane.speed = lane_node.attribute("speed").as_float();
       lane.length = lane_node.attribute("length").as_float();
       lane.shape = parse_position_list(lane_node.attribute("shape").value());
-      edge.lanes.emplace_back(std::move(lane));
+      lanes_temp.emplace_back(std::move(lane));
     }
+    edge.lanes.resize(lanes_temp.size());
+    // TODO: Check if sorting passes or there are invalid instances, e.g. indexes
+    // that exceed the bounds of the number of lanes.
+    for (size_t i = 0; i < lanes_temp.size(); i++) {
+      edge.lanes[lanes_temp[i].index] = std::move(lanes_temp[i]);
+    }
+
     sumo_network._edges.emplace(edge.id, std::move(edge));
   }
 
@@ -110,7 +121,7 @@ void SumoNetwork::Build() {
               rt_point_t(lane.shape[i + 1].x, lane.shape[i + 1].y)),
             std::make_tuple(edge.id, lane.index, i));
       }
-      _lane_to_parent_edge_map[lane.id] = edge.id;
+      _lane_to_parent_edge_map[lane.id] = std::make_pair(edge.id, lane.index);
       _outgoing_connections_map.emplace(lane.id, std::vector<size_t>());
     }
   }
@@ -173,23 +184,22 @@ std::vector<RoutePoint> SumoNetwork::GetNextRoutePoints(const RoutePoint& route_
         distance - (segment_length - route_point.offset));
   } else {
     std::vector<RoutePoint> next_route_points;
-    if (edge.function == Function::Internal) {
-      for (size_t connection_index : _outgoing_connections_map.at(lane.id)) {
-        const Connection& connection = _connections[connection_index];
+    for (size_t connection_index : _outgoing_connections_map.at(lane.id)) {
+      const Connection& connection = _connections[connection_index];
+      if (connection.via == "") {
         std::vector<RoutePoint> results = GetNextRoutePoints(
             RoutePoint{connection.to, connection.to_lane, 0, 0},
             distance - (segment_length - route_point.offset));
         next_route_points.insert(next_route_points.end(), results.begin(), results.end());
-      }
-    } else {
-      for (size_t connection_index : _outgoing_connections_map.at(lane.id)) {
-        const Connection& connection = _connections[connection_index];
+      } else {
+        const std::pair<std::string, uint32_t>& lane_parent = _lane_to_parent_edge_map.at(connection.via);
         std::vector<RoutePoint> results = GetNextRoutePoints(
-            RoutePoint{_lane_to_parent_edge_map.at(connection.via), 0, 0, 0},
+            RoutePoint{lane_parent.first, lane_parent.second, 0, 0},
             distance - (segment_length - route_point.offset));
         next_route_points.insert(next_route_points.end(), results.begin(), results.end());
       }
     }
+
     return next_route_points;
   }
 }

@@ -97,7 +97,7 @@ private:
   std::vector<Connection> _connections;
 
   rt_tree_t _segments_index;
-  std::unordered_map<std::string, std::string> _lane_to_parent_edge_map;
+  std::unordered_map<std::string, std::pair<std::string, uint32_t>> _lane_to_parent_edge_map;
   std::unordered_map<std::string, size_t> _internal_edge_to_connection_map;
   std::unordered_map<std::string, std::vector<size_t>> _outgoing_connections_map;
 

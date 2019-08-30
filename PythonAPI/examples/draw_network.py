@@ -51,6 +51,10 @@ if __name__ == '__main__':
             mid - 0.5 * direction - 0.5 * normal,
             mid + 0.5 * direction,
             **args))
+    def add_line(start, end, **args):
+        dwg.add(dwg.line(start, end, **args))
+    def add_circle(pos, radius, **args):
+        dwg.add(dwg.circle(pos, radius, **args))
 
     lanes_with_connections = set()
     lanes_with_connections.update(network.edges[c.from_edge].lanes[c.from_lane].id for c in network.connections)
@@ -77,7 +81,49 @@ if __name__ == '__main__':
                         stroke=stroke,
                         stroke_width=stroke_width)
 
+    edges = [entry.data() for entry in network.edges]
+    for apple in range(100):
+        edge = random.choice(edges)
+        (lane_index, lane) = random.choice([r for r in enumerate(edge.lanes)])
+        segment_index = random.choice([i for i in range(len(lane.shape) - 1)])
+        offset = random.uniform(0, 1) * (lane.shape[segment_index + 1] - lane.shape[segment_index]).length()
+
+        rp = carla.SumoNetworkRoutePoint()
+        rp.edge = edge.id
+        rp.lane = lane_index
+        rp.segment = segment_index
+        rp.offset = offset
+        pos = network.get_route_point_position(rp)
+        for _ in range(100):
+            next_rp_list = network.get_next_route_points(rp, 1.0)
+            if len(next_rp_list) == 0:
+                break
+            next_rp = random.choice(next_rp_list)
+            next_pos = network.get_route_point_position(next_rp)
+
+            add_line(
+                np.array([
+                    pos.y - occupancy_map.bounds_min.y, 
+                    occupancy_map.bounds_max.x - pos.x]),
+                np.array([
+                    next_pos.y - occupancy_map.bounds_min.y, 
+                    occupancy_map.bounds_max.x - next_pos.x]),
+                    stroke='magenta',
+                    stroke_width='0.2')
+            add_circle(
+                np.array([
+                    pos.y - occupancy_map.bounds_min.y, 
+                    occupancy_map.bounds_max.x - pos.x]),
+                0.3,
+                fill='magenta')
+
+
+            (rp, pos) = (next_rp, next_pos)
+        print(apple)
+
     dwg.save()
+
+    exit()
                 
     print('Drawing occupancy grid...')
     occupancy_grid = occupancy_map.create_occupancy_grid(
