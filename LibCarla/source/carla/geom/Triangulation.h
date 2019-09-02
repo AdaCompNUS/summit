@@ -10,7 +10,7 @@ class Triangulation {
 
 public:
   
-  static std::vector<size_t> triangulate(const std::vector<geom::Vector2D>& polygon);
+  static std::vector<size_t> Triangulate(const std::vector<geom::Vector2D>& polygon);
 
 };
 

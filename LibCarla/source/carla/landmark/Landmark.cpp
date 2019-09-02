@@ -14,7 +14,7 @@ namespace landmark {
 
 Landmark::Landmark(const std::vector<geom::Vector2D>& outline)
   : _outline(outline) { 
-  _triangulation = geom::Triangulation::triangulate(_outline);
+  _triangulation = geom::Triangulation::Triangulate(_outline);
 }
 
 std::vector<Landmark> Landmark::Load(const std::string& file, const geom::Vector2D& offset) {  

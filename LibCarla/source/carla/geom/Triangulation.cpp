@@ -5,7 +5,7 @@
 namespace carla {
 namespace geom {
 
-  std::vector<size_t> Triangulation::triangulate(const std::vector<geom::Vector2D>& polygon) {
+  std::vector<size_t> Triangulation::Triangulate(const std::vector<geom::Vector2D>& polygon) {
     std::vector<std::array<float, 2>> perimeter;
     for (const geom::Vector2D& vertex : polygon) {
       perimeter.push_back({vertex.x, vertex.y});

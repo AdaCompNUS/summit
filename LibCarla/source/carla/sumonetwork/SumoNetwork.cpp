@@ -222,51 +222,61 @@ std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RouteP
 }
 
 occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
+
   std::vector<geom::Triangle2D> triangles;
 
-  auto FromSegment = [&triangles](const geom::Vector2D& start, const geom::Vector2D& end, float width) {
-    geom::Vector2D direction = (end - start).MakeUnitVector();
-    geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
-
-    geom::Vector2D v1 = start + normal * width / 2.0;
-    geom::Vector2D v2 = start - normal * width / 2.0;
-    geom::Vector2D v3 = end + normal * width / 2.0;
-    geom::Vector2D v4 = end - normal * width / 2.0;
-
-    triangles.emplace_back(v3, v2, v1);
-    triangles.emplace_back(v2, v3, v4);
-
-    for (int i = 0; i < 8; i++) {
-      v1 = end;
-      v2 = end + normal.Rotate(-geom::Math::Pi<float>() / 8.0f * (i + 1)) * width / 2.0;
-      v3 = end + normal.Rotate(-geom::Math::Pi<float>() / 8.0f * i) * width / 2.0;
-      triangles.emplace_back(v3, v2, v1);
-
-      v1 = start;
-      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 8.0f * i) * width / 2.0;
-      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 8.0f * (i + 1)) * width / 2.0;
-      triangles.emplace_back(v3, v2, v1);
-    }
-  };
+  // Calculate triangles from lanes.
+  typedef boost::geometry::model::d2::point_xy<float> buffer_point_t;
+  typedef boost::geometry::model::polygon<buffer_point_t> buffer_polygon_t;
+  typedef boost::geometry::model::linestring<buffer_point_t> buffer_linestring_t;
+  boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(2.05f); // Extra 0.05m to fill gaps between roads.
+  boost::geometry::strategy::buffer::join_round join_strategy(18);
+  boost::geometry::strategy::buffer::end_round end_strategy(18);
+  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
+  boost::geometry::strategy::buffer::side_straight side_strategy;
 
   for (const auto& edge_entry : _edges) {
     const Edge& edge = edge_entry.second;
     for (const Lane& lane : edge.lanes) {
-      for (size_t i = 0; i < lane.shape.size() - 1; i++) {
-        FromSegment(lane.shape[i], lane.shape[i + 1], 4.20f); // Extra 0.20m to fill up gaps between roads.
+
+      // Create linestring.
+      buffer_linestring_t linestring;
+      for (size_t i = 0; i < lane.shape.size(); i++) {
+        boost::geometry::append(linestring, buffer_point_t(lane.shape[i].x, lane.shape[i].y));
+      }
+
+      // Calculate buffer.
+      boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
+      boost::geometry::buffer(linestring, buffer_result,
+          distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+      // Process polygons in buffer result.
+      for (const buffer_polygon_t& polygon : buffer_result) {
+        std::vector<geom::Vector2D> lane_shape;
+        for(const buffer_point_t& vertex : polygon.outer()) {
+          lane_shape.emplace_back(vertex.x(), vertex.y());
+        }
+        std::vector<size_t> lane_triangulation = geom::Triangulation::Triangulate(lane_shape);
+        for (size_t i = 0; i < lane_triangulation.size(); i += 3) {
+          triangles.emplace_back(
+              lane_shape[lane_triangulation[i + 2]],
+              lane_shape[lane_triangulation[i + 1]],
+              lane_shape[lane_triangulation[i]]);
+        }
       }
     }
   }
 
+  // Calculate triangles from junctions.
   for (const auto& junction_entry : _junctions) {
     const Junction& junction = junction_entry.second;
-    std::vector<size_t> triangle_indices = geom::Triangulation::triangulate(junction.shape);
+    std::vector<size_t> junction_triangulation = geom::Triangulation::Triangulate(junction.shape);
 
-    for (size_t i = 0; i < triangle_indices.size(); i += 3) {
+    for (size_t i = 0; i < junction_triangulation.size(); i += 3) {
       triangles.emplace_back(
-          junction.shape[triangle_indices[i + 2]],
-          junction.shape[triangle_indices[i + 1]],
-          junction.shape[triangle_indices[i]]);
+          junction.shape[junction_triangulation[i + 2]],
+          junction.shape[junction_triangulation[i + 1]],
+          junction.shape[junction_triangulation[i]]);
     }
   }
   
