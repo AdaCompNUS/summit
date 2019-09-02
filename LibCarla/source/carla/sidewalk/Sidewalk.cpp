@@ -62,7 +62,6 @@ occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
   typedef boost::geometry::model::d2::point_xy<float> buffer_point_t;
   typedef boost::geometry::model::polygon<buffer_point_t> buffer_polygon_t;
   typedef boost::geometry::model::linestring<buffer_point_t> buffer_linestring_t;
-  //typedef boost::geometry::model::ring<buffer_point_t, true, false> buffer_ring_t;
   boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(_width / 2);
   boost::geometry::strategy::buffer::join_round join_strategy(18);
   boost::geometry::strategy::buffer::end_round end_strategy(18);
@@ -71,30 +70,67 @@ occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
 
   for (const std::vector<geom::Vector2D>& polygon : _polygons) {
     
-    // Create linestring.
-    buffer_linestring_t linestring;
-    for (size_t i = 0; i < polygon.size(); i++) {
-      //boost::geometry::append(ring, buffer_point_t(polygon[i].x, polygon[i].y));
-      boost::geometry::append(linestring, buffer_point_t(polygon[i].x, polygon[i].y));
-    }
-
-    // Calculate buffer.
-    boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
-    boost::geometry::buffer(linestring, buffer_result,
-        distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-      
-    // Process polygons in buffer result.
-    for (const buffer_polygon_t& buffer_polygon : buffer_result) {
-      std::vector<geom::Vector2D> polygon_shape;
-      for(const buffer_point_t& vertex : buffer_polygon.outer()) {
-        polygon_shape.emplace_back(vertex.x(), vertex.y());
+    // For everything except last segment. This is to prevent a loop which will cause the 
+    // buffering to mess up.
+    {
+      // Create linestring.
+      buffer_linestring_t linestring;
+      for (size_t i = 0; i < polygon.size(); i++) {
+        boost::geometry::append(linestring, buffer_point_t(
+              polygon[i].x, 
+              polygon[i].y));
       }
-      std::vector<size_t> polygon_triangulation = geom::Triangulation::Triangulate(polygon_shape);
-      for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
-        triangles.emplace_back(
-            polygon_shape[polygon_triangulation[i + 2]],
-            polygon_shape[polygon_triangulation[i + 1]],
-            polygon_shape[polygon_triangulation[i]]);
+
+      // Calculate buffer.
+      boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
+      boost::geometry::buffer(linestring, buffer_result,
+          distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+      // Process polygons in buffer result.
+      for (const buffer_polygon_t& buffer_polygon : buffer_result) {
+        std::vector<geom::Vector2D> polygon_shape;
+        for(const buffer_point_t& vertex : buffer_polygon.outer()) {
+          polygon_shape.emplace_back(vertex.x(), vertex.y());
+        }
+        std::vector<size_t> polygon_triangulation = geom::Triangulation::Triangulate(polygon_shape);
+        for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
+          triangles.emplace_back(
+              polygon_shape[polygon_triangulation[i + 2]],
+              polygon_shape[polygon_triangulation[i + 1]],
+              polygon_shape[polygon_triangulation[i]]);
+        }
+      }
+    }
+    
+    // For last segment
+    {
+      // Create linestring.
+      buffer_linestring_t linestring;
+      boost::geometry::append(linestring, buffer_point_t(
+            polygon[polygon.size() - 1].x, 
+            polygon[polygon.size() - 1].y));
+      boost::geometry::append(linestring, buffer_point_t(
+            polygon[0].x, 
+            polygon[0].y));
+
+      // Calculate buffer.
+      boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
+      boost::geometry::buffer(linestring, buffer_result,
+          distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+      // Process polygons in buffer result.
+      for (const buffer_polygon_t& buffer_polygon : buffer_result) {
+        std::vector<geom::Vector2D> polygon_shape;
+        for(const buffer_point_t& vertex : buffer_polygon.outer()) {
+          polygon_shape.emplace_back(vertex.x(), vertex.y());
+        }
+        std::vector<size_t> polygon_triangulation = geom::Triangulation::Triangulate(polygon_shape);
+        for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
+          triangles.emplace_back(
+              polygon_shape[polygon_triangulation[i + 2]],
+              polygon_shape[polygon_triangulation[i + 1]],
+              polygon_shape[polygon_triangulation[i]]);
+        }
       }
     }
   }
