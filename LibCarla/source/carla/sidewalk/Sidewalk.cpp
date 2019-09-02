@@ -1,6 +1,9 @@
 #include "Sidewalk.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Triangulation.h"
 #include <opencv2/opencv.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
 
 namespace carla {
 namespace sidewalk {
@@ -56,34 +59,43 @@ Sidewalk::Sidewalk(const occupancy::OccupancyMap& occupancy_map,
 occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
   std::vector<geom::Triangle2D> triangles;
 
-  auto FromSegment = [&triangles](const geom::Vector2D& start, const geom::Vector2D& end, float width) {
-    geom::Vector2D direction = (end - start).MakeUnitVector();
-    geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
-
-    geom::Vector2D v1 = start + normal * width / 2.0;
-    geom::Vector2D v2 = start - normal * width / 2.0;
-    geom::Vector2D v3 = end + normal * width / 2.0;
-    geom::Vector2D v4 = end - normal * width / 2.0;
-
-    triangles.emplace_back(v3, v2, v1);
-    triangles.emplace_back(v2, v3, v4);
-
-    for (int i = 0; i < 16; i++) {
-      v1 = end;
-      v2 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
-      v3 = end + normal.Rotate(-geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
-      triangles.emplace_back(v3, v2, v1);
-
-      v1 = start;
-      v2 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * i) * width / 2.0;
-      v3 = start + normal.Rotate(geom::Math::Pi<float>() / 16.0f * (i + 1)) * width / 2.0;
-      triangles.emplace_back(v3, v2, v1);
-    }
-  };
+  typedef boost::geometry::model::d2::point_xy<float> buffer_point_t;
+  typedef boost::geometry::model::polygon<buffer_point_t> buffer_polygon_t;
+  typedef boost::geometry::model::linestring<buffer_point_t> buffer_linestring_t;
+  //typedef boost::geometry::model::ring<buffer_point_t, true, false> buffer_ring_t;
+  boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(_width / 2);
+  boost::geometry::strategy::buffer::join_round join_strategy(18);
+  boost::geometry::strategy::buffer::end_round end_strategy(18);
+  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
+  boost::geometry::strategy::buffer::side_straight side_strategy;
 
   for (const std::vector<geom::Vector2D>& polygon : _polygons) {
+    
+    // Create linestring.
+    buffer_linestring_t linestring;
     for (size_t i = 0; i < polygon.size(); i++) {
-      FromSegment(polygon[i], polygon[(i + 1) % polygon.size()], _width);
+      //boost::geometry::append(ring, buffer_point_t(polygon[i].x, polygon[i].y));
+      boost::geometry::append(linestring, buffer_point_t(polygon[i].x, polygon[i].y));
+    }
+
+    // Calculate buffer.
+    boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
+    boost::geometry::buffer(linestring, buffer_result,
+        distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+      
+    // Process polygons in buffer result.
+    for (const buffer_polygon_t& buffer_polygon : buffer_result) {
+      std::vector<geom::Vector2D> polygon_shape;
+      for(const buffer_point_t& vertex : buffer_polygon.outer()) {
+        polygon_shape.emplace_back(vertex.x(), vertex.y());
+      }
+      std::vector<size_t> polygon_triangulation = geom::Triangulation::Triangulate(polygon_shape);
+      for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
+        triangles.emplace_back(
+            polygon_shape[polygon_triangulation[i + 2]],
+            polygon_shape[polygon_triangulation[i + 1]],
+            polygon_shape[polygon_triangulation[i]]);
+      }
     }
   }
   
