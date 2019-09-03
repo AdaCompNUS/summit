@@ -113,18 +113,6 @@ PolygonTable OccupancyMap::CreatePolygonTable(const geom::Vector2D& bounds_min, 
   return table;
 }
 
-// https://wrf.ecse.rpi.edu//Research/Short_Notes/pnpoly.html
-bool PointInPolygon(const std::vector<geom::Vector2D>& vertices, const geom::Vector2D& test)
-{
-  size_t i, j, c = 0;
-  for (i = 0, j = vertices.size() - 1; i < vertices.size(); j = i++) {
-    if ( ((vertices[i].y>test.y) != (vertices[j].y>test.y)) &&
-        (test.x < (vertices[j].x-vertices[i].x) * (test.y-vertices[i].y) / (vertices[j].y-vertices[i].y) + vertices[i].x) )
-      c = !c;
-  }
-  return c == 1;
-}
-
 bool PolygonPolygonIntersects(const std::vector<geom::Vector2D>& vertices_a, const std::vector<geom::Vector2D>& vertices_b) {
   typedef boost::geometry::model::d2::point_xy<float> b_point_t;
   typedef boost::geometry::model::polygon<b_point_t> b_polygon_t;
