@@ -222,65 +222,23 @@ std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RouteP
 }
 
 occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
-
-  std::vector<geom::Triangle2D> triangles;
-
-  // Calculate triangles from lanes.
-  typedef boost::geometry::model::d2::point_xy<float> buffer_point_t;
-  typedef boost::geometry::model::polygon<buffer_point_t> buffer_polygon_t;
-  typedef boost::geometry::model::linestring<buffer_point_t> buffer_linestring_t;
-  boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(2.05f); // Extra 0.05m to fill gaps between roads.
-  boost::geometry::strategy::buffer::join_round join_strategy(18);
-  boost::geometry::strategy::buffer::end_round end_strategy(18);
-  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
-  boost::geometry::strategy::buffer::side_straight side_strategy;
+  
+  occupancy::OccupancyMap occupancy_map;
 
   for (const auto& edge_entry : _edges) {
     const Edge& edge = edge_entry.second;
     for (const Lane& lane : edge.lanes) {
-
-      // Create linestring.
-      buffer_linestring_t linestring;
-      for (size_t i = 0; i < lane.shape.size(); i++) {
-        boost::geometry::append(linestring, buffer_point_t(lane.shape[i].x, lane.shape[i].y));
-      }
-
-      // Calculate buffer.
-      boost::geometry::model::multi_polygon<buffer_polygon_t> buffer_result;
-      boost::geometry::buffer(linestring, buffer_result,
-          distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-
-      // Process polygons in buffer result.
-      for (const buffer_polygon_t& polygon : buffer_result) {
-        std::vector<geom::Vector2D> lane_shape;
-        for(const buffer_point_t& vertex : polygon.outer()) {
-          lane_shape.emplace_back(vertex.x(), vertex.y());
-        }
-        std::vector<std::pair<size_t, size_t>> lane_triangulation = geom::Triangulation::Triangulate({lane_shape});
-        for (size_t i = 0; i < lane_triangulation.size(); i += 3) {
-          triangles.emplace_back(
-              lane_shape[lane_triangulation[i + 2].second],
-              lane_shape[lane_triangulation[i + 1].second],
-              lane_shape[lane_triangulation[i].second]);
-        }
-      }
-    }
-  }
-
-  // Calculate triangles from junctions.
-  for (const auto& junction_entry : _junctions) {
-    const Junction& junction = junction_entry.second;
-    std::vector<std::pair<size_t, size_t>> junction_triangulation = geom::Triangulation::Triangulate({junction.shape});
-
-    for (size_t i = 0; i < junction_triangulation.size(); i += 3) {
-      triangles.emplace_back(
-          junction.shape[junction_triangulation[i + 2].second],
-          junction.shape[junction_triangulation[i + 1].second],
-          junction.shape[junction_triangulation[i].second]);
+      occupancy_map = occupancy_map.Union(occupancy::OccupancyMap::FromLine(lane.shape, 4.10f));
     }
   }
   
-  return occupancy::OccupancyMap(triangles);
+  for (const auto& junction_entry : _junctions) {
+    const Junction& junction = junction_entry.second;
+    occupancy_map = occupancy_map.Union(occupancy::OccupancyMap::FromPolygon(junction.shape));
+  }
+
+  return occupancy_map;
+
 }
 
 std::vector<geom::Vector3D> SumoNetwork::GetRoadmarkMeshTriangles() const {

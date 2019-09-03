@@ -1,6 +1,5 @@
 #include "Sidewalk.h"
 #include "carla/geom/Math.h"
-#include "carla/geom/Triangulation.h"
 #include <opencv2/opencv.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -8,37 +7,13 @@
 namespace carla {
 namespace sidewalk {
 
-Sidewalk::Sidewalk(const occupancy::OccupancyMap& occupancy_map, 
-    const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, 
-    float width, float resolution,
-    float max_cross_distance)
-  : _bounds_min(bounds_min), _bounds_max(bounds_max),
-  _width(width), _resolution(resolution),
-  _max_cross_distance(max_cross_distance),
-  _rng(std::random_device()()) {
-
-  occupancy::OccupancyGrid occupancy_grid = occupancy_map.CreateOccupancyGrid(bounds_min, bounds_max, resolution);
-  cv::bitwise_not(occupancy_grid.Mat(), occupancy_grid.Mat());
-  int kernel_size = static_cast<int>(std::ceil(width / resolution));
-  cv::erode(
-      occupancy_grid.Mat(), 
-      occupancy_grid.Mat(), 
-      cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(kernel_size, kernel_size)));
-      
-  std::vector<std::vector<cv::Point>> contours;
-  findContours(occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_TC89_KCOS);
+Sidewalk::Sidewalk(const std::vector<std::vector<geom::Vector2D>>& polygons)
+  : _polygons(polygons) {
 
   std::vector<rt_value_t> index_entries;
-  for (size_t i = 0; i < contours.size(); i++) {
-    const std::vector<cv::Point>& contour = contours[i];
 
-    std::vector<geom::Vector2D> polygon(contour.size());
-    
-    for (size_t j = 0; j < contour.size(); j++) {
-      polygon[j].x = bounds_max.x - (contour[j].y + 0.5f) * resolution;
-      polygon[j].y = bounds_min.y + (contour[j].x + 0.5f) * resolution;
-    }
-
+  for (size_t i = 0; i < _polygons.size(); i++) {
+    const std::vector<geom::Vector2D>& polygon = _polygons[i];
     for (size_t j = 0; j < polygon.size(); j++) {
       const geom::Vector2D& v_start = polygon[j];
       const geom::Vector2D& v_end = polygon[(j + 1) % polygon.size()];
@@ -49,78 +24,21 @@ Sidewalk::Sidewalk(const occupancy::OccupancyMap& occupancy_map,
             rt_point_t(v_end.x, v_end.y)),
           std::pair<size_t, size_t>(i, j));
     }
-
-    _polygons.emplace_back(std::move(polygon));
   }
 
   _segments_index = rt_tree_t(index_entries);
 }
   
-occupancy::OccupancyMap Sidewalk::CreateOccupancyMap() const {
-  std::vector<geom::Triangle2D> triangles;
-
-  typedef boost::geometry::model::d2::point_xy<float> buffer_point_t;
-  typedef boost::geometry::model::polygon<buffer_point_t> buffer_polygon_t;
-  typedef boost::geometry::model::ring<buffer_point_t> buffer_ring_t;
-  boost::geometry::strategy::buffer::distance_symmetric<float> outer_distance_strategy(_width / 2);
-  boost::geometry::strategy::buffer::distance_symmetric<float> inner_distance_strategy(- _width / 2);
-  boost::geometry::strategy::buffer::join_round join_strategy(18);
-  boost::geometry::strategy::buffer::end_round end_strategy(18);
-  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
-  boost::geometry::strategy::buffer::side_straight side_strategy;
-
+occupancy::OccupancyMap Sidewalk::CreateOccupancyMap(float width) const {
+  occupancy::OccupancyMap occupancy_map;
   for (const std::vector<geom::Vector2D>& polygon : _polygons) {
-  
-    // Convert into boost polygon.
-    buffer_polygon_t polygon_boost;
-    for (size_t i = 0; i < polygon.size(); i++) {
-      boost::geometry::append(polygon_boost.outer(), buffer_point_t(
-            polygon[i].x, 
-            polygon[i].y));
-    }
-    boost::geometry::correct(polygon_boost);
-    
-    // Calculate outer buffer.
-    boost::geometry::model::multi_polygon<buffer_polygon_t> outer_buffer;
-    boost::geometry::buffer(polygon_boost, outer_buffer,
-        outer_distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-
-    // Calculate inner buffer.
-    boost::geometry::model::multi_polygon<buffer_polygon_t> inner_buffer;
-    boost::geometry::buffer(polygon_boost, inner_buffer,
-        inner_distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-
-    // Calculate buffer difference.
-    std::vector<buffer_polygon_t> buffer_difference;
-    boost::geometry::difference(outer_buffer, inner_buffer, buffer_difference);
-
-    for (const buffer_polygon_t& buffer_polygon : buffer_difference) {
-      // Calculate polygon with holes.
-      std::vector<std::vector<geom::Vector2D>> polygon_with_holes(
-          1 + buffer_polygon.inners().size(), 
-          std::vector<geom::Vector2D>());
-      for (const buffer_point_t& vertex : buffer_polygon.outer()) {
-        polygon_with_holes[0].emplace_back(vertex.x(), vertex.y());
-      }
-      for (size_t i = 0; i < buffer_polygon.inners().size(); i++) {
-        const buffer_ring_t& inner = buffer_polygon.inners()[i];
-        for (const buffer_point_t& vertex : inner) {
-          polygon_with_holes[1 + i].emplace_back(vertex.x(), vertex.y());
-        }
-      }
-    
-      // Triangulate.
-      std::vector<std::pair<size_t, size_t>> polygon_triangulation = geom::Triangulation::Triangulate(polygon_with_holes);
-      for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
-        triangles.emplace_back(
-            polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second],
-            polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second],
-            polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second]);
-      }
-    }
+    occupancy::OccupancyMap polygon_occupancy_map = occupancy::OccupancyMap::FromPolygon(polygon);
+    occupancy::OccupancyMap outer_buffer = polygon_occupancy_map.Buffer(width / 2);
+    occupancy::OccupancyMap inner_buffer = polygon_occupancy_map.Buffer(-width / 2);
+    occupancy::OccupancyMap buffer_difference = outer_buffer.Difference(inner_buffer);
+    occupancy_map = occupancy_map.Union(buffer_difference);
   }
-  
-  return occupancy::OccupancyMap(std::move(triangles));
+  return occupancy_map;
 }
   
 geom::Vector2D Sidewalk::GetRoutePointPosition(const SidewalkRoutePoint& route_point) const {
@@ -193,14 +111,14 @@ SidewalkRoutePoint Sidewalk::GetPreviousRoutePoint(const SidewalkRoutePoint& rou
   }
 }
   
-std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point) const {
+std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point, float max_cross_distance) const {
   const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
   const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
   geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
   geom::Vector2D normal = direction.Rotate(geom::Math::Pi<float>() / 2);
 
   geom::Vector2D ray_start = segment_start + route_point.offset * direction;
-  geom::Vector2D ray_end = ray_start + _max_cross_distance * normal;
+  geom::Vector2D ray_end = ray_start + max_cross_distance * normal;
   
   rt_segment_t ray(
       rt_point_t(ray_start.x, ray_start.y),

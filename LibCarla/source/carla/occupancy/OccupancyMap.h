@@ -4,10 +4,17 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyGrid.h"
 #include "carla/occupancy/PolygonTable.h"
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
+#include "carla/sidewalk/Sidewalk.h"
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+
+namespace carla {
+namespace sidewalk {
+
+class Sidewalk;
+
+}
+}
 
 namespace carla {
 namespace occupancy {
@@ -15,30 +22,28 @@ namespace occupancy {
 class OccupancyMap {
 public:
 
-  OccupancyMap(const std::vector<geom::Triangle2D>& triangles);
+  OccupancyMap();
+  static OccupancyMap FromLine(const std::vector<geom::Vector2D>& line, float width);
+  static OccupancyMap FromPolygon(const std::vector<geom::Vector2D>& polygon);
 
-  const std::vector<geom::Triangle2D>& Triangles() const { return _triangles; }
-  geom::Vector2D BoundsMin() const { return _bounds_min; }
-  geom::Vector2D BoundsMax() const { return _bounds_max; }
+  OccupancyMap Union(const OccupancyMap& occupancy_map) const;
+  OccupancyMap Difference(const OccupancyMap& occupancy_map) const;
+  OccupancyMap Buffer(float width) const;
+
+  sidewalk::Sidewalk CreateSidewalk(float distance) const;
 
   std::vector<geom::Vector3D> GetMeshTriangles() const;
-  OccupancyGrid CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const;   
-  PolygonTable CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float cell_size, float resolution) const;
-  bool Intersects(const std::vector<geom::Vector2D>& polygon) const;
 
 private:
     
-  typedef boost::geometry::model::point<float, 2, boost::geometry::cs::cartesian> rt_point_t;
-  typedef boost::geometry::model::box<rt_point_t> rt_box_t;
-  typedef std::pair<rt_box_t, std::vector<geom::Triangle2D>::size_type> rt_value_t;
-  typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16>> rt_index_t;
+  typedef boost::geometry::model::d2::point_xy<float> b_point_t;
+  typedef boost::geometry::model::linestring<b_point_t> b_linestring_t;
+  typedef boost::geometry::model::ring<b_point_t> b_ring_t;
+  typedef boost::geometry::model::polygon<b_point_t> b_polygon_t;
+  typedef boost::geometry::model::multi_polygon<b_polygon_t> b_multi_polygon_t;
 
-  std::vector<geom::Triangle2D> _triangles;
-  rt_index_t _triangles_index;
-  geom::Vector2D _bounds_min;
-  geom::Vector2D _bounds_max;
-  
-  std::vector<rt_value_t> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;
+  b_multi_polygon_t _multi_polygon;
+
 };
 
 }

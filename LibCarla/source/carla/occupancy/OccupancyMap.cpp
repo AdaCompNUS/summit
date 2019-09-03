@@ -1,162 +1,180 @@
 #include "OccupancyMap.h"
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/geometries.hpp>
+#include "carla/geom/Triangulation.h"
+#include <algorithm>
 
 namespace carla {
 namespace occupancy {
+
+OccupancyMap::OccupancyMap() {
+
+}
+
+OccupancyMap OccupancyMap::FromLine(const std::vector<geom::Vector2D>& line, float width) {
+  OccupancyMap result;
+
+  // Convert into b_linestring_t.
+  b_linestring_t linestring;
+  for (const geom::Vector2D& vertex : line) {
+    boost::geometry::append(linestring, b_point_t(vertex.x, vertex.y));
+  }
+
+  // Correct geometry.
+  boost::geometry::correct(linestring);
+
+  // Calculate buffer.
+  boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(width / 2);
+  boost::geometry::strategy::buffer::join_round join_strategy(18);
+  boost::geometry::strategy::buffer::end_round end_strategy(18);
+  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
+  boost::geometry::strategy::buffer::side_straight side_strategy;
+  boost::geometry::buffer(linestring, result._multi_polygon,
+      distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+  boost::geometry::buffer(linestring, result._multi_polygon,
+      distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+  return result;
+}
   
-OccupancyMap::OccupancyMap(const std::vector<geom::Triangle2D>& triangles) : _triangles(triangles) {
-  if (triangles.empty()) {
-    throw_exception(std::invalid_argument("empty occupancy map not allowed"));
+OccupancyMap OccupancyMap::FromPolygon(const std::vector<geom::Vector2D>& polygon) {
+  OccupancyMap result;
+
+  // Convert into b_multi_polygon_t.
+  result._multi_polygon.emplace_back();
+  for (const geom::Vector2D& vertex : polygon) {
+    boost::geometry::append(result._multi_polygon[0].outer(), b_point_t(vertex.x, vertex.y));
   }
 
-  std::vector<rt_value_t> index_entries;
+  // Correct geometry.
+  boost::geometry::correct(result._multi_polygon);
 
-  for (size_t i = 0; i < _triangles.size(); i++) {
-    const geom::Triangle2D& t = _triangles[i];
-    float minx = std::min(t.v0.x, std::min(t.v1.x, t.v2.x));
-    float miny = std::min(t.v0.y, std::min(t.v1.y, t.v2.y));
-    float maxx = std::max(t.v0.x, std::max(t.v1.x, t.v2.x));
-    float maxy = std::max(t.v0.y, std::max(t.v1.y, t.v2.y));
+  return result;
+}
 
-    index_entries.emplace_back(
-        rt_box_t(rt_point_t(minx, miny), rt_point_t(maxx, maxy)),
-        i);
+OccupancyMap OccupancyMap::Union(const OccupancyMap& occupancy_map) const {
+  OccupancyMap result;
+  boost::geometry::union_(_multi_polygon, occupancy_map._multi_polygon, result._multi_polygon);
+  return result;
+}
+
+OccupancyMap OccupancyMap::Difference(const OccupancyMap& occupancy_map) const {
+  OccupancyMap result;
+  boost::geometry::difference(_multi_polygon, occupancy_map._multi_polygon, result._multi_polygon);
+  return result;
+}
+
+OccupancyMap OccupancyMap::Buffer(float width) const {
+  OccupancyMap result;
+
+  boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(width / 2);
+  boost::geometry::strategy::buffer::join_round join_strategy(18);
+  boost::geometry::strategy::buffer::end_round end_strategy(18);
+  boost::geometry::strategy::buffer::point_circle circle_strategy(18);
+  boost::geometry::strategy::buffer::side_straight side_strategy;
+  boost::geometry::buffer(_multi_polygon, result._multi_polygon,
+      distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+
+  return result;
+}
+
+sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
+  std::vector<std::vector<geom::Vector2D>> polygons;
+
+  for (const b_polygon_t& polygon : _multi_polygon) {
+
+    // Calculate outer buffer.
+    OccupancyMap outer_map; 
+    outer_map._multi_polygon.emplace_back(b_polygon_t({polygon.outer()}));
+    boost::geometry::correct(outer_map._multi_polygon);
+    outer_map = outer_map.Buffer(distance);
+
+    for (const b_polygon_t& buffer_polygon : outer_map._multi_polygon) {
+      
+      // Add outer of outer buffer in clockwise order.
+      polygons.emplace_back();
+      for (const b_point_t& vertex : buffer_polygon.outer()) {
+        polygons.back().emplace_back(vertex.x(), vertex.y());
+      }
+
+      // Add inners of outer buffer in anticlockwise order.
+      // These possibly form positive buffering a convex polygon, leading to overlaps.
+      for (const b_ring_t& buffer_polygon_inner : buffer_polygon.inners()) {
+        polygons.emplace_back();
+        for (const b_point_t& vertex : buffer_polygon_inner) {
+          polygons.back().emplace_back(vertex.x(), vertex.y());
+        }
+        std::reverse(polygons.back().begin(), polygons.back().end());
+      }
+    }
+
+    for (const b_ring_t& inner : polygon.inners()) {
+
+      // Calculate inner buffer.
+      OccupancyMap inner_map; 
+      inner_map._multi_polygon.emplace_back(b_polygon_t({inner}));
+      boost::geometry::correct(inner_map._multi_polygon);
+      inner_map = inner_map.Buffer(-distance);
+
+      // Add outer of inner buffer in anticlockwise order.
+      // If polygon is too small for negative buffering, then this will be empty.
+      for (const b_polygon_t& buffer_polygon : inner_map._multi_polygon) {
+        polygons.emplace_back();
+        for (const b_point_t& vertex : buffer_polygon.outer()) {
+          polygons.back().emplace_back(vertex.x(), vertex.y());
+        }
+        std::reverse(polygons.back().begin(), polygons.back().end());
+      }
+    }
+    
   }
-
-  _triangles_index = rt_index_t(index_entries);
-  _bounds_min.x = boost::geometry::get<0>(_triangles_index.bounds().min_corner());
-  _bounds_min.y = boost::geometry::get<1>(_triangles_index.bounds().min_corner());
-  _bounds_max.x = boost::geometry::get<0>(_triangles_index.bounds().max_corner());
-  _bounds_max.y = boost::geometry::get<1>(_triangles_index.bounds().max_corner());
+  
+  return sidewalk::Sidewalk(std::move(polygons));
 }
   
 std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
-  std::vector<geom::Vector3D> mesh_triangles;
-  for (const geom::Triangle2D& t : _triangles) {
-    mesh_triangles.emplace_back(t.v0.x, t.v0.y, 0);
-    mesh_triangles.emplace_back(t.v1.x, t.v1.y, 0);
-    mesh_triangles.emplace_back(t.v2.x, t.v2.y, 0);
-    
-    mesh_triangles.emplace_back(t.v2.x, t.v2.y, 0);
-    mesh_triangles.emplace_back(t.v1.x, t.v1.y, 0);
-    mesh_triangles.emplace_back(t.v0.x, t.v0.y, 0);
-  }
-  return mesh_triangles;
-}
+  std::vector<geom::Vector3D> triangles;
 
-std::vector<OccupancyMap::rt_value_t> OccupancyMap::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {
-  std::vector<rt_value_t> index_entries;
-  _triangles_index.query(
-      boost::geometry::index::intersects(rt_box_t(
-          rt_point_t(bounds_min.x, bounds_min.y), rt_point_t(bounds_max.x, bounds_max.y))),
-      std::back_inserter(index_entries));
-  return index_entries;
-}
-  
-OccupancyGrid OccupancyMap::CreateOccupancyGrid(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float resolution) const {
+  for (const b_polygon_t& polygon : _multi_polygon) {
 
-  cv::Mat mat = cv::Mat::zeros(
-      static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / resolution)), // Rows
-      static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / resolution)), // Columns
-      CV_8UC1);
-
-  std::vector<std::vector<cv::Point>> triangle_mat;
-  triangle_mat.emplace_back();
-  triangle_mat.back().emplace_back();
-  triangle_mat.back().emplace_back();
-  triangle_mat.back().emplace_back();
-
-  for (const rt_value_t& index_entry : QueryIntersect(bounds_min, bounds_max)) {
-    const geom::Triangle2D& triangle = _triangles[index_entry.second];
-
-    // TODO: Any better way other than casting?
-    triangle_mat[0][0].x = static_cast<int>(std::floor((triangle.v0.y - bounds_min.y) / resolution));
-    triangle_mat[0][0].y = static_cast<int>(std::floor((bounds_max.x - triangle.v0.x) / resolution));
-    triangle_mat[0][1].x = static_cast<int>(std::floor((triangle.v1.y - bounds_min.y) / resolution));
-    triangle_mat[0][1].y = static_cast<int>(std::floor((bounds_max.x - triangle.v1.x) / resolution));
-    triangle_mat[0][2].x = static_cast<int>(std::floor((triangle.v2.y - bounds_min.y) / resolution));
-    triangle_mat[0][2].y = static_cast<int>(std::floor((bounds_max.x - triangle.v2.x) / resolution));
-
-    cv::fillPoly(mat, triangle_mat, cv::Scalar(255), cv::LINE_8);
-  }
-
-  return OccupancyGrid(mat);
-}
-
-PolygonTable OccupancyMap::CreatePolygonTable(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, float cell_size, float resolution) const {
-  int rows = static_cast<int>(std::ceil((bounds_max.x - bounds_min.x) / cell_size)); 
-  int columns = static_cast<int>(std::ceil((bounds_max.y - bounds_min.y) / cell_size)); 
-
-  PolygonTable table(static_cast<size_t>(rows), static_cast<size_t>(columns));
-  for (int row = 0; row < rows; row++) {
-    for (int column = 0; column < columns; column++) {
-      geom::Vector2D cell_bounds_min(bounds_max.x - (row + 1) * cell_size, bounds_min.y + column * cell_size); 
-      geom::Vector2D cell_bounds_max(bounds_max.x - row * cell_size, bounds_min.y + (column + 1) * cell_size); 
-      OccupancyGrid cell_occupancy_grid = CreateOccupancyGrid(cell_bounds_min, cell_bounds_max, resolution);
-      cv::bitwise_not(cell_occupancy_grid.Mat(), cell_occupancy_grid.Mat());
-      
-      std::vector<std::vector<cv::Point>> contours;
-      findContours(cell_occupancy_grid.Mat(), contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-
-      for (const std::vector<cv::Point>& contour : contours) {
-        std::vector<geom::Vector2D> polygon(contour.size());
-        for (size_t i = 0; i < contour.size(); i++) {
-          polygon[i].x = cell_bounds_max.x - (contour[i].y + 0.5f) * resolution;
-          polygon[i].y = cell_bounds_min.y + (contour[i].x + 0.5f) * resolution;
-        }
-        table.Insert(static_cast<size_t>(row), static_cast<size_t>(column), polygon);
+    // Calculate polygon with holes.
+    std::vector<std::vector<geom::Vector2D>> polygon_with_holes(
+        1 + polygon.inners().size(),
+        std::vector<geom::Vector2D>());
+    for (const b_point_t& vertex : polygon.outer()) {
+      polygon_with_holes[0].emplace_back(vertex.x(), vertex.y());
+    }
+    for (size_t i = 0; i < polygon.inners().size(); i++) {
+      const b_ring_t& inner = polygon.inners()[i];
+      for (const b_point_t& vertex : inner) {
+        polygon_with_holes[1 + i].emplace_back(vertex.x(), vertex.y());
       }
     }
-  }
 
-  return table;
-}
-
-bool PolygonPolygonIntersects(const std::vector<geom::Vector2D>& vertices_a, const std::vector<geom::Vector2D>& vertices_b) {
-  typedef boost::geometry::model::d2::point_xy<float> b_point_t;
-  typedef boost::geometry::model::polygon<b_point_t> b_polygon_t;
-
-  b_polygon_t polygon_a;
-  b_polygon_t polygon_b;
-
-  for (const geom::Vector2D& v : vertices_a) {
-      boost::geometry::append(polygon_a.outer(), b_point_t(v.x, v.y));
-  }
-
-  for (const geom::Vector2D& v : vertices_b) {
-      boost::geometry::append(polygon_b.outer(), b_point_t(v.x, v.y));
-  }
-
-  std::vector<b_polygon_t> output;
-  boost::geometry::intersection(polygon_a, polygon_b, output);
-
-  return output.size() > 0;
-}
-
-bool OccupancyMap::Intersects(const std::vector<geom::Vector2D>& polygon) const {
-  if (polygon.size() < 3) {
-    return false;
-  }
-
-  geom::Vector2D bounds_min{polygon[0]};
-  geom::Vector2D bounds_max{polygon[1]};
-
-  for (size_t i = 1; i < polygon.size(); i++) {
-    bounds_min.x = std::min(bounds_min.x, polygon[i].x);
-    bounds_min.y = std::min(bounds_min.y, polygon[i].y);
-    bounds_max.x = std::max(bounds_max.x, polygon[i].x);
-    bounds_max.y = std::max(bounds_max.y, polygon[i].y);
-  }
-
-  for (const rt_value_t& entry : QueryIntersect(bounds_min, bounds_max)) {
-    const geom::Triangle2D& triangle = _triangles[entry.second];
-    if (PolygonPolygonIntersects(polygon, {triangle.v0, triangle.v1, triangle.v2})) {
-      return true;
+    // Triangulate.
+    std::vector<std::pair<size_t, size_t>> polygon_triangulation = geom::Triangulation::Triangulate(polygon_with_holes);
+    for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
+      // Flip to get anticlockwise winding order required in UI.
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
+          polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y,
+          0);
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].x,
+          polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].y,
+          0);
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
+          polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
+          0);
     }
   }
-
-  return false;
+  
+  return triangles;
 }
 
 }
