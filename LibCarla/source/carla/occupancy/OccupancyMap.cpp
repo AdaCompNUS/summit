@@ -94,12 +94,13 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
     outer_map = outer_map.Buffer(distance);
 
     for (const b_polygon_t& buffer_polygon : outer_map._multi_polygon) {
-      
+
       // Add outer of outer buffer in clockwise order.
       polygons.emplace_back();
       for (const b_point_t& vertex : buffer_polygon.outer()) {
         polygons.back().emplace_back(vertex.x(), vertex.y());
       }
+      std::reverse(polygons.back().begin(), polygons.back().end());
 
       // Add inners of outer buffer in anticlockwise order.
       // These possibly form positive buffering a convex polygon, leading to overlaps.
@@ -107,8 +108,8 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
         polygons.emplace_back();
         for (const b_point_t& vertex : buffer_polygon_inner) {
           polygons.back().emplace_back(vertex.x(), vertex.y());
+          std::reverse(polygons.back().begin(), polygons.back().end());
         }
-        std::reverse(polygons.back().begin(), polygons.back().end());
       }
     }
 
