@@ -43,7 +43,7 @@ void export_sidewalk() {
        .def(vector_indexing_suite<std::vector<SidewalkRoutePoint>>())
   ;
 
-  class_<Sidewalk>("Sidewalk", init<const occupancy::OccupancyMap&, const geom::Vector2D&, const geom::Vector2D&, float, float, float>())
+  class_<Sidewalk>("Sidewalk", no_init)
     .def("create_occupancy_map",
         &Sidewalk::CreateOccupancyMap)
     .def("get_route_point_position",
