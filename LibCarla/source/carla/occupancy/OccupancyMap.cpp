@@ -126,19 +126,24 @@ bool PointInPolygon(const std::vector<geom::Vector2D>& vertices, const geom::Vec
 }
 
 bool PolygonPolygonIntersects(const std::vector<geom::Vector2D>& vertices_a, const std::vector<geom::Vector2D>& vertices_b) {
-  for (const geom::Vector2D& point : vertices_a) {
-    if (PointInPolygon(vertices_b, point)) {
-      return true;
-    }
-  }
-  
-  for (const geom::Vector2D& point : vertices_b) {
-    if (PointInPolygon(vertices_a, point)) {
-      return true;
-    }
+  typedef boost::geometry::model::d2::point_xy<float> b_point_t;
+  typedef boost::geometry::model::polygon<b_point_t> b_polygon_t;
+
+  b_polygon_t polygon_a;
+  b_polygon_t polygon_b;
+
+  for (const geom::Vector2D& v : vertices_a) {
+      boost::geometry::append(polygon_a.outer(), b_point_t(v.x, v.y));
   }
 
-  return false;
+  for (const geom::Vector2D& v : vertices_b) {
+      boost::geometry::append(polygon_b.outer(), b_point_t(v.x, v.y));
+  }
+
+  std::vector<b_polygon_t> output;
+  boost::geometry::intersection(polygon_a, polygon_b, output);
+
+  return output.size() > 0;
 }
 
 bool OccupancyMap::Intersects(const std::vector<geom::Vector2D>& polygon) const {
