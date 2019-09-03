@@ -256,12 +256,12 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
         for(const buffer_point_t& vertex : polygon.outer()) {
           lane_shape.emplace_back(vertex.x(), vertex.y());
         }
-        std::vector<size_t> lane_triangulation = geom::Triangulation::Triangulate(lane_shape);
+        std::vector<std::pair<size_t, size_t>> lane_triangulation = geom::Triangulation::Triangulate({lane_shape});
         for (size_t i = 0; i < lane_triangulation.size(); i += 3) {
           triangles.emplace_back(
-              lane_shape[lane_triangulation[i + 2]],
-              lane_shape[lane_triangulation[i + 1]],
-              lane_shape[lane_triangulation[i]]);
+              lane_shape[lane_triangulation[i + 2].second],
+              lane_shape[lane_triangulation[i + 1].second],
+              lane_shape[lane_triangulation[i].second]);
         }
       }
     }
@@ -270,13 +270,13 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
   // Calculate triangles from junctions.
   for (const auto& junction_entry : _junctions) {
     const Junction& junction = junction_entry.second;
-    std::vector<size_t> junction_triangulation = geom::Triangulation::Triangulate(junction.shape);
+    std::vector<std::pair<size_t, size_t>> junction_triangulation = geom::Triangulation::Triangulate({junction.shape});
 
     for (size_t i = 0; i < junction_triangulation.size(); i += 3) {
       triangles.emplace_back(
-          junction.shape[junction_triangulation[i + 2]],
-          junction.shape[junction_triangulation[i + 1]],
-          junction.shape[junction_triangulation[i]]);
+          junction.shape[junction_triangulation[i + 2].second],
+          junction.shape[junction_triangulation[i + 1].second],
+          junction.shape[junction_triangulation[i].second]);
     }
   }
   

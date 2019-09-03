@@ -13,8 +13,11 @@ namespace carla {
 namespace landmark {
 
 Landmark::Landmark(const std::vector<geom::Vector2D>& outline)
-  : _outline(outline) { 
-  _triangulation = geom::Triangulation::Triangulate(_outline);
+  : _outline(outline) {
+  
+  for (std::pair<size_t, size_t> index : geom::Triangulation::Triangulate({_outline})) {
+    _triangulation.emplace_back(index.second);
+  }
 }
 
 std::vector<Landmark> Landmark::Load(const std::string& file, const geom::Vector2D& offset) {  
