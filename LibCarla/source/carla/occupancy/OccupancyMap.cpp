@@ -136,7 +136,6 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
         for (const b_point_t& vertex : buffer_polygon.outer()) {
           polygons.back().emplace_back(vertex.x(), vertex.y());
         }
-        std::reverse(polygons.back().begin(), polygons.back().end());
       }
     }
     
