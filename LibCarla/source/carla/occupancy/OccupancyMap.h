@@ -3,7 +3,6 @@
 #include "carla/geom/Triangle2D.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyGrid.h"
-#include "carla/occupancy/PolygonTable.h"
 #include "carla/sidewalk/Sidewalk.h"
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
@@ -25,13 +24,14 @@ public:
   OccupancyMap();
   static OccupancyMap FromLine(const std::vector<geom::Vector2D>& line, float width);
   static OccupancyMap FromPolygon(const std::vector<geom::Vector2D>& polygon);
+  static OccupancyMap FromBounds(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
 
   OccupancyMap Union(const OccupancyMap& occupancy_map) const;
   OccupancyMap Difference(const OccupancyMap& occupancy_map) const;
   OccupancyMap Buffer(float width) const;
-
+  
   sidewalk::Sidewalk CreateSidewalk(float distance) const;
-
+  std::vector<geom::Triangle2D> GetTriangles() const;
   std::vector<geom::Vector3D> GetMeshTriangles() const;
 
 private:

@@ -1,7 +1,6 @@
 #include <carla/geom/Vector2D.h>
 #include <carla/occupancy/OccupancyGrid.h>
 #include <carla/occupancy/OccupancyMap.h>
-#include <carla/occupancy/PolygonTable.h>
 #include <boost/python/numpy.hpp>
 #include <cstdint>
 
@@ -28,15 +27,19 @@ void export_occupancy() {
           self.At(row, column) = value;
         })
   ;
-  
-  class_<PolygonTable>("PolygonTable", no_init)
-    .add_property("rows", &PolygonTable::Rows)
-    .add_property("columns", &PolygonTable::Columns)
-    .def("get", &PolygonTable::Get, return_internal_reference<>())
-  ;
 
   class_<OccupancyMap>("OccupancyMap", no_init)
-    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
+    .def("from_line", &OccupancyMap::FromLine)
+    .staticmethod("from_line")
+    .def("from_polygon", &OccupancyMap::FromPolygon)
+    .staticmethod("from_polygon")
+    .def("from_bounds", &OccupancyMap::FromBounds)
+    .staticmethod("from_bounds")
+    .def("union", &OccupancyMap::Union)
+    .def("difference", &OccupancyMap::Difference)
+    .def("buffer", &OccupancyMap::Buffer)
     .def("create_sidewalk", &OccupancyMap::CreateSidewalk)
+    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
+    .def("get_triangles", &OccupancyMap::GetTriangles)
   ;
 }

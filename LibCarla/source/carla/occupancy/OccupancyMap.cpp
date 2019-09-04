@@ -56,6 +56,14 @@ OccupancyMap OccupancyMap::FromPolygon(const std::vector<geom::Vector2D>& polygo
   return result;
 }
 
+OccupancyMap OccupancyMap::FromBounds(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) {
+  return FromPolygon({
+      bounds_min,
+      geom::Vector2D(bounds_min.x, bounds_max.y),
+      bounds_max,
+      geom::Vector2D(bounds_max.x, bounds_min.y)});
+}
+
 OccupancyMap OccupancyMap::Union(const OccupancyMap& occupancy_map) const {
   OccupancyMap result;
   boost::geometry::union_(_multi_polygon, occupancy_map._multi_polygon, result._multi_polygon);
@@ -108,8 +116,8 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
         polygons.emplace_back();
         for (const b_point_t& vertex : buffer_polygon_inner) {
           polygons.back().emplace_back(vertex.x(), vertex.y());
-          std::reverse(polygons.back().begin(), polygons.back().end());
         }
+        std::reverse(polygons.back().begin(), polygons.back().end());
       }
     }
 
@@ -137,6 +145,44 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
   return sidewalk::Sidewalk(std::move(polygons));
 }
   
+std::vector<geom::Triangle2D> OccupancyMap::GetTriangles() const {
+  std::vector<geom::Triangle2D> triangles;
+
+  for (const b_polygon_t& polygon : _multi_polygon) {
+
+    // Calculate polygon with holes.
+    std::vector<std::vector<geom::Vector2D>> polygon_with_holes(
+        1 + polygon.inners().size(),
+        std::vector<geom::Vector2D>());
+    for (const b_point_t& vertex : polygon.outer()) {
+      polygon_with_holes[0].emplace_back(vertex.x(), vertex.y());
+    }
+    for (size_t i = 0; i < polygon.inners().size(); i++) {
+      const b_ring_t& inner = polygon.inners()[i];
+      for (const b_point_t& vertex : inner) {
+        polygon_with_holes[1 + i].emplace_back(vertex.x(), vertex.y());
+      }
+    }
+
+    // Triangulate.
+    std::vector<std::pair<size_t, size_t>> polygon_triangulation = geom::Triangulation::Triangulate(polygon_with_holes);
+    for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
+      triangles.emplace_back(
+          geom::Vector2D(
+            polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
+            polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y),
+          geom::Vector2D(
+            polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].x,
+            polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].y),
+          geom::Vector2D(
+            polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
+            polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y));
+    }
+  }
+  
+  return triangles;
+}
+
 std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
   std::vector<geom::Vector3D> triangles;
 
@@ -159,7 +205,8 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
     // Triangulate.
     std::vector<std::pair<size_t, size_t>> polygon_triangulation = geom::Triangulation::Triangulate(polygon_with_holes);
     for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
-      // Flip to get anticlockwise winding order required in UI.
+      
+      // Counterclockwise for upward facing triangle.
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y,
@@ -171,6 +218,20 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
+          0);
+      
+      // Clockwise for downward facing triangle.
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
+          polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
+          0);
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].x,
+          polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].y,
+          0);
+      triangles.emplace_back(
+          polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
+          polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y,
           0);
     }
   }
