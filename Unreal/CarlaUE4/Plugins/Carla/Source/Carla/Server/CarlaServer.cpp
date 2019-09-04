@@ -598,15 +598,11 @@ void FCarlaServer::FPimpl::BindActions()
     }
     if (bEnabled)
     {
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Block);
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECollisionResponse::ECR_Block);
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Block);
+      ActorView.GetActor()->SetActorEnableCollision(true);
     }
     else
     {
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_Vehicle, ECollisionResponse::ECR_Overlap);
-      RootComponent->SetCollisionResponseToChannel(ECollisionChannel::ECC_PhysicsBody, ECollisionResponse::ECR_Overlap);
+      ActorView.GetActor()->SetActorEnableCollision(false);
     }
     return R<void>::Success();
   };
