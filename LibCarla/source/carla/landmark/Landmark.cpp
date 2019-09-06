@@ -1,6 +1,5 @@
 #include "Landmark.h"
 
-#include "carla/geom/Triangulation.h"
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/handler.hpp>
 #include <osmium/memory/buffer.hpp>
@@ -12,15 +11,7 @@
 namespace carla {
 namespace landmark {
 
-Landmark::Landmark(const std::vector<geom::Vector2D>& outline)
-  : _outline(outline) {
-  
-  for (std::pair<size_t, size_t> index : geom::Triangulation::Triangulate({_outline})) {
-    _triangulation.emplace_back(index.second);
-  }
-}
-
-std::vector<Landmark> Landmark::Load(const std::string& file, const geom::Vector2D& offset) {  
+std::vector<occupancy::OccupancyMap> Landmark::Load(const std::string& file, const geom::Vector2D& offset) {  
   osmium::io::File input_file{file};
   osmium::io::Reader reader{input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 
@@ -32,7 +23,7 @@ std::vector<Landmark> Landmark::Load(const std::string& file, const geom::Vector
   struct CountHandler : public osmium::handler::Handler {
     
     geom::Vector2D offset;
-    std::vector<Landmark> landmarks;
+    std::vector<occupancy::OccupancyMap> landmarks;
     
     void way(const osmium::Way& way) noexcept {
       if (way.tags()["building"]) {
@@ -54,46 +45,6 @@ std::vector<Landmark> Landmark::Load(const std::string& file, const geom::Vector
 
   return handler.landmarks;
 }
-
-std::vector<geom::Vector3D> Landmark::GetWallMeshTriangles(float height) const {
-  std::vector<geom::Vector3D> triangles;
-  for (size_t i = 0; i < _outline.size(); i++) {
-    const geom::Vector2D& start = _outline[i];
-    const geom::Vector2D& end = _outline[(i + 1) % _outline.size()];
-
-    triangles.emplace_back(end.x, end.y, height);
-    triangles.emplace_back(end.x, end.y, 0);
-    triangles.emplace_back(start.x, start.y, 0);
-
-    triangles.emplace_back(start.x, start.y, 0);
-    triangles.emplace_back(end.x, end.y, 0);
-    triangles.emplace_back(end.x, end.y, height);
-
-    triangles.emplace_back(start.x, start.y, 0);
-    triangles.emplace_back(start.x, start.y, height);
-    triangles.emplace_back(end.x, end.y, height);
-
-    triangles.emplace_back(end.x, end.y, height);
-    triangles.emplace_back(start.x, start.y, height);
-    triangles.emplace_back(start.x, start.y, 0);
-  }
-  return triangles;
-}
-  
-std::vector<geom::Vector3D> Landmark::GetOutlineMeshTriangles(float height) const {
-  std::vector<geom::Vector3D> triangles;
-  for (size_t i = 0; i < _triangulation.size(); i += 3) {
-    triangles.emplace_back(_outline[_triangulation[i]].x, _outline[_triangulation[i]].y, height);
-    triangles.emplace_back(_outline[_triangulation[i + 1]].x, _outline[_triangulation[i + 1]].y, height);
-    triangles.emplace_back(_outline[_triangulation[i + 2]].x, _outline[_triangulation[i + 2]].y, height);
-
-    triangles.emplace_back(_outline[_triangulation[i + 2]].x, _outline[_triangulation[i + 2]].y, height);
-    triangles.emplace_back(_outline[_triangulation[i + 1]].x, _outline[_triangulation[i + 1]].y, height);
-    triangles.emplace_back(_outline[_triangulation[i]].x, _outline[_triangulation[i]].y, height);
-  }
-  return triangles;
-}
-
 
 }
 }

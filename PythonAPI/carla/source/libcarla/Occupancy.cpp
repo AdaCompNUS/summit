@@ -4,6 +4,18 @@
 #include <boost/python/numpy.hpp>
 #include <cstdint>
 
+namespace carla {
+namespace occupancy {
+
+  std::ostream &operator<<(std::ostream &out, const OccupancyMap &occupancy_map) {
+    out << "OccupancyMap()";
+    // TODO
+    return out;
+  }
+
+}
+}
+
 void export_occupancy() {
   using namespace boost::python;
   using namespace carla;
@@ -29,17 +41,23 @@ void export_occupancy() {
   ;
 
   class_<OccupancyMap>("OccupancyMap", no_init)
-    .def("from_line", &OccupancyMap::FromLine)
-    .staticmethod("from_line")
-    .def("from_polygon", &OccupancyMap::FromPolygon)
-    .staticmethod("from_polygon")
-    .def("from_bounds", &OccupancyMap::FromBounds)
-    .staticmethod("from_bounds")
+    .def(init<>())
+    .def(init<const std::vector<geom::Vector2D>&, float>())
+    .def(init<const std::vector<geom::Vector2D>&>())
+    .def(init<const geom::Vector2D&, const geom::Vector2D&>())
+    .add_property("is_empty", make_function(&OccupancyMap::IsEmpty)) 
     .def("union", &OccupancyMap::Union)
     .def("difference", &OccupancyMap::Difference)
+    .def("intersection", &OccupancyMap::Intersection)
     .def("buffer", &OccupancyMap::Buffer)
     .def("create_sidewalk", &OccupancyMap::CreateSidewalk)
-    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
     .def("get_triangles", &OccupancyMap::GetTriangles)
+    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
+    .def("get_wall_mesh_triangles", &OccupancyMap::GetTriangles)
+  ;
+  
+  class_<std::vector<OccupancyMap>>("vector_of_occupancy_map")
+      .def(boost::python::vector_indexing_suite<std::vector<OccupancyMap>>())
+      .def(self_ns::str(self_ns::self))
   ;
 }

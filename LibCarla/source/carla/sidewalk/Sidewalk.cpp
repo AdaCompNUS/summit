@@ -32,7 +32,7 @@ Sidewalk::Sidewalk(const std::vector<std::vector<geom::Vector2D>>& polygons)
 occupancy::OccupancyMap Sidewalk::CreateOccupancyMap(float width) const {
   occupancy::OccupancyMap occupancy_map;
   for (const std::vector<geom::Vector2D>& polygon : _polygons) {
-    occupancy::OccupancyMap polygon_occupancy_map = occupancy::OccupancyMap::FromPolygon(polygon);
+    occupancy::OccupancyMap polygon_occupancy_map(polygon);
     occupancy::OccupancyMap outer_buffer = polygon_occupancy_map.Buffer(width / 2);
     occupancy::OccupancyMap inner_buffer = polygon_occupancy_map.Buffer(-width / 2);
     occupancy::OccupancyMap buffer_difference = outer_buffer.Difference(inner_buffer);

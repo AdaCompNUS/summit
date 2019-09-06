@@ -71,7 +71,10 @@ class SumoNetwork {
 public:
 
   static SumoNetwork Load(const std::string& data);
-  
+
+  geom::Vector2D Offset() const { return _offset; }
+  geom::Vector2D BoundsMin() const { return _bounds_min; }
+  geom::Vector2D BoundsMax() const { return _bounds_max; }
   const std::unordered_map<std::string, Edge>& Edges() const { return _edges; }
   const std::unordered_map<std::string, Junction>& Junctions() const { return _junctions; }
   const std::vector<Connection>& Connections() const { return _connections; }
@@ -93,6 +96,10 @@ private:
   typedef boost::geometry::model::box<rt_point_t> rt_box_t;
   typedef std::pair<rt_segment_t, std::tuple<std::string, uint32_t, uint32_t>> rt_value_t; // Segment -> (Edge, Lane Index, Segment Index)
   typedef boost::geometry::index::rtree<rt_value_t, boost::geometry::index::rstar<16> > rt_tree_t;
+
+  geom::Vector2D _offset;
+  geom::Vector2D _bounds_min;
+  geom::Vector2D _bounds_max;
 
   std::unordered_map<std::string, Edge> _edges;
   std::unordered_map<std::string, Junction> _junctions;

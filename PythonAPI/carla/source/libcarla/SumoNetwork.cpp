@@ -185,6 +185,9 @@ void export_sumo_network() {
   class_<SumoNetwork>("SumoNetwork", no_init)
     .def("load", &SumoNetwork::Load)
     .staticmethod("load")
+    .add_property("offset", make_function(&SumoNetwork::Offset))
+    .add_property("bounds_min", make_function(&SumoNetwork::BoundsMin)) 
+    .add_property("bounds_max", make_function(&SumoNetwork::BoundsMax)) 
     .add_property("edges", 
         make_function(&SumoNetwork::Edges, return_internal_reference<>()))
     .add_property("junctions", 

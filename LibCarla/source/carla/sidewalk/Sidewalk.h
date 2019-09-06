@@ -32,6 +32,8 @@ public:
 
   Sidewalk(const std::vector<std::vector<geom::Vector2D>>& polygons);
 
+  const std::vector<std::vector<geom::Vector2D>>& Polygons() const { return _polygons; }
+
   occupancy::OccupancyMap CreateOccupancyMap(float width) const;
   geom::Vector2D GetRoutePointPosition(const SidewalkRoutePoint& route_point) const;
   SidewalkRoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;

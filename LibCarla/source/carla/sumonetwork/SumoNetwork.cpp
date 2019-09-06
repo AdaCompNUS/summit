@@ -8,7 +8,7 @@
 namespace carla {
 namespace sumonetwork {
 
-static std::vector<geom::Vector2D> parse_position_list(const std::string& s) {
+static std::vector<geom::Vector2D> parse_shape_list(const std::string& s) {
   if (s.empty()) return {};
 
   std::vector<std::string> split_list;
@@ -21,11 +21,37 @@ static std::vector<geom::Vector2D> parse_position_list(const std::string& s) {
   std::vector<geom::Vector2D> position_list;
   for (size_t i = 0; i < split_list.size(); i += 2) {
     position_list.emplace_back(
-        std::stof(split_list[i + 1]),       // Swap for SUMO -> CARLA.
-        std::stof(split_list[i]));  // Swap for SUMO -> CARLA.
+        std::stof(split_list[i + 1]), // Swap for SUMO -> CARLA.
+        std::stof(split_list[i]));    // Swap for SUMO -> CARLA.
   }
 
   return position_list;
+}
+
+static geom::Vector2D parse_coordinates(const std::string& s) {
+  if (s.empty()) return geom::Vector2D(0, 0);
+
+  std::vector<std::string> split_list;
+  boost::split(
+      split_list, 
+      s,
+      boost::is_any_of(","),
+      boost::token_compress_on);
+
+  return geom::Vector2D(std::stof(split_list[0]), std::stof(split_list[1]));
+}
+
+static std::pair<geom::Vector2D, geom::Vector2D> parse_bounds(const std::string& s) {
+  std::vector<std::string> split_list;
+  boost::split(
+      split_list, 
+      s,
+      boost::is_any_of(","),
+      boost::token_compress_on);
+
+  return std::make_pair(
+      geom::Vector2D(std::stof(split_list[0]), std::stof(split_list[1])),
+      geom::Vector2D(std::stof(split_list[2]), std::stof(split_list[3])));
 }
 
 static std::vector<std::string> parse_string_list(const std::string& s) {
@@ -47,7 +73,13 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
   SumoNetwork sumo_network;
   
   pugi::xml_node net_node = xml.child("net");
-  
+ 
+  pugi::xml_node location_node = net_node.child("location");
+  sumo_network._offset = parse_coordinates(location_node.attribute("netOffset").value());
+  std::pair<geom::Vector2D, geom::Vector2D> bounds = parse_bounds(location_node.attribute("convBoundary").value());
+  sumo_network._bounds_min = bounds.first;
+  sumo_network._bounds_max = bounds.second;
+
   for (pugi::xml_node edge_node : net_node.children("edge")) {
     Edge edge;
     edge.id = edge_node.attribute("id").value();
@@ -70,7 +102,7 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
       lane.index = lane_node.attribute("index").as_uint();
       lane.speed = lane_node.attribute("speed").as_float();
       lane.length = lane_node.attribute("length").as_float();
-      lane.shape = parse_position_list(lane_node.attribute("shape").value());
+      lane.shape = parse_shape_list(lane_node.attribute("shape").value());
       lanes_temp.emplace_back(std::move(lane));
     }
     edge.lanes.resize(lanes_temp.size());
@@ -90,7 +122,7 @@ SumoNetwork SumoNetwork::Load(const std::string& data) {
     junction.y = junction_node.attribute("x").as_float(); // Swap for SUMO -> CARLA.
     junction.inc_lanes = parse_string_list(junction_node.attribute("incLanes").value());
     junction.int_lanes = parse_string_list(junction_node.attribute("intLanes").value());
-    junction.shape = parse_position_list(junction_node.attribute("shape").value());
+    junction.shape = parse_shape_list(junction_node.attribute("shape").value());
     sumo_network._junctions.emplace(junction.id, std::move(junction));
   }
 
@@ -228,13 +260,13 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
   for (const auto& edge_entry : _edges) {
     const Edge& edge = edge_entry.second;
     for (const Lane& lane : edge.lanes) {
-      occupancy_map = occupancy_map.Union(occupancy::OccupancyMap::FromLine(lane.shape, 4.10f));
+      occupancy_map = occupancy_map.Union(occupancy::OccupancyMap(lane.shape, 4.10f));
     }
   }
   
   for (const auto& junction_entry : _junctions) {
     const Junction& junction = junction_entry.second;
-    occupancy_map = occupancy_map.Union(occupancy::OccupancyMap::FromPolygon(junction.shape));
+    occupancy_map = occupancy_map.Union(occupancy::OccupancyMap(junction.shape));
   }
 
   return occupancy_map;

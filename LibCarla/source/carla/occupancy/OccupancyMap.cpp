@@ -14,9 +14,7 @@ OccupancyMap::OccupancyMap() {
 
 }
 
-OccupancyMap OccupancyMap::FromLine(const std::vector<geom::Vector2D>& line, float width) {
-  OccupancyMap result;
-
+OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width) {
   // Convert into b_linestring_t.
   b_linestring_t linestring;
   for (const geom::Vector2D& vertex : line) {
@@ -32,36 +30,41 @@ OccupancyMap OccupancyMap::FromLine(const std::vector<geom::Vector2D>& line, flo
   boost::geometry::strategy::buffer::end_round end_strategy(18);
   boost::geometry::strategy::buffer::point_circle circle_strategy(18);
   boost::geometry::strategy::buffer::side_straight side_strategy;
-  boost::geometry::buffer(linestring, result._multi_polygon,
+  boost::geometry::buffer(linestring, _multi_polygon,
       distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
 
-  boost::geometry::buffer(linestring, result._multi_polygon,
+  boost::geometry::buffer(linestring, _multi_polygon,
       distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-
-  return result;
 }
   
-OccupancyMap OccupancyMap::FromPolygon(const std::vector<geom::Vector2D>& polygon) {
-  OccupancyMap result;
-
+OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& polygon) {
   // Convert into b_multi_polygon_t.
-  result._multi_polygon.emplace_back();
+  _multi_polygon.emplace_back();
   for (const geom::Vector2D& vertex : polygon) {
-    boost::geometry::append(result._multi_polygon[0].outer(), b_point_t(vertex.x, vertex.y));
+    boost::geometry::append(_multi_polygon[0].outer(), b_point_t(vertex.x, vertex.y));
   }
 
   // Correct geometry.
-  boost::geometry::correct(result._multi_polygon);
-
-  return result;
+  boost::geometry::correct(_multi_polygon);
 }
 
-OccupancyMap OccupancyMap::FromBounds(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) {
-  return FromPolygon({
-      bounds_min,
-      geom::Vector2D(bounds_min.x, bounds_max.y),
-      bounds_max,
-      geom::Vector2D(bounds_max.x, bounds_min.y)});
+OccupancyMap::OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max)
+  : OccupancyMap({
+      bounds_min, geom::Vector2D(bounds_min.x, bounds_max.y),
+      bounds_max, geom::Vector2D(bounds_max.x, bounds_min.y)}) {
+
+}
+
+bool OccupancyMap::IsEmpty() const {
+  return boost::geometry::is_empty(_multi_polygon);
+}
+  
+bool OccupancyMap::operator==(const OccupancyMap& occupancy_map) const {
+  return boost::geometry::equals(_multi_polygon, occupancy_map._multi_polygon);
+}
+
+bool OccupancyMap::operator!=(const OccupancyMap& occupancy_map) const {
+  return !(*this == occupancy_map);
 }
 
 OccupancyMap OccupancyMap::Union(const OccupancyMap& occupancy_map) const {
@@ -73,6 +76,12 @@ OccupancyMap OccupancyMap::Union(const OccupancyMap& occupancy_map) const {
 OccupancyMap OccupancyMap::Difference(const OccupancyMap& occupancy_map) const {
   OccupancyMap result;
   boost::geometry::difference(_multi_polygon, occupancy_map._multi_polygon, result._multi_polygon);
+  return result;
+}
+
+OccupancyMap OccupancyMap::Intersection(const OccupancyMap& occupancy_map) const {
+  OccupancyMap result;
+  boost::geometry::intersection(_multi_polygon, occupancy_map._multi_polygon, result._multi_polygon);
   return result;
 }
 
@@ -182,7 +191,7 @@ std::vector<geom::Triangle2D> OccupancyMap::GetTriangles() const {
   return triangles;
 }
 
-std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
+std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles(float height) const {
   std::vector<geom::Vector3D> triangles;
 
   for (const b_polygon_t& polygon : _multi_polygon) {
@@ -209,32 +218,81 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles() const {
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y,
-          0);
+          height);
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].x,
           polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].y,
-          0);
+          height);
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
-          0);
+          height);
       
       // Clockwise for downward facing triangle.
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
-          0);
+          height);
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].x,
           polygon_with_holes[polygon_triangulation[i + 1].first][polygon_triangulation[i + 1].second].y,
-          0);
+          height);
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y,
-          0);
+          height);
     }
   }
   
+  return triangles;
+}
+
+std::vector<geom::Vector3D> OccupancyMap::GetWallMeshTriangles(float height) const {
+  std::vector<geom::Vector3D> triangles;
+  for (const b_polygon_t& polygon : _multi_polygon) {
+    for (size_t i = 0; i < polygon.outer().size(); i++) {
+      const b_point_t& start = polygon.outer()[i];
+      const b_point_t& end = polygon.outer()[(i + 1) % polygon.outer().size()];
+
+      triangles.emplace_back(end.x(), end.y(), height);
+      triangles.emplace_back(end.x(), end.y(), 0);
+      triangles.emplace_back(start.x(), start.y(), 0);
+
+      triangles.emplace_back(start.x(), start.y(), 0);
+      triangles.emplace_back(end.x(), end.y(), 0);
+      triangles.emplace_back(end.x(), end.y(), height);
+
+      triangles.emplace_back(start.x(), start.y(), 0);
+      triangles.emplace_back(start.x(), start.y(), height);
+      triangles.emplace_back(end.x(), end.y(), height);
+
+      triangles.emplace_back(end.x(), end.y(), height);
+      triangles.emplace_back(start.x(), start.y(), height);
+      triangles.emplace_back(start.x(), start.y(), 0);
+    }
+    for (const b_ring_t& inner : polygon.inners()) {
+      for (size_t i = 0; i < inner.size(); i++) {
+        const b_point_t& start = inner[i];
+        const b_point_t& end = inner[(i + 1) % inner.size()];
+
+        triangles.emplace_back(end.x(), end.y(), height);
+        triangles.emplace_back(end.x(), end.y(), 0);
+        triangles.emplace_back(start.x(), start.y(), 0);
+
+        triangles.emplace_back(start.x(), start.y(), 0);
+        triangles.emplace_back(end.x(), end.y(), 0);
+        triangles.emplace_back(end.x(), end.y(), height);
+
+        triangles.emplace_back(start.x(), start.y(), 0);
+        triangles.emplace_back(start.x(), start.y(), height);
+        triangles.emplace_back(end.x(), end.y(), height);
+
+        triangles.emplace_back(end.x(), end.y(), height);
+        triangles.emplace_back(start.x(), start.y(), height);
+        triangles.emplace_back(start.x(), start.y(), 0);
+      }
+    }
+  }
   return triangles;
 }
 

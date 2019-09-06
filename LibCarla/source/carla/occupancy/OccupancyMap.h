@@ -22,17 +22,23 @@ class OccupancyMap {
 public:
 
   OccupancyMap();
-  static OccupancyMap FromLine(const std::vector<geom::Vector2D>& line, float width);
-  static OccupancyMap FromPolygon(const std::vector<geom::Vector2D>& polygon);
-  static OccupancyMap FromBounds(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
+  OccupancyMap(const std::vector<geom::Vector2D>& line, float width);
+  OccupancyMap(const std::vector<geom::Vector2D>& polygon);
+  OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
+
+  bool IsEmpty() const; 
+  bool operator==(const OccupancyMap& occupancy_map) const;
+  bool operator!=(const OccupancyMap& occupancy_map) const;
 
   OccupancyMap Union(const OccupancyMap& occupancy_map) const;
   OccupancyMap Difference(const OccupancyMap& occupancy_map) const;
+  OccupancyMap Intersection(const OccupancyMap& occupancy_map) const;
   OccupancyMap Buffer(float width) const;
   
   sidewalk::Sidewalk CreateSidewalk(float distance) const;
   std::vector<geom::Triangle2D> GetTriangles() const;
-  std::vector<geom::Vector3D> GetMeshTriangles() const;
+  std::vector<geom::Vector3D> GetMeshTriangles(float height=0) const;
+  std::vector<geom::Vector3D> GetWallMeshTriangles(float height) const;
 
 private:
     
