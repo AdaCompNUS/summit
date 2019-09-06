@@ -10,21 +10,7 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
-import cv2
-import numpy as np
-import random
 import svgwrite
-
-def rotate(v, radians):
-    c, s = np.cos(radians), np.sin(radians)
-    return np.array([v[0] * c - v[1] * s, v[0] * s + v[1] * c]) 
-
-def unit_vector(v):
-    norm = np.linalg.norm(v)
-    if norm == 0:
-        return v - v
-    else:
-        return v / norm
 
 if __name__ == '__main__':
 
@@ -33,102 +19,90 @@ if __name__ == '__main__':
 
     print('Loading map...')
     network = carla.SumoNetwork.load(data)
-    occupancy_map = network.create_occupancy_map()
-
-    print('Drawing topology...')
+    network_occupancy_map = network.create_occupancy_map()
+    sidewalk = network_occupancy_map.create_sidewalk(1.5)
+    sidewalk_occupancy_map = sidewalk.create_occupancy_map(3)
+    landmarks = carla.Landmark.load(
+            '../../Data/map.osm',
+            network.offset)
+    landmarks = [l.difference(network_occupancy_map).difference(sidewalk_occupancy_map) for l in landmarks]
+    landmarks = [l for l in landmarks if not l.is_empty]
+    
     dwg = svgwrite.Drawing('map.svg', profile='full')
     dwg.add(dwg.rect(size=('100%', '100%'), fill='white'))
+
+    def to_svg(coord):
+        return [coord.y - network.bounds_min.y, network.bounds_max.x - coord.x]
+
     def add_arrowed_line(start, end, **args):
-        direction = unit_vector(end - start)
-        normal = rotate(direction, math.pi / 2)
+        direction = (end - start).make_unit_vector()
+        normal = direction.rotate(math.pi / 2)
         mid = (start + end) / 2 
-        dwg.add(dwg.line(start, end, **args))
         dwg.add(dwg.line(
-            mid - 0.5 * direction + 0.5 * normal,
-            mid + 0.5 * direction,
+            to_svg(start), 
+            to_svg(end), 
             **args))
         dwg.add(dwg.line(
-            mid - 0.5 * direction - 0.5 * normal,
-            mid + 0.5 * direction,
+            to_svg(mid - 0.75 * direction + 0.75 * normal),
+            to_svg(mid + 0.75 * direction),
             **args))
+        dwg.add(dwg.line(
+            to_svg(mid - 0.75 * direction - 0.75 * normal),
+            to_svg(mid + 0.75 * direction),
+            **args))
+
     def add_line(start, end, **args):
-        dwg.add(dwg.line(start, end, **args))
+        dwg.add(dwg.line(
+            to_svg(start), 
+            to_svg(end), 
+            **args))
+
     def add_circle(pos, radius, **args):
-        dwg.add(dwg.circle(pos, radius, **args))
+        dwg.add(dwg.circle(
+            to_svg(pos), 
+            radius, 
+            **args))
+
+    def add_triangle(triangle, **args):
+        dwg.add(dwg.polygon(
+            [to_svg(triangle.v0), to_svg(triangle.v1), to_svg(triangle.v2)],
+            **args))
 
     lanes_with_connections = set()
     lanes_with_connections.update(network.edges[c.from_edge].lanes[c.from_lane].id for c in network.connections)
     
+    # Draw SUMO network.
     for entry in network.edges:
         edge = entry.data()
         for lane in edge.lanes:
             for i in range(len(lane.shape) - 1):
-                stroke = 'black'
-                stroke_width = 0.25
-                if edge.function != carla.Function.Normal:
-                    stroke = 'blue'
-                if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
-                    stroke = 'red'
-                    stroke_width = 1.0
-
+                #if edge.function != carla.Function.Normal:
+                #    stroke = 'blue'
+                #if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
+                #    stroke = 'red'
+                #    stroke_width = 1.0
                 add_arrowed_line(
-                    np.array([
-                        lane.shape[i].y - occupancy_map.bounds_min.y, 
-                        occupancy_map.bounds_max.x - lane.shape[i].x]),
-                    np.array([
-                        lane.shape[i + 1].y - occupancy_map.bounds_min.y, 
-                        occupancy_map.bounds_max.x - lane.shape[i + 1].x]),
-                        stroke=stroke,
-                        stroke_width=stroke_width)
+                        lane.shape[i], 
+                        lane.shape[i + 1],
+                        stroke=svgwrite.rgb(52,152,219),
+                        stroke_width=1.0)
 
-    edges = [entry.data() for entry in network.edges]
-    for apple in range(100):
-        edge = random.choice(edges)
-        (lane_index, lane) = random.choice([r for r in enumerate(edge.lanes)])
-        segment_index = random.choice([i for i in range(len(lane.shape) - 1)])
-        offset = random.uniform(0, 1) * (lane.shape[segment_index + 1] - lane.shape[segment_index]).length()
-
-        rp = carla.SumoNetworkRoutePoint()
-        rp.edge = edge.id
-        rp.lane = lane_index
-        rp.segment = segment_index
-        rp.offset = offset
-        pos = network.get_route_point_position(rp)
-        for _ in range(100):
-            next_rp_list = network.get_next_route_points(rp, 1.0)
-            if len(next_rp_list) == 0:
-                break
-            next_rp = random.choice(next_rp_list)
-            next_pos = network.get_route_point_position(next_rp)
-
+    # Draw sidewalk.
+    for polygon in sidewalk.polygons:
+        for i in range(len(polygon) - 1):
             add_line(
-                np.array([
-                    pos.y - occupancy_map.bounds_min.y, 
-                    occupancy_map.bounds_max.x - pos.x]),
-                np.array([
-                    next_pos.y - occupancy_map.bounds_min.y, 
-                    occupancy_map.bounds_max.x - next_pos.x]),
-                    stroke='magenta',
-                    stroke_width='0.2')
-            add_circle(
-                np.array([
-                    pos.y - occupancy_map.bounds_min.y, 
-                    occupancy_map.bounds_max.x - pos.x]),
-                0.3,
-                fill='magenta')
+                    polygon[i], 
+                    polygon[i + 1], 
+                    stroke=svgwrite.rgb(231,76,60), 
+                    stroke_width=1.0)
 
-
-            (rp, pos) = (next_rp, next_pos)
-        print(apple)
-
+    # Draw landmarks.
+    for landmark in landmarks:
+        for triangle in landmark.get_triangles():
+            add_triangle(
+                    triangle,
+                    fill=svgwrite.rgb(149,165,166),
+                    stroke=svgwrite.rgb(149,165,166),
+                    stroke_width=0.25)
+        
     dwg.save()
-
-    exit()
-                
-    print('Drawing occupancy grid...')
-    occupancy_grid = occupancy_map.create_occupancy_grid(
-        occupancy_map.bounds_min,
-        occupancy_map.bounds_max,
-        0.25)
-    cv2.imwrite('map.bmp', occupancy_grid.data)
-   
