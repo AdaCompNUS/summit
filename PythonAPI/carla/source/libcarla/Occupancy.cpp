@@ -52,8 +52,8 @@ void export_occupancy() {
     .def("buffer", &OccupancyMap::Buffer)
     .def("create_sidewalk", &OccupancyMap::CreateSidewalk)
     .def("get_triangles", &OccupancyMap::GetTriangles)
-    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles)
-    .def("get_wall_mesh_triangles", &OccupancyMap::GetTriangles)
+    .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles, (arg("height")=0.0f))
+    .def("get_wall_mesh_triangles", &OccupancyMap::GetWallMeshTriangles)
   ;
   
   class_<std::vector<OccupancyMap>>("vector_of_occupancy_map")
