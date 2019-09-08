@@ -43,7 +43,21 @@ void export_occupancy() {
   class_<OccupancyMap>("OccupancyMap", no_init)
     .def(init<>())
     .def(init<const std::vector<geom::Vector2D>&, float>())
+    .def("__init__", make_constructor(
+          +[](const list& line_py, float width) {
+            std::vector<carla::geom::Vector2D> line{
+              stl_input_iterator<carla::geom::Vector2D>(line_py),
+              stl_input_iterator<carla::geom::Vector2D>()};
+            return boost::shared_ptr<OccupancyMap>(new OccupancyMap(line, width));
+          }))
     .def(init<const std::vector<geom::Vector2D>&>())
+    .def("__init__", make_constructor(
+          +[](const list& polygon_py) {
+            std::vector<carla::geom::Vector2D> polygon{
+              stl_input_iterator<carla::geom::Vector2D>(polygon_py),
+              stl_input_iterator<carla::geom::Vector2D>()};
+            return boost::shared_ptr<OccupancyMap>(new OccupancyMap(polygon));
+          }))
     .def(init<const geom::Vector2D&, const geom::Vector2D&>())
     .def("load", &OccupancyMap::Load)
     .staticmethod("load")

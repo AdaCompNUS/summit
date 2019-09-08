@@ -71,6 +71,13 @@ void export_commands() {
   class_<cr::Command::SpawnDynamicMesh>("SpawnDynamicMesh")
     .def("__init__", &command_impl::CustomInit<const std::vector<carla::geom::Vector3D>&, std::string>, (arg("triangles"), arg("material")))
     .def(init<const std::vector<carla::geom::Vector3D>&, std::string>((arg("triangles"), arg("material"))))
+    .def("__init__", make_constructor(
+          +[](const list& triangles_py, const std::string& material) {
+            std::vector<carla::geom::Vector3D> triangles{
+              stl_input_iterator<carla::geom::Vector3D>(triangles_py),
+              stl_input_iterator<carla::geom::Vector3D>()};
+            return boost::shared_ptr<cr::Command::SpawnDynamicMesh>(new cr::Command::SpawnDynamicMesh(triangles, material));
+          }))
     .def_readwrite("triangles", &cr::Command::SpawnDynamicMesh::triangles)
     .def_readwrite("material", &cr::Command::SpawnDynamicMesh::material)
   ;
