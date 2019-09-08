@@ -76,18 +76,24 @@ if __name__ == '__main__':
         edge = entry.data()
         for lane in edge.lanes:
             for i in range(len(lane.shape) - 1):
-                #if edge.function != carla.Function.Normal:
-                #    stroke = 'blue'
-                #if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
-                #    stroke = 'red'
-                #    stroke_width = 1.0
+                stroke = 'black'
+                stroke_width = 0.25
+                '''
+                if edge.function != carla.Function.Normal:
+                    stroke = 'blue'
+                    stroke_width = 0.25
+                if i == len(lane.shape) - 2 and lane.id not in lanes_with_connections:
+                    stroke = 'red'
+                    stroke_width = 1.0
+                '''
                 add_arrowed_line(
                         lane.shape[i], 
                         lane.shape[i + 1],
-                        stroke=svgwrite.rgb(52,152,219),
-                        stroke_width=1.0)
+                        stroke=stroke,
+                        stroke_width=stroke_width)
 
     # Draw sidewalk.
+    '''
     for polygon in sidewalk.polygons:
         for i in range(len(polygon) - 1):
             add_line(
@@ -96,7 +102,9 @@ if __name__ == '__main__':
                     stroke=svgwrite.rgb(231,76,60), 
                     stroke_width=1.0)
 
+    '''
     # Draw landmarks.
+    '''
     for landmark in landmarks:
         for triangle in landmark.get_triangles():
             add_triangle(
@@ -104,5 +112,6 @@ if __name__ == '__main__':
                     fill=svgwrite.rgb(149,165,166),
                     stroke=svgwrite.rgb(149,165,166),
                     stroke_width=0.25)
+    '''
         
     dwg.save()

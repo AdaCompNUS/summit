@@ -6,6 +6,7 @@
 #include <boost/geometry/geometries/geometries.hpp>
 #include "carla/geom/Triangulation.h"
 #include <algorithm>
+#include <sstream>
 
 namespace carla {
 namespace occupancy {
@@ -32,7 +33,6 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width)
   boost::geometry::strategy::buffer::side_straight side_strategy;
   boost::geometry::buffer(linestring, _multi_polygon,
       distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-
   boost::geometry::buffer(linestring, _multi_polygon,
       distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
 }
@@ -53,6 +53,18 @@ OccupancyMap::OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2
       bounds_min, geom::Vector2D(bounds_min.x, bounds_max.y),
       bounds_max, geom::Vector2D(bounds_max.x, bounds_min.y)}) {
 
+}
+  
+OccupancyMap OccupancyMap::Load(const std::string& data) {
+  OccupancyMap occupancy_map;
+  boost::geometry::read_wkt(data, occupancy_map._multi_polygon);
+  return occupancy_map;
+}
+
+std::string OccupancyMap::Save() const {
+  std::ostringstream ss;
+  ss << boost::geometry::wkt(_multi_polygon);
+  return ss.str();
 }
 
 bool OccupancyMap::IsEmpty() const {
