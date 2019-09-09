@@ -85,8 +85,8 @@ OccupancyMap OccupancyMap::Load(const std::string& file) {
     while (true) {
       char c; ss.get(c);
       if (c == '(') {
-        ring.emplace_back();
-        read_point(ring.back());
+        b_point_t point; read_point(point);
+        boost::geometry::append(ring, point);
       } else if (c == ')') {
         break;
       } else {
@@ -102,8 +102,8 @@ OccupancyMap OccupancyMap::Load(const std::string& file) {
     while (true) {
       ss.get(c);
       if (c == '(') {
-        polygon.inners().emplace_back();
-        read_ring(polygon.inners().back());
+        polygon.inners().resize(polygon.inners().size() + 1);
+        read_ring(polygon.inners()[polygon.inners().size() - 1]);
       } else if (c == ')') {
         break;
       } else {
@@ -113,13 +113,13 @@ OccupancyMap OccupancyMap::Load(const std::string& file) {
   };
 
   auto read_multi_polygon = [&ss, &read_polygon] (b_multi_polygon_t& multi_polygon) {
-    char c; ss.get(c); // ( of multi polygon.
-    
+    char c; ss.get(c); // ( of multi_polygon.
+
     while (true) {
       ss.get(c); // ( of polygon, or ).
       if (c == '(') {
-        multi_polygon.emplace_back();
-        read_polygon(multi_polygon.back());
+        multi_polygon.resize(multi_polygon.size() + 1);
+        read_polygon(multi_polygon[multi_polygon.size() - 1]);
       } else if (c == ')') {
         break;
       } else {
@@ -130,6 +130,7 @@ OccupancyMap OccupancyMap::Load(const std::string& file) {
 
   OccupancyMap occupancy_map;
   read_multi_polygon(occupancy_map._multi_polygon);
+  boost::geometry::correct(occupancy_map._multi_polygon);
 
   return occupancy_map;
 }
@@ -138,6 +139,7 @@ void OccupancyMap::Save(const std::string& file) const {
   std::ofstream ofs;
   ofs.open(file, std::ios::out | std::ios::trunc);
   
+  ofs << '(';
   for (const b_polygon_t& polygon : _multi_polygon) {
     ofs << '(';
     
@@ -153,7 +155,7 @@ void OccupancyMap::Save(const std::string& file) const {
       ofs << '(';
       for (const b_point_t& point : inner) {
         ofs << '(';
-        ofs << std::to_string(point.x()) << ',' << std::to_string(point.y());
+        ofs << std::to_string(point.x()) << ' ' << std::to_string(point.y());
         ofs << ')';
       }
       ofs << ')';
@@ -161,6 +163,7 @@ void OccupancyMap::Save(const std::string& file) const {
 
     ofs << ')';
   }
+  ofs << ')';
 
   ofs.close();
 }
