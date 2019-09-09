@@ -70,7 +70,7 @@ class SumoNetwork {
 
 public:
 
-  static SumoNetwork Load(const std::string& data);
+  static SumoNetwork Load(const std::string& file);
 
   geom::Vector2D Offset() const { return _offset; }
   geom::Vector2D BoundsMin() const { return _bounds_min; }

@@ -4,6 +4,8 @@
 #include <boost/algorithm/string.hpp>
 #include <pugixml/pugixml.hpp>
 #include <string>
+#include <sstream>
+#include <fstream>
 
 namespace carla {
 namespace sumonetwork {
@@ -66,9 +68,15 @@ static std::vector<std::string> parse_string_list(const std::string& s) {
   return split_list;
 }
 
-SumoNetwork SumoNetwork::Load(const std::string& data) {
+SumoNetwork SumoNetwork::Load(const std::string& file) {
+  std::ifstream ifs;
+  ifs.open(file, std::ios::in);
+  std::ostringstream ss;
+  ss << ifs.rdbuf();
+  ifs.close();
+
   pugi::xml_document xml;
-  xml.load_string(data.c_str());
+  xml.load_string(ss.str().c_str());
 
   SumoNetwork sumo_network;
   

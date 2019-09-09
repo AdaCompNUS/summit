@@ -26,8 +26,8 @@ public:
   OccupancyMap(const std::vector<geom::Vector2D>& polygon);
   OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
 
-  static OccupancyMap Load(const std::string& data);
-  std::string Save() const;
+  static OccupancyMap Load(const std::string& file);
+  void Save(const std::string& file) const;
 
   bool IsEmpty() const; 
   bool operator==(const OccupancyMap& occupancy_map) const;

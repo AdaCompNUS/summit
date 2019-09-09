@@ -7,6 +7,7 @@
 #include "carla/geom/Triangulation.h"
 #include <algorithm>
 #include <sstream>
+#include <fstream>
 
 namespace carla {
 namespace occupancy {
@@ -55,16 +56,113 @@ OccupancyMap::OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2
 
 }
   
-OccupancyMap OccupancyMap::Load(const std::string& data) {
+OccupancyMap OccupancyMap::Load(const std::string& file) {
+  std::ifstream ifs;
+  ifs.open(file, std::ios::in);
+  std::ostringstream ss_data;
+  ss_data << ifs.rdbuf();
+  ifs.close();
+  std::stringstream ss(ss_data.str());
+
+  auto read_point = [&ss] (b_point_t& point) {
+    std::string text;
+    while (true) {
+      char c; ss.get(c);
+      if (c == ')') {
+        break;
+      } else {
+        text += c;
+      }
+    }
+
+    std::vector<std::string> text_split;
+    boost::split(text_split, text, boost::is_any_of(" "));
+    point.x(std::stof(text_split[0]));
+    point.y(std::stof(text_split[1]));
+  };
+
+  auto read_ring = [&ss, &read_point] (b_ring_t& ring) {
+    while (true) {
+      char c; ss.get(c);
+      if (c == '(') {
+        ring.emplace_back();
+        read_point(ring.back());
+      } else if (c == ')') {
+        break;
+      } else {
+        // Error
+      }
+    }
+  };
+
+  auto read_polygon = [&ss, &read_ring] (b_polygon_t& polygon) {
+    char c; ss.get(c);
+    read_ring(polygon.outer());
+
+    while (true) {
+      ss.get(c);
+      if (c == '(') {
+        polygon.inners().emplace_back();
+        read_ring(polygon.inners().back());
+      } else if (c == ')') {
+        break;
+      } else {
+        // Error
+      }
+    }
+  };
+
+  auto read_multi_polygon = [&ss, &read_polygon] (b_multi_polygon_t& multi_polygon) {
+    char c; ss.get(c); // ( of multi polygon.
+    
+    while (true) {
+      ss.get(c); // ( of polygon, or ).
+      if (c == '(') {
+        multi_polygon.emplace_back();
+        read_polygon(multi_polygon.back());
+      } else if (c == ')') {
+        break;
+      } else {
+        // Error
+      }
+    }
+  };
+
   OccupancyMap occupancy_map;
-  boost::geometry::read_wkt(data, occupancy_map._multi_polygon);
+  read_multi_polygon(occupancy_map._multi_polygon);
+
   return occupancy_map;
 }
 
-std::string OccupancyMap::Save() const {
-  std::ostringstream ss;
-  ss << boost::geometry::wkt(_multi_polygon);
-  return ss.str();
+void OccupancyMap::Save(const std::string& file) const {
+  std::ofstream ofs;
+  ofs.open(file, std::ios::out | std::ios::trunc);
+  
+  for (const b_polygon_t& polygon : _multi_polygon) {
+    ofs << '(';
+    
+    ofs << '(';
+    for (const b_point_t& point : polygon.outer()) {
+      ofs << '(';
+      ofs << std::to_string(point.x()) << ' ' << std::to_string(point.y());
+      ofs << ')';
+    }
+    ofs << ')';
+
+    for (const b_ring_t& inner : polygon.inners()) {
+      ofs << '(';
+      for (const b_point_t& point : inner) {
+        ofs << '(';
+        ofs << std::to_string(point.x()) << ',' << std::to_string(point.y());
+        ofs << ')';
+      }
+      ofs << ')';
+    }
+
+    ofs << ')';
+  }
+
+  ofs.close();
 }
 
 bool OccupancyMap::IsEmpty() const {
