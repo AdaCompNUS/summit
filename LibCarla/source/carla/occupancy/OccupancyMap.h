@@ -4,6 +4,7 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyGrid.h"
 #include "carla/sidewalk/Sidewalk.h"
+#include "carla/segments/SegmentMap.h"
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 
@@ -11,6 +12,14 @@ namespace carla {
 namespace sidewalk {
 
 class Sidewalk;
+
+}
+}
+
+namespace carla {
+namespace segments {
+
+class SegmentMap;
 
 }
 }
@@ -37,11 +46,13 @@ public:
   OccupancyMap Difference(const OccupancyMap& occupancy_map) const;
   OccupancyMap Intersection(const OccupancyMap& occupancy_map) const;
   OccupancyMap Buffer(float width) const;
-  
+
   sidewalk::Sidewalk CreateSidewalk(float distance) const;
   std::vector<geom::Triangle2D> GetTriangles() const;
   std::vector<geom::Vector3D> GetMeshTriangles(float height=0) const;
   std::vector<geom::Vector3D> GetWallMeshTriangles(float height) const;
+
+  friend class segments::SegmentMap;
 
 private:
     

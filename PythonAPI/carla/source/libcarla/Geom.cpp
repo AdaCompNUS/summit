@@ -12,6 +12,7 @@
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Triangle2D.h>
+#include <carla/geom/Segment2D.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -81,6 +82,12 @@ namespace geom {
     out << "Triangle2D(v0=" << triangle.v0
         << ", v1=" << triangle.v1
         << ", v2=" << triangle.v2 << ')';
+    return out;
+  }
+  
+  std::ostream &operator<<(std::ostream &out, const Segment2D &segment) {
+    out << "Segment2D(start=" << segment.start
+        << ", end=" << segment.end << ')';
     return out;
   }
 
@@ -239,6 +246,20 @@ void export_geom() {
     .def_readwrite("v0", &cg::Triangle2D::v0)
     .def_readwrite("v1", &cg::Triangle2D::v1)
     .def_readwrite("v2", &cg::Triangle2D::v2)
+    .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<cg::Segment2D>("Segment2D")
+    .def(init<const cg::Vector2D&, const cg::Vector2D&>())
+    .def("__eq__", &cg::Segment2D::operator==)
+    .def("__ne__", &cg::Segment2D::operator!=)
+    .def_readwrite("start", &cg::Segment2D::start)
+    .def_readwrite("end", &cg::Segment2D::end)
+    .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<std::vector<cg::Segment2D>>("vector_of_segment2D")
+    .def(boost::python::vector_indexing_suite<std::vector<cg::Segment2D>>())
     .def(self_ns::str(self_ns::self))
   ;
 }

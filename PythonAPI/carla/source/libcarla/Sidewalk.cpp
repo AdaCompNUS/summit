@@ -40,7 +40,8 @@ void export_sidewalk() {
   ;
   
   class_<std::vector<SidewalkRoutePoint>>("vector_of_sidewalk_route_point")
-       .def(vector_indexing_suite<std::vector<SidewalkRoutePoint>>())
+    .def(vector_indexing_suite<std::vector<SidewalkRoutePoint>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<Sidewalk>("Sidewalk", no_init)

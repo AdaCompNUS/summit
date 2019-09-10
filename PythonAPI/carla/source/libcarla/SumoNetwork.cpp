@@ -140,6 +140,7 @@ void export_sumo_network() {
   ;
   class_<std::vector<Lane>>("vector_of_lane")
     .def(vector_indexing_suite<std::vector<Lane>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<Junction>("Junction", no_init)
@@ -176,10 +177,12 @@ void export_sumo_network() {
   ;
   class_<std::vector<RoutePoint>>("vector_of_routepoint")
     .def(vector_indexing_suite<std::vector<RoutePoint>>())
+    .def(self_ns::str(self_ns::self))
   ;
   
   class_<std::vector<std::vector<RoutePoint>>>("vector_of_vector_of_route_point")
-      .def(vector_indexing_suite<std::vector<std::vector<RoutePoint>>>())
+    .def(vector_indexing_suite<std::vector<std::vector<RoutePoint>>>())
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<SumoNetwork>("SumoNetwork", no_init)
@@ -199,6 +202,7 @@ void export_sumo_network() {
     .def("get_next_route_points", &SumoNetwork::GetNextRoutePoints)
     .def("get_next_route_paths", &SumoNetwork::GetNextRoutePaths)
     .def("create_occupancy_map", &SumoNetwork::CreateOccupancyMap)
+    .def("create_segment_map", &SumoNetwork::CreateSegmentMap)
     .def("get_roadmark_mesh_triangles", &SumoNetwork::GetRoadmarkMeshTriangles)
     .def("query_intersect", &SumoNetwork::QueryIntersect)
   ;

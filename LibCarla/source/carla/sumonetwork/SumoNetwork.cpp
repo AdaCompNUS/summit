@@ -262,7 +262,6 @@ std::vector<std::vector<RoutePoint>> SumoNetwork::GetNextRoutePaths(const RouteP
 }
 
 occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
-  
   occupancy::OccupancyMap occupancy_map;
 
   for (const auto& edge_entry : _edges) {
@@ -278,7 +277,21 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
   }
 
   return occupancy_map;
+}
+  
+segments::SegmentMap SumoNetwork::CreateSegmentMap() const {
+  std::vector<geom::Segment2D> segments;
 
+  for (const auto& edge_entry : _edges) {
+    const Edge& edge = edge_entry.second;
+    for (const Lane& lane : edge.lanes) {
+      for (size_t i = 0; i < lane.shape.size() - 1; i++) {
+        segments.emplace_back(lane.shape[i], lane.shape[i + 1]);
+      }
+    }
+  }
+
+  return segments::SegmentMap(std::move(segments));
 }
 
 std::vector<geom::Vector3D> SumoNetwork::GetRoadmarkMeshTriangles() const {

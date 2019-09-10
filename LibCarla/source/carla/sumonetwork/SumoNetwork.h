@@ -1,6 +1,7 @@
 #include "carla/geom/Vector2D.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/occupancy/OccupancyMap.h"
+#include "carla/segments/SegmentMap.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
@@ -85,6 +86,7 @@ public:
   std::vector<std::vector<RoutePoint>> GetNextRoutePaths(const RoutePoint& route_point, size_t num_points, float interval) const;
 
   occupancy::OccupancyMap CreateOccupancyMap() const;
+  segments::SegmentMap CreateSegmentMap() const;
   std::vector<geom::Vector3D> GetRoadmarkMeshTriangles() const;
   
   std::vector<RoutePoint> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;

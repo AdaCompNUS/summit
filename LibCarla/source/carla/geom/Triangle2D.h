@@ -26,6 +26,5 @@ class Triangle2D {
    
 };
    
-
 }
 }

@@ -4,18 +4,6 @@
 #include <boost/python/numpy.hpp>
 #include <cstdint>
 
-namespace carla {
-namespace occupancy {
-
-  std::ostream &operator<<(std::ostream &out, const OccupancyMap &occupancy_map) {
-    out << "OccupancyMap()";
-    // TODO
-    return out;
-  }
-
-}
-}
-
 void export_occupancy() {
   using namespace boost::python;
   using namespace carla;
@@ -75,6 +63,5 @@ void export_occupancy() {
   
   class_<std::vector<OccupancyMap>>("vector_of_occupancy_map")
       .def(boost::python::vector_indexing_suite<std::vector<OccupancyMap>>())
-      .def(self_ns::str(self_ns::self))
   ;
 }

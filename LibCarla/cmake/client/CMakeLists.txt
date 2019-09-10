@@ -168,6 +168,12 @@ file(GLOB libcarla_carla_gamma_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_gamma_sources}")
 install(FILES ${libcarla_carla_gamma_sources} DESTINATION include/carla/gamma)
 
+file(GLOB libcarla_carla_segments_sources
+    "${libcarla_source_path}/carla/segments/*.cpp"
+    "${libcarla_source_path}/carla/segments/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_segments_sources}")
+install(FILES ${libcarla_carla_segments_sources} DESTINATION include/carla/segments)
+
 file(GLOB libcarla_carla_sensor_sources
     "${libcarla_source_path}/carla/sensor/*.cpp"
     "${libcarla_source_path}/carla/sensor/*.h")
