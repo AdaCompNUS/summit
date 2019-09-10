@@ -23,8 +23,7 @@ void SegmentMap::Build() {
   for (size_t i = 0; i < _multi_linestring.size(); i++) {
     const b_linestring_t& linestring = _multi_linestring[i];
     for (size_t j = 0; j < linestring.size() - 1; j++) {
-      weights.emplace_back(boost::geometry::distance(
-            linestring[i], linestring[i + 1]));
+      weights.emplace_back(boost::geometry::distance(linestring[j], linestring[j + 1]));
       _index_to_segment_map.emplace_back(std::make_pair(i, j));
     }
   }
@@ -48,7 +47,7 @@ SegmentMap SegmentMap::Difference(const occupancy::OccupancyMap& occupancy_map) 
 
 SegmentMap SegmentMap::Intersection(const occupancy::OccupancyMap& occupancy_map) const {
   SegmentMap result;
-  boost::geometry::difference(_multi_linestring, occupancy_map._multi_polygon, result._multi_linestring);
+  boost::geometry::intersection(_multi_linestring, occupancy_map._multi_polygon, result._multi_linestring);
   result.Build();
   return result;
 }

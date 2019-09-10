@@ -12,27 +12,35 @@ import carla
 
 import svgwrite
 
+def get_spawn_occupancy_map(center_pos, spawn_size_min, spawn_size_max):
+    return carla.OccupancyMap(
+            carla.Vector2D(center_pos.x - spawn_size_max, center_pos.y - spawn_size_max),
+            carla.Vector2D(center_pos.x + spawn_size_max, center_pos.y + spawn_size_max)) \
+        .difference(carla.OccupancyMap(
+            carla.Vector2D(center_pos.x - spawn_size_min, center_pos.y - spawn_size_min),
+            carla.Vector2D(center_pos.x + spawn_size_min, center_pos.y + spawn_size_min)))
+
 if __name__ == '__main__':
 
-    with open('../../Data/map.net.xml', 'r') as file:
-        data = file.read()
-
     print('Loading map...')
-    network = carla.SumoNetwork.load(data)
+    network = carla.SumoNetwork.load('../../Data/meskel_square.net.xml')
     network_occupancy_map = network.create_occupancy_map()
     sidewalk = network_occupancy_map.create_sidewalk(1.5)
     sidewalk_occupancy_map = sidewalk.create_occupancy_map(3)
     landmarks = carla.Landmark.load(
-            '../../Data/map.osm',
+            '../../Data/meskel_square.osm',
             network.offset)
     landmarks = [l.difference(network_occupancy_map).difference(sidewalk_occupancy_map) for l in landmarks]
     landmarks = [l for l in landmarks if not l.is_empty]
-    
+
+    segment_map = network.create_segment_map()
+    segment_map = segment_map.intersection(get_spawn_occupancy_map(carla.Vector2D(450, 400), 50, 150))
+
     dwg = svgwrite.Drawing('map.svg', profile='full')
     dwg.add(dwg.rect(size=('100%', '100%'), fill='white'))
 
     def to_svg(coord):
-        return [coord.y - network.bounds_min.y, network.bounds_max.x - coord.x]
+        return [coord.x, coord.y]
 
     def add_arrowed_line(start, end, **args):
         direction = (end - start).make_unit_vector()
@@ -101,8 +109,8 @@ if __name__ == '__main__':
                     polygon[i + 1], 
                     stroke=svgwrite.rgb(231,76,60), 
                     stroke_width=1.0)
-
     '''
+
     # Draw landmarks.
     '''
     for landmark in landmarks:
@@ -114,4 +122,11 @@ if __name__ == '__main__':
                     stroke_width=0.25)
     '''
         
+    # Sample segments.
+    for _ in range(1000):
+        add_circle(segment_map.rand_point(), 1.0, 
+                fill='red',
+                stroke='black',
+                stroke_width=0.5)
+
     dwg.save()
