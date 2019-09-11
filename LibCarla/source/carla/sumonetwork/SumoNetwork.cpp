@@ -40,7 +40,8 @@ static geom::Vector2D parse_coordinates(const std::string& s) {
       boost::is_any_of(","),
       boost::token_compress_on);
 
-  return geom::Vector2D(std::stof(split_list[0]), std::stof(split_list[1]));
+  // Swap x, y for SUMO -> CARLA.
+  return geom::Vector2D(std::stof(split_list[1]), std::stof(split_list[0]));
 }
 
 static std::pair<geom::Vector2D, geom::Vector2D> parse_bounds(const std::string& s) {
@@ -51,9 +52,10 @@ static std::pair<geom::Vector2D, geom::Vector2D> parse_bounds(const std::string&
       boost::is_any_of(","),
       boost::token_compress_on);
 
+  // Swap x, y for SUMO -> CARLA.
   return std::make_pair(
-      geom::Vector2D(std::stof(split_list[0]), std::stof(split_list[1])),
-      geom::Vector2D(std::stof(split_list[2]), std::stof(split_list[3])));
+      geom::Vector2D(std::stof(split_list[1]), std::stof(split_list[0])),
+      geom::Vector2D(std::stof(split_list[3]), std::stof(split_list[2])));
 }
 
 static std::vector<std::string> parse_string_list(const std::string& s) {

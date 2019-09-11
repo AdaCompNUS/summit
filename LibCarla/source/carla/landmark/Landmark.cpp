@@ -31,8 +31,8 @@ std::vector<occupancy::OccupancyMap> Landmark::Load(const std::string& file, con
         for (const osmium::NodeRef it_node : way.nodes()) {
           osmium::geom::Coordinates c = osmium::geom::lonlat_to_mercator(it_node.location());
           outline.emplace_back(
-              static_cast<float>(c.y) + offset.y,  // Swap from Web Mercator -> CARLA.
-              static_cast<float>(c.x) + offset.x); // Swap from Web Mercator -> CARLA.
+              static_cast<float>(c.y) + offset.x, 
+              static_cast<float>(c.x) + offset.y);
         }
         landmarks.emplace_back(std::move(outline));
       }

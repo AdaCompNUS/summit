@@ -10,17 +10,15 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
-data = 'meskel_square'
+data = 'highway'
 
 if __name__ == '__main__':
 
     print('Loading SUMO network...')
     network = carla.SumoNetwork.load('../../Data/' + data + '.net.xml')
     
-    print('Testing segments...')
+    print('Testing network segments...')
     segment_map = network.create_segment_map()
-    for _ in range(100):
-        print(segment_map.rand_point())
 
     print('Calculating SUMO network occupancy map...')
     network_occupancy_map = network.create_occupancy_map()
