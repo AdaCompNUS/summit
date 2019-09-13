@@ -86,9 +86,15 @@ SumoNetwork SumoNetwork::Load(const std::string& file) {
  
   pugi::xml_node location_node = net_node.child("location");
   sumo_network._offset = parse_coordinates(location_node.attribute("netOffset").value());
+
   std::pair<geom::Vector2D, geom::Vector2D> bounds = parse_bounds(location_node.attribute("convBoundary").value());
   sumo_network._bounds_min = bounds.first;
   sumo_network._bounds_max = bounds.second;
+  
+  // (x, y) -> (lon, lat)
+  std::pair<geom::Vector2D, geom::Vector2D> originalBoundsSpherical = parse_bounds(location_node.attribute("origBoundary").value());
+  sumo_network._original_bounds_min_spherical = originalBoundsSpherical.first;
+  sumo_network._original_bounds_max_spherical = originalBoundsSpherical.second;
 
   for (pugi::xml_node edge_node : net_node.children("edge")) {
     Edge edge;

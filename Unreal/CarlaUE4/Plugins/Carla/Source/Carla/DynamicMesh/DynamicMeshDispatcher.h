@@ -12,6 +12,8 @@ public:
 
   uint32 SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material);
 
+  uint32 SpawnDynamicTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8_t>& Data);
+
   bool DestroyDynamicMesh(uint32 Id);
 
 private:

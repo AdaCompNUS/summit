@@ -249,7 +249,20 @@ void FCarlaServer::FPimpl::BindActions()
     REQUIRE_CARLA_EPISODE();
     return Episode->DestroyDynamicMesh(id);
   };
-
+  
+  BIND_SYNC(spawn_dynamic_tile_mesh) << [this](cg::Vector3D bounds_min, cg::Vector3D bounds_max, const std::vector<uint8_t>& data) -> R<uint32_t>
+  {
+    REQUIRE_CARLA_EPISODE();
+    TArray<uint8_t> Data;
+    Data.SetNum(data.size(), true);
+    for (size_t i = 0; i < data.size(); i++) {
+      Data[i] = data[i];
+    }
+    return Episode->SpawnDynamicTileMesh(
+        FVector2D(bounds_min.x * 100.0f, bounds_min.y * 100.0f), 
+        FVector2D(bounds_max.x * 100.0f, bounds_max.y * 100.0f), 
+        Data);
+  };
 
   BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>
   {

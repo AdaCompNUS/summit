@@ -107,6 +107,10 @@ namespace detail {
     uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
       return _client.SpawnDynamicMesh(triangles, material);
     }
+    
+    uint32_t SpawnDynamicTileMesh(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, const std::vector<uint8_t>& data) {
+      return _client.SpawnDynamicTileMesh(bounds_min, bounds_max, data);
+    }
 
     bool DestroyDynamicMesh(uint32_t id) {
       return _client.DestroyDynamicMesh(id);

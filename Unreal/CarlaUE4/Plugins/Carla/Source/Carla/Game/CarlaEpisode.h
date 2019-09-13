@@ -211,9 +211,11 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  uint32_t SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material);
+  uint32 SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material);
   
-  bool DestroyDynamicMesh(uint32_t id);
+  uint32 SpawnDynamicTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& Data);
+  
+  bool DestroyDynamicMesh(uint32 id);
 
   /// Attach @a Child to @a Parent.
   ///

@@ -76,6 +76,8 @@ public:
   geom::Vector2D Offset() const { return _offset; }
   geom::Vector2D BoundsMin() const { return _bounds_min; }
   geom::Vector2D BoundsMax() const { return _bounds_max; }
+  geom::Vector2D OriginalBoundsMinSpherical() const { return _original_bounds_min_spherical; }
+  geom::Vector2D OriginalBoundsMaxSpherical() const { return _original_bounds_max_spherical; }
   const std::unordered_map<std::string, Edge>& Edges() const { return _edges; }
   const std::unordered_map<std::string, Junction>& Junctions() const { return _junctions; }
   const std::vector<Connection>& Connections() const { return _connections; }
@@ -102,6 +104,8 @@ private:
   geom::Vector2D _offset;
   geom::Vector2D _bounds_min;
   geom::Vector2D _bounds_max;
+  geom::Vector2D _original_bounds_min_spherical;
+  geom::Vector2D _original_bounds_max_spherical;
 
   std::unordered_map<std::string, Edge> _edges;
   std::unordered_map<std::string, Junction> _junctions;

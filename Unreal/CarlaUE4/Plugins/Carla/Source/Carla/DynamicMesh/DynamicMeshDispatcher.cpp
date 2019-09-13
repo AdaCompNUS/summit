@@ -15,6 +15,20 @@ uint32 ADynamicMeshDispatcher::SpawnDynamicMesh(const TArray<FVector>& Triangles
   return SpawnId - 1;
 }
   
+uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& Data) {
+  if (GetWorld() == nullptr) {
+    UE_LOG(LogCarla, Display, TEXT("NULL WORLD"));
+    return -1;
+  }
+
+  ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
+  DynamicMeshActor->SetTileMesh(BoundsMin, BoundsMax, Data);
+  ActorMap.Add(SpawnId++, DynamicMeshActor);
+  DynamicMeshActor->OnDestroyed.AddDynamic(this, &ADynamicMeshDispatcher::OnActorDestroyed);
+
+  return SpawnId - 1;
+}
+  
 bool ADynamicMeshDispatcher::DestroyDynamicMesh(uint32 Id) {
   if (!ActorMap.Contains(Id)) {
     return false;
