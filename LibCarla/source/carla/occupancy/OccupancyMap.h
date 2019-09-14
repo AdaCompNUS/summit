@@ -30,9 +30,19 @@ namespace occupancy {
 class OccupancyMap {
 public:
 
+  // Empty constructor.
   OccupancyMap();
+  
+  // Filled buffered line.
   OccupancyMap(const std::vector<geom::Vector2D>& line, float width);
+  
+  // Buffered outline.
+  OccupancyMap(const std::vector<geom::Vector2D>& line, float width, float thickness);
+
+  // Polygon.
   OccupancyMap(const std::vector<geom::Vector2D>& polygon);
+
+  // Rectangle.
   OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max);
 
   static OccupancyMap Load(const std::string& file);

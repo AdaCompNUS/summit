@@ -287,6 +287,24 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
   return occupancy_map;
 }
   
+occupancy::OccupancyMap SumoNetwork::CreateRoadmarkOccupancyMap() const {
+  occupancy::OccupancyMap roadmark_occupancy_map;
+  for (const auto& edge_entry : _edges) {
+    const Edge& edge = edge_entry.second;
+    for (const Lane& lane : edge.lanes) {
+      roadmark_occupancy_map = roadmark_occupancy_map.Union(occupancy::OccupancyMap(lane.shape, 4.00f, 0.10f));
+    }
+  }
+  
+  occupancy::OccupancyMap junction_occupancy_map;
+  for (const auto& junction_entry : _junctions) {
+    const Junction& junction = junction_entry.second;
+    junction_occupancy_map = junction_occupancy_map.Union(occupancy::OccupancyMap(junction.shape));
+  }
+
+  return roadmark_occupancy_map.Difference(junction_occupancy_map);
+}
+
 segments::SegmentMap SumoNetwork::CreateSegmentMap() const {
   std::vector<geom::Segment2D> segments;
 
@@ -300,10 +318,6 @@ segments::SegmentMap SumoNetwork::CreateSegmentMap() const {
   }
 
   return segments::SegmentMap(std::move(segments));
-}
-
-std::vector<geom::Vector3D> SumoNetwork::GetRoadmarkMeshTriangles() const {
-  return {};
 }
 
 std::vector<RoutePoint> SumoNetwork::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {

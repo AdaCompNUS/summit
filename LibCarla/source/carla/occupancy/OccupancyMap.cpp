@@ -28,14 +28,50 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width)
 
   // Calculate buffer.
   boost::geometry::strategy::buffer::distance_symmetric<float> distance_strategy(width / 2);
+  boost::geometry::strategy::buffer::side_straight side_strategy;
   boost::geometry::strategy::buffer::join_round join_strategy(18);
   boost::geometry::strategy::buffer::end_round end_strategy(18);
   boost::geometry::strategy::buffer::point_circle circle_strategy(18);
-  boost::geometry::strategy::buffer::side_straight side_strategy;
   boost::geometry::buffer(linestring, _multi_polygon,
       distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
-  boost::geometry::buffer(linestring, _multi_polygon,
-      distance_strategy, side_strategy, join_strategy, end_strategy, circle_strategy);
+}
+
+OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width, float thickness) {
+  // Convert into b_linestring_t.
+  b_linestring_t linestring;
+  for (const geom::Vector2D& vertex : line) {
+    boost::geometry::append(linestring, b_point_t(vertex.x, vertex.y));
+  }
+
+  // Correct geometry.
+  boost::geometry::correct(linestring);
+
+  // Calculate outline.
+  b_multi_polygon_t outline;
+  boost::geometry::buffer(linestring, outline,
+      boost::geometry::strategy::buffer::distance_symmetric<float>(width / 2),
+      boost::geometry::strategy::buffer::side_straight(),
+      boost::geometry::strategy::buffer::join_round(18),
+      boost::geometry::strategy::buffer::end_flat(),
+      boost::geometry::strategy::buffer::point_circle(18));
+
+  b_multi_polygon_t outline_outer;
+  boost::geometry::buffer(outline[0].outer(), outline_outer,
+      boost::geometry::strategy::buffer::distance_symmetric<float>(thickness / 2),
+      boost::geometry::strategy::buffer::side_straight(),
+      boost::geometry::strategy::buffer::join_round(18),
+      boost::geometry::strategy::buffer::end_flat(),
+      boost::geometry::strategy::buffer::point_circle(18));
+  
+  b_multi_polygon_t outline_inner;
+  boost::geometry::buffer(outline[0].outer(), outline_inner,
+      boost::geometry::strategy::buffer::distance_symmetric<float>(-thickness / 2),
+      boost::geometry::strategy::buffer::side_straight(),
+      boost::geometry::strategy::buffer::join_round(18),
+      boost::geometry::strategy::buffer::end_flat(),
+      boost::geometry::strategy::buffer::point_circle(18));
+  
+  boost::geometry::difference(outline_outer, outline_inner, _multi_polygon);
 }
   
 OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& polygon) {

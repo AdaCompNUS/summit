@@ -88,8 +88,8 @@ public:
   std::vector<std::vector<RoutePoint>> GetNextRoutePaths(const RoutePoint& route_point, size_t num_points, float interval) const;
 
   occupancy::OccupancyMap CreateOccupancyMap() const;
+  occupancy::OccupancyMap CreateRoadmarkOccupancyMap() const;
   segments::SegmentMap CreateSegmentMap() const;
-  std::vector<geom::Vector3D> GetRoadmarkMeshTriangles() const;
   
   std::vector<RoutePoint> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;
 
