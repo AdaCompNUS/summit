@@ -5,7 +5,7 @@ import requests
 
 TILE_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{0}/{1}/{2}' # z/y/x
 CHECK_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap/{0}/{1}/{2}'
-ZOOM_MIN = 0
+ZOOM_MIN = 19
 ZOOM_MAX = 19
 
 # map_location = 'map'
@@ -18,7 +18,16 @@ ZOOM_MAX = 19
 #(BOUNDS_MIN, BOUNDS_MAX) = ((51.5621800, -1.7729100), (51.5633900, -1.7697300))
 
 #map_location = 'highway'
-(BOUNDS_MIN, BOUNDS_MAX) = ((1.2983800, 103.7777000), (1.3003700, 103.7814900))
+#(BOUNDS_MIN, BOUNDS_MAX) = ((1.2983800, 103.7777000), (1.3003700, 103.7814900))
+
+#map_location = 'chandni_chowk'
+#(BOUNDS_MIN, BOUNDS_MAX) = ((28.653888, 77.223296), (28.660295, 77.236850))
+
+#map_location = 'shi_men_er_lu'
+#(BOUNDS_MIN, BOUNDS_MAX) = ((31.229828, 121.438702), (31.242810,121.464944))
+
+#map_location = 'beijing'
+(BOUNDS_MIN, BOUNDS_MAX) = ((39.8992818, 116.4099687), (39.9476116, 116.4438916))
     
 # https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 def deg2num(zoom, lat_deg, lon_deg):

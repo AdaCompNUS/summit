@@ -10,7 +10,7 @@ sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
-data = 'highway'
+data = 'beijing'
 
 if __name__ == '__main__':
 

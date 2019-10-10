@@ -22,5 +22,6 @@ void export_segments() {
     .def("difference", &SegmentMap::Difference)
     .def("intersection", &SegmentMap::Intersection)
     .def("rand_point", &SegmentMap::RandPoint)
+    .def("get_segments", &SegmentMap::GetSegments)
   ;
 }

@@ -59,6 +59,7 @@ public:
   bool Contains(const geom::Vector2D& point) const;
 
   sidewalk::Sidewalk CreateSidewalk(float distance) const;
+  std::vector<std::vector<std::vector<geom::Vector2D>>> GetPolygons() const;
   std::vector<geom::Triangle2D> GetTriangles() const;
   std::vector<geom::Vector3D> GetMeshTriangles(float height=0) const;
   std::vector<geom::Vector3D> GetWallMeshTriangles(float height) const;

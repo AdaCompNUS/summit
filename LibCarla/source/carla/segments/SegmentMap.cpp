@@ -70,6 +70,16 @@ geom::Vector2D SegmentMap::RandPoint() {
 
   return start + std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) * (end - start);
 }
+  
+std::vector<geom::Segment2D> SegmentMap::GetSegments() const {
+  std::vector<geom::Segment2D> segments; 
+  for (const b_linestring_t& linestring : _multi_linestring) {
+    segments.emplace_back(
+        geom::Vector2D(linestring[0].x(), linestring[0].y()),
+        geom::Vector2D(linestring[1].x(), linestring[1].y()));
+  }
+  return segments;
+}
 
 }
 }

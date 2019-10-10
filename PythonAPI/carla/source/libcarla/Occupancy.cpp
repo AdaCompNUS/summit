@@ -57,6 +57,7 @@ void export_occupancy() {
     .def("buffer", &OccupancyMap::Buffer)
     .def("contains", &OccupancyMap::Contains)
     .def("create_sidewalk", &OccupancyMap::CreateSidewalk)
+    .def("get_polygons", &OccupancyMap::GetPolygons)
     .def("get_triangles", &OccupancyMap::GetTriangles)
     .def("get_mesh_triangles", &OccupancyMap::GetMeshTriangles, (arg("height")=0.0f))
     .def("get_wall_mesh_triangles", &OccupancyMap::GetWallMeshTriangles)

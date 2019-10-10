@@ -305,7 +305,30 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
   
   return sidewalk::Sidewalk(std::move(polygons));
 }
-  
+ 
+std::vector<std::vector<std::vector<geom::Vector2D>>> OccupancyMap::GetPolygons() const {
+  std::vector<std::vector<std::vector<geom::Vector2D>>> vertices;
+
+  for (const b_polygon_t polygon : _multi_polygon) {  
+    vertices.emplace_back(); // New polygon.
+
+    vertices.back().emplace_back(); // New ring.
+    for (const b_point_t vertex : polygon.outer()) {
+      vertices.back().back().emplace_back(vertex.x(), vertex.y()); // New point.
+    }
+
+    for (const b_ring_t ring : polygon.inners()) {
+      vertices.back().emplace_back(); // New ring.
+      for (const b_point_t vertex : ring) {
+        vertices.back().back().emplace_back(vertex.x(), vertex.y()); // New point.
+      }
+    }
+  }
+
+  return vertices;
+}
+
+
 std::vector<geom::Triangle2D> OccupancyMap::GetTriangles() const {
   std::vector<geom::Triangle2D> triangles;
 

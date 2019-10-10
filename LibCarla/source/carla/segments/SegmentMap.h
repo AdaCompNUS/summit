@@ -33,6 +33,8 @@ public:
 
   geom::Vector2D RandPoint();
 
+  std::vector<geom::Segment2D> GetSegments() const;
+
   friend class occupancy::OccupancyMap;
 
 private:
