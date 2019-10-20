@@ -6,28 +6,36 @@ import requests
 TILE_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{0}/{1}/{2}' # z/y/x
 CHECK_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap/{0}/{1}/{2}'
 ZOOM_MIN = 18
-ZOOM_MAX = 18
+ZOOM_MAX = 19
 
-# map_location = 'map'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((1.2894000, 103.7669000), (1.3088000, 103.7853000))
 
-#map_location = 'meskel_square'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((9.00802, 38.76009), (9.01391, 38.76603))
+map_locations = ['map', 'meskel_square', 'magic', 'highway', 'chandni_chowk', 'shi_men_er_lu', 'beijing']
+# map_locations = ['shi_men_er_lu', 'beijing']
 
-#map_location = 'magic'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((51.5621800, -1.7729100), (51.5633900, -1.7697300))
 
-#map_location = 'highway'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((1.2983800, 103.7777000), (1.3003700, 103.7814900))
+def set_map_bounds(map_location):
+    if map_location is 'map':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((1.2894000, 103.7669000), (1.3088000, 103.7853000))
 
-#map_location = 'chandni_chowk'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((28.653888, 77.223296), (28.660295, 77.236850))
+    if map_location is 'meskel_square':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((9.00802, 38.76009), (9.01391, 38.76603))
 
-#map_location = 'shi_men_er_lu'
-#(BOUNDS_MIN, BOUNDS_MAX) = ((31.229828, 121.438702), (31.242810,121.464944))
+    if map_location is 'magic':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((51.5621800, -1.7729100), (51.5633900, -1.7697300))
 
-#map_location = 'beijing'
-(BOUNDS_MIN, BOUNDS_MAX) = ((39.897975, 116.270888), (39.990929, 116.610580))
+    if map_location is 'highway':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((1.2983800, 103.7777000), (1.3003700, 103.7814900))
+
+    if map_location is 'chandni_chowk':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((28.653888, 77.223296), (28.660295, 77.236850))
+
+    if map_location is 'shi_men_er_lu':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((31.229828, 121.438702), (31.242810,121.464944))
+
+    if map_location is 'beijing':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((39.8992818, 116.4099687), (39.9476116, 116.4438916))
+
+    return BOUNDS_MIN, BOUNDS_MAX
     
 # https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 def deg2num(zoom, lat_deg, lon_deg):
@@ -79,6 +87,15 @@ def get_tiles(zoom, (min_lat, min_lon), (max_lat, max_lon), output_dir):
                 with open('{}/{}/{}_{}.jpeg'.format(output_dir, zoom, row, column), 'w+') as f:
                     f.write(tile)
 
+
 if __name__ == '__main__':
-    for i in range(ZOOM_MIN, ZOOM_MAX + 1):
-        get_tiles(i, BOUNDS_MIN, BOUNDS_MAX, '/home/leeyiyuan/carla/Data/imagery')
+    cur_path = os.path.dirname(os.path.abspath(__file__))
+    imagery_path = os.path.join(cur_path, "../../Data/imagery")
+    print("Data folder {}".format(imagery_path))
+
+    for map_location in map_locations:
+        BOUNDS_MIN, BOUNDS_MAX = set_map_bounds(map_location)
+        print("Parsing map for {} from {} to {}".format(map_location, BOUNDS_MIN, BOUNDS_MAX))
+
+        for i in range(ZOOM_MIN, ZOOM_MAX + 1):
+            get_tiles(i, BOUNDS_MIN, BOUNDS_MAX, imagery_path)
