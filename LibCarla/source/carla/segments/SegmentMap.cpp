@@ -3,11 +3,13 @@
 namespace carla {
 namespace segments {
 
-SegmentMap::SegmentMap() {
+SegmentMap::SegmentMap() 
+    : _rng(std::random_device()()) {
   Build();
 }
 
-SegmentMap::SegmentMap(const std::vector<geom::Segment2D>& segments) { 
+SegmentMap::SegmentMap(const std::vector<geom::Segment2D>& segments)
+    : _rng(std::random_device()()) { 
   _multi_linestring.resize(segments.size());
   for (size_t i = 0; i < segments.size(); i++) {
     boost::geometry::append(_multi_linestring[i], b_point_t(segments[i].start.x, segments[i].start.y));
@@ -52,15 +54,12 @@ SegmentMap SegmentMap::Intersection(const occupancy::OccupancyMap& occupancy_map
   return result;
 }
 
-geom::Vector2D SegmentMap::RandPoint() {
-  static std::default_random_engine rng;
-  static bool rng_initialized = false;
-  if (!rng_initialized) {
-    rng = std::default_random_engine(std::random_device()());
-    rng_initialized = true;
-  }
+void SegmentMap::SeedRand(uint32_t seed) {
+  _rng.seed(seed);
+}
 
-  const std::pair<size_t, size_t>& segment = _index_to_segment_map[_index_distribution(rng)];
+geom::Vector2D SegmentMap::RandPoint() {
+  const std::pair<size_t, size_t>& segment = _index_to_segment_map[_index_distribution(_rng)];
   geom::Vector2D start(
       _multi_linestring[segment.first][segment.second].x(), 
       _multi_linestring[segment.first][segment.second].y());
@@ -68,7 +67,7 @@ geom::Vector2D SegmentMap::RandPoint() {
       _multi_linestring[segment.first][segment.second + 1].x(),
       _multi_linestring[segment.first][segment.second + 1].y());
 
-  return start + std::uniform_real_distribution<float>(0.0f, 1.0f)(rng) * (end - start);
+  return start + std::uniform_real_distribution<float>(0.0f, 1.0f)(_rng) * (end - start);
 }
   
 std::vector<geom::Segment2D> SegmentMap::GetSegments() const {

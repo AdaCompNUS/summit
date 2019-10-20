@@ -31,6 +31,7 @@ public:
   SegmentMap Difference(const occupancy::OccupancyMap& occupancy_map) const;
   SegmentMap Intersection(const occupancy::OccupancyMap& occupancy_map) const;
 
+  void SeedRand(uint32_t seed);
   geom::Vector2D RandPoint();
 
   std::vector<geom::Segment2D> GetSegments() const;
@@ -47,6 +48,8 @@ private:
 
   std::vector<std::pair<size_t, size_t>> _index_to_segment_map;
   std::discrete_distribution<size_t> _index_distribution;
+
+  std::default_random_engine _rng;
 
   void Build();
 };
