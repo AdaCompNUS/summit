@@ -67,14 +67,14 @@ void ADynamicMeshActor::SetTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, co
   // Create mesh.
   TArray<FVector> Triangles;
   // Bottom triangle.
-  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, -50);
-  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, -50);
-  Triangles.Emplace(BoundsMax.X, BoundsMin.Y, -50);
+  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, 0);
+  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, 0);
+  Triangles.Emplace(BoundsMax.X, BoundsMin.Y, 0);
 
   // Top triangle.
-  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, -50);
-  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, -50);
-  Triangles.Emplace(BoundsMin.X, BoundsMax.Y, -50);
+  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, 0);
+  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, 0);
+  Triangles.Emplace(BoundsMin.X, BoundsMax.Y, 0);
 
   TArray<int> VertexIndices;
   VertexIndices.SetNum(Triangles.Num(), true);
