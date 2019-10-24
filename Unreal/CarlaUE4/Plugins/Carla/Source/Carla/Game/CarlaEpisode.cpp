@@ -140,7 +140,7 @@ uint32 UCarlaEpisode::SpawnDynamicMesh(const TArray<FVector>& Triangles, const F
   return DynamicMeshDispatcher->SpawnDynamicMesh(Triangles, Material);
 }
   
-uint32 UCarlaEpisode::SpawnDynamicTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& Data) { 
+uint32 UCarlaEpisode::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data) { 
   return DynamicMeshDispatcher->SpawnDynamicTileMesh(BoundsMin, BoundsMax, Data);
 }
   

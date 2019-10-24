@@ -155,12 +155,12 @@ void export_world() {
           return self.SpawnDynamicMesh(triangles, material);
         })
     .def("spawn_dynamic_tile_mesh", 
-        +[](cc::World& self, const carla::geom::Vector2D& bounds_min, const carla::geom::Vector2D& bounds_max, 
+        +[](cc::World& self, const carla::geom::Vector3D& bounds_min, const carla::geom::Vector3D& bounds_max, 
             const std::vector<uint8_t>& data) {
           return self.SpawnDynamicTileMesh(bounds_min, bounds_max, data);
         })
     .def("spawn_dynamic_tile_mesh", 
-        +[](cc::World& self, const carla::geom::Vector2D& bounds_min, const carla::geom::Vector2D& bounds_max, 
+        +[](cc::World& self, const carla::geom::Vector3D& bounds_min, const carla::geom::Vector3D& bounds_max, 
             const list& data_py) {
           std::vector<uint8_t> data{
             stl_input_iterator<uint8_t>(data_py),

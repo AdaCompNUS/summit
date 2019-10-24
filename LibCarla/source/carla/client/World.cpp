@@ -45,7 +45,7 @@ namespace client {
     return _episode.Lock()->SpawnDynamicMesh(triangles, material);
   }
   
-  uint32_t World::SpawnDynamicTileMesh(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, const std::vector<uint8_t>& data) {
+  uint32_t World::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data) {
     return _episode.Lock()->SpawnDynamicTileMesh(bounds_min, bounds_max, data);
   }
     

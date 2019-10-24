@@ -259,8 +259,8 @@ void FCarlaServer::FPimpl::BindActions()
       Data[i] = data[i];
     }
     return Episode->SpawnDynamicTileMesh(
-        FVector2D(bounds_min.x * 100.0f, bounds_min.y * 100.0f), 
-        FVector2D(bounds_max.x * 100.0f, bounds_max.y * 100.0f), 
+        FVector(bounds_min.x * 100.0f, bounds_min.y * 100.0f, bounds_min.z * 100.0f), 
+        FVector(bounds_max.x * 100.0f, bounds_max.y * 100.0f, bounds_max.z * 100.0f), 
         Data);
   };
 

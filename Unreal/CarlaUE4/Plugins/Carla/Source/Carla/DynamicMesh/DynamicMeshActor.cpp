@@ -63,18 +63,18 @@ void ADynamicMeshActor::SetTriangles(const TArray<FVector>& Triangles) {
  * https://github.com/EpicGames/UnrealEngine/blob/ab237f46dc0eee40263acbacbe938312eb0dffbb/Engine/Source/Runtime/UMG/Private/Blueprint/AsyncTaskDownloadImage.cpp#L61
  * https://wiki.unrealengine.com/Procedural_Materials
  */
-void ADynamicMeshActor::SetTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& RawData) {
+void ADynamicMeshActor::SetTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& RawData) {
   // Create mesh.
   TArray<FVector> Triangles;
   // Bottom triangle.
-  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, 0);
-  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, 0);
-  Triangles.Emplace(BoundsMax.X, BoundsMin.Y, 0);
+  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, BoundsMin.Z);
+  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, BoundsMax.Z);
+  Triangles.Emplace(BoundsMax.X, BoundsMin.Y, (BoundsMin.Z + BoundsMax.Z) / 2);
 
   // Top triangle.
-  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, 0);
-  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, 0);
-  Triangles.Emplace(BoundsMin.X, BoundsMax.Y, 0);
+  Triangles.Emplace(BoundsMax.X, BoundsMax.Y, BoundsMax.Z);
+  Triangles.Emplace(BoundsMin.X, BoundsMin.Y, BoundsMin.Z);
+  Triangles.Emplace(BoundsMin.X, BoundsMax.Y, (BoundsMin.Z + BoundsMax.Z) / 2);
 
   TArray<int> VertexIndices;
   VertexIndices.SetNum(Triangles.Num(), true);

@@ -148,7 +148,7 @@ namespace detail {
     return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_mesh", triangles, material);
   }
     
-  uint32_t Client::SpawnDynamicTileMesh(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max, const std::vector<uint8_t>& data) {
+  uint32_t Client::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data) {
     return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_tile_mesh", bounds_min, bounds_max, data);
   }
     

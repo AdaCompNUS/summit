@@ -15,7 +15,7 @@ uint32 ADynamicMeshDispatcher::SpawnDynamicMesh(const TArray<FVector>& Triangles
   return SpawnId - 1;
 }
   
-uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& Data) {
+uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data) {
   if (GetWorld() == nullptr) {
     UE_LOG(LogCarla, Display, TEXT("NULL WORLD"));
     return -1;

@@ -19,7 +19,7 @@ public:
 
   void SetTriangles(const TArray<FVector>& Triangles);
 
-  void SetTileMesh(FVector2D BoundsMin, FVector2D BoundsMax, const TArray<uint8>& RawData);
+  void SetTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& RawData);
 
 private:
 
