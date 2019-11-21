@@ -74,6 +74,12 @@ file(GLOB libcarla_carla_geom_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_geom_sources}")
 install(FILES ${libcarla_carla_geom_sources} DESTINATION include/carla/geom)
 
+file(GLOB libcarla_carla_aabb_sources
+    "${libcarla_source_path}/carla/aabb/*.cpp"
+    "${libcarla_source_path}/carla/aabb/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_aabb_sources}")
+install(FILES ${libcarla_carla_aabb_sources} DESTINATION include/carla/aabb)
+
 file(GLOB libcarla_carla_image_sources
     "${libcarla_source_path}/carla/image/*.cpp"
     "${libcarla_source_path}/carla/image/*.h")

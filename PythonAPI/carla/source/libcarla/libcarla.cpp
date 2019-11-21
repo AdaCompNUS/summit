@@ -193,6 +193,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Gamma.cpp"
 #include "Landmark.cpp"
 #include "Segments.cpp"
+#include "AABB.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
@@ -221,6 +222,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_gamma();
   export_sidewalk();
   export_segments();
+  export_aabb();
   export_blueprint();
   export_actor();
   export_sensor();

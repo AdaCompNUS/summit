@@ -13,6 +13,7 @@
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Triangle2D.h>
 #include <carla/geom/Segment2D.h>
+#include <carla/geom/AABB2D.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -88,6 +89,12 @@ namespace geom {
   std::ostream &operator<<(std::ostream &out, const Segment2D &segment) {
     out << "Segment2D(start=" << segment.start
         << ", end=" << segment.end << ')';
+    return out;
+  }
+  
+  std::ostream &operator<<(std::ostream &out, const AABB2D &aabb) {
+    out << "AABB2D(bounds_min=" << aabb.bounds_min
+        << ", bounds_max=" << aabb.bounds_max << ')';
     return out;
   }
 
@@ -265,6 +272,21 @@ void export_geom() {
   
   class_<std::vector<cg::Segment2D>>("vector_of_segment2D")
     .def(boost::python::vector_indexing_suite<std::vector<cg::Segment2D>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+  
+  class_<cg::AABB2D>("AABB2D")
+    .def(init<const cg::Vector2D&, const cg::Vector2D&>())
+    .def("__eq__", &cg::AABB2D::operator==)
+    .def("__ne__", &cg::AABB2D::operator!=)
+    .def_readwrite("bounds_min", &cg::AABB2D::bounds_min)
+    .def_readwrite("bounds_max", &cg::AABB2D::bounds_max)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+
+  class_<std::vector<cg::AABB2D>>("vector_of_aabb2D")
+    .def(boost::python::vector_indexing_suite<std::vector<cg::AABB2D>>())
     .def(self_ns::str(self_ns::self))
   ;
 }
