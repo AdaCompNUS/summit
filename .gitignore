@@ -1,10 +1,11 @@
 Build
+Data
 Dist
 Doxygen
 Deprecated/PythonClient/dist
 Util/Build
 Install
-Data/imagery
+LinuxNoEditor
 
 /ExportedMaps
 /Import
