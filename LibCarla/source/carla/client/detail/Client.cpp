@@ -144,12 +144,12 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
-  uint32_t Client::SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material) {
-    return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_mesh", triangles, material);
+  uint32_t Client::SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material, uint8_t semantic_segmentation_label) {
+    return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_mesh", triangles, material, semantic_segmentation_label);
   }
     
-  uint32_t Client::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data) {
-    return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_tile_mesh", bounds_min, bounds_max, data);
+  uint32_t Client::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label) {
+    return _pimpl->CallAndWait<uint32_t>("spawn_dynamic_tile_mesh", bounds_min, bounds_max, data, semantic_segmentation_label);
   }
     
   bool Client::DestroyDynamicMesh(uint32_t id) {

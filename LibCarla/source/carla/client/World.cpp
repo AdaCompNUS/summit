@@ -41,12 +41,12 @@ namespace client {
     return _episode.Lock()->SetEpisodeSettings(settings);
   }
     
-  uint32_t World::SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
-    return _episode.Lock()->SpawnDynamicMesh(triangles, material);
+  uint32_t World::SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material, uint8_t semantic_segmentation_label) {
+    return _episode.Lock()->SpawnDynamicMesh(triangles, material, semantic_segmentation_label);
   }
   
-  uint32_t World::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data) {
-    return _episode.Lock()->SpawnDynamicTileMesh(bounds_min, bounds_max, data);
+  uint32_t World::SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label) {
+    return _episode.Lock()->SpawnDynamicTileMesh(bounds_min, bounds_max, data, semantic_segmentation_label);
   }
     
   bool World::DestroyDynamicMesh(uint32_t id) {

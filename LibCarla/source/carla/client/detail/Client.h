@@ -81,9 +81,9 @@ namespace detail {
 
     std::vector<std::string> GetAvailableMaps();
 
-    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material);
+    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material, uint8_t semantic_segmentation_label);
     
-    uint32_t SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data);
+    uint32_t SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label);
     
     bool DestroyDynamicMesh(uint32_t id);
 

@@ -104,12 +104,12 @@ namespace detail {
       return _client.GetAvailableMaps();
     }
 
-    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material) {
-      return _client.SpawnDynamicMesh(triangles, material);
+    uint32_t SpawnDynamicMesh(const std::vector<geom::Vector3D> &triangles, std::string material, uint8_t semantic_segmentation_label) {
+      return _client.SpawnDynamicMesh(triangles, material, semantic_segmentation_label);
     }
     
-    uint32_t SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data) {
-      return _client.SpawnDynamicTileMesh(bounds_min, bounds_max, data);
+    uint32_t SpawnDynamicTileMesh(const geom::Vector3D& bounds_min, const geom::Vector3D& bounds_max, const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label) {
+      return _client.SpawnDynamicTileMesh(bounds_min, bounds_max, data, semantic_segmentation_label);
     }
 
     bool DestroyDynamicMesh(uint32_t id) {

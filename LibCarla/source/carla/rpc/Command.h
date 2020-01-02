@@ -57,12 +57,14 @@ namespace rpc {
 
     struct SpawnDynamicMesh : CommandBase<SpawnDynamicMesh> {
       SpawnDynamicMesh() = default;
-      SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material)
+      SpawnDynamicMesh(const std::vector<geom::Vector3D>& triangles, std::string material, uint8_t semantic_segmentation_label)
         : triangles(triangles),
-        material(material) {}
+        material(material),
+        semantic_segmentation_label(semantic_segmentation_label) {}
       std::vector<geom::Vector3D> triangles;
       std::string material;
-      MSGPACK_DEFINE_ARRAY(triangles, material);
+      uint8_t semantic_segmentation_label;
+      MSGPACK_DEFINE_ARRAY(triangles, material, semantic_segmentation_label);
     };
     
     struct DestroyDynamicMesh : CommandBase<DestroyDynamicMesh> {

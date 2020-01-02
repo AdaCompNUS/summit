@@ -70,11 +70,13 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   Actor.GetComponents<UStaticMeshComponent>(StaticMeshComponents);
   for (UStaticMeshComponent *Component : StaticMeshComponents) {
     const auto Label = GetLabelByPath(Component->GetStaticMesh());
-    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
+    if (Label != ECityObjectLabel::None) { // To prevent overriding settings from elsewhere.
+      SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
+      UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
+      UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
+    }
   }
 
   // Iterate skeletal meshes.
@@ -82,11 +84,13 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
   Actor.GetComponents<USkeletalMeshComponent>(SkeletalMeshComponents);
   for (USkeletalMeshComponent *Component : SkeletalMeshComponents) {
     const auto Label = GetLabelByPath(Component->GetPhysicsAsset());
-    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
+    if (Label != ECityObjectLabel::None) { // To prevent overriding settings from elsewhere.
+      SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
 #ifdef CARLA_TAGGER_EXTRA_LOG
-    UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
-    UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
+      UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
+      UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
 #endif // CARLA_TAGGER_EXTRA_LOG
+    }
   }
 }
 

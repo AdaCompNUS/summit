@@ -69,17 +69,19 @@ void export_commands() {
   ;
 
   class_<cr::Command::SpawnDynamicMesh>("SpawnDynamicMesh")
-    .def("__init__", &command_impl::CustomInit<const std::vector<carla::geom::Vector3D>&, std::string>, (arg("triangles"), arg("material")))
-    .def(init<const std::vector<carla::geom::Vector3D>&, std::string>((arg("triangles"), arg("material"))))
+    .def("__init__", &command_impl::CustomInit<const std::vector<carla::geom::Vector3D>&, std::string, uint8_t>,
+        (arg("triangles"), arg("material"), arg("semantic_segmentation_label")))
+    .def(init<const std::vector<carla::geom::Vector3D>&, std::string, uint8_t>((arg("triangles"), arg("material"), arg("semantic_segmentation_label"))))
     .def("__init__", make_constructor(
-          +[](const list& triangles_py, const std::string& material) {
+          +[](const list& triangles_py, const std::string& material, uint8_t semantic_segmentation_label) {
             std::vector<carla::geom::Vector3D> triangles{
               stl_input_iterator<carla::geom::Vector3D>(triangles_py),
               stl_input_iterator<carla::geom::Vector3D>()};
-            return boost::shared_ptr<cr::Command::SpawnDynamicMesh>(new cr::Command::SpawnDynamicMesh(triangles, material));
+            return boost::shared_ptr<cr::Command::SpawnDynamicMesh>(new cr::Command::SpawnDynamicMesh(triangles, material, semantic_segmentation_label));
           }))
     .def_readwrite("triangles", &cr::Command::SpawnDynamicMesh::triangles)
     .def_readwrite("material", &cr::Command::SpawnDynamicMesh::material)
+    .def_readwrite("semantic_segmentation_label", &cr::Command::SpawnDynamicMesh::semantic_segmentation_label)
   ;
 
   class_<cr::Command::DestroyDynamicMesh>("DestroyDynamicMesh")

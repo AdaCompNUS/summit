@@ -21,6 +21,8 @@ public:
 
   void SetTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& RawData);
 
+  void SetSemanticSegmentationLabel(uint8 Label);
+
 private:
 
   UPROPERTY()

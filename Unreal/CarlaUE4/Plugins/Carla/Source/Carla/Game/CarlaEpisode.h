@@ -211,9 +211,9 @@ public:
     return SpawnActorWithInfo(Transform, std::move(ActorDescription)).Value.GetActor();
   }
 
-  uint32 SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material);
+  uint32 SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material, uint8 SemanticSegmentationLabel);
   
-  uint32 SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data);
+  uint32 SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data, uint8 SemanticSegmentationLabel);
   
   bool DestroyDynamicMesh(uint32 id);
 

@@ -234,23 +234,17 @@ void FCarlaServer::FPimpl::BindActions()
     return GFrameCounter;
   };
 
-  BIND_SYNC(spawn_dynamic_mesh) << [this](const std::vector<cg::Vector3D> &triangles, std::string material) -> R<uint32_t>
+  BIND_SYNC(spawn_dynamic_mesh) << [this](const std::vector<cg::Vector3D> &triangles, std::string material, uint8_t semantic_segmentation_label) -> R<uint32_t>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<FVector> Triangles;
     for (const cg::Vector3D& triangle : triangles) {
       Triangles.Emplace(triangle.x * 100.0f, triangle.y * 100.0f, triangle.z * 100.0f);
     }
-    return Episode->SpawnDynamicMesh(Triangles, FString(material.c_str()));
+    return Episode->SpawnDynamicMesh(Triangles, FString(material.c_str()), semantic_segmentation_label);
   };
   
-  BIND_SYNC(destroy_dynamic_mesh) << [this](uint32_t id) -> R<bool>
-  {
-    REQUIRE_CARLA_EPISODE();
-    return Episode->DestroyDynamicMesh(id);
-  };
-  
-  BIND_SYNC(spawn_dynamic_tile_mesh) << [this](cg::Vector3D bounds_min, cg::Vector3D bounds_max, const std::vector<uint8_t>& data) -> R<uint32_t>
+  BIND_SYNC(spawn_dynamic_tile_mesh) << [this](cg::Vector3D bounds_min, cg::Vector3D bounds_max, const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label) -> R<uint32_t>
   {
     REQUIRE_CARLA_EPISODE();
     TArray<uint8_t> Data;
@@ -261,7 +255,14 @@ void FCarlaServer::FPimpl::BindActions()
     return Episode->SpawnDynamicTileMesh(
         FVector(bounds_min.x * 100.0f, bounds_min.y * 100.0f, bounds_min.z * 100.0f), 
         FVector(bounds_max.x * 100.0f, bounds_max.y * 100.0f, bounds_max.z * 100.0f), 
-        Data);
+        Data,
+        semantic_segmentation_label);
+  };
+  
+  BIND_SYNC(destroy_dynamic_mesh) << [this](uint32_t id) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return Episode->DestroyDynamicMesh(id);
   };
 
   BIND_SYNC(get_actor_definitions) << [this]() -> R<std::vector<cr::ActorDefinition>>
@@ -971,7 +972,7 @@ void FCarlaServer::FPimpl::BindActions()
       },
       [=](auto, const C::DestroyActor &c) {         MAKE_RESULT(destroy_actor(c.actor)); },
       [=](auto, const C::SpawnDynamicMesh &c) { 
-        auto result = spawn_dynamic_mesh(c.triangles, c.material);
+        auto result = spawn_dynamic_mesh(c.triangles, c.material, c.semantic_segmentation_label);
         return CR{result.Get()};
       },
       [=](auto, const C::DestroyDynamicMesh &c) { 

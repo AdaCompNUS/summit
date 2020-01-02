@@ -1,6 +1,6 @@
 #include "DynamicMeshDispatcher.h"
 
-uint32 ADynamicMeshDispatcher::SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material) {
+uint32 ADynamicMeshDispatcher::SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material, uint8 SemanticSegmentationLabel) {
   if (GetWorld() == nullptr) {
     UE_LOG(LogCarla, Display, TEXT("NULL WORLD"));
     return -1;
@@ -9,13 +9,14 @@ uint32 ADynamicMeshDispatcher::SpawnDynamicMesh(const TArray<FVector>& Triangles
   ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
   DynamicMeshActor->SetMaterial(Material);
   DynamicMeshActor->SetTriangles(Triangles);
+  DynamicMeshActor->SetSemanticSegmentationLabel(SemanticSegmentationLabel);
   ActorMap.Add(SpawnId++, DynamicMeshActor);
   DynamicMeshActor->OnDestroyed.AddDynamic(this, &ADynamicMeshDispatcher::OnActorDestroyed);
 
   return SpawnId - 1;
 }
   
-uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data) {
+uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data, uint8 SemanticSegmentationLabel) {
   if (GetWorld() == nullptr) {
     UE_LOG(LogCarla, Display, TEXT("NULL WORLD"));
     return -1;
@@ -23,6 +24,7 @@ uint32 ADynamicMeshDispatcher::SpawnDynamicTileMesh(FVector BoundsMin, FVector B
 
   ADynamicMeshActor* DynamicMeshActor = GetWorld()->SpawnActor<ADynamicMeshActor>();
   DynamicMeshActor->SetTileMesh(BoundsMin, BoundsMax, Data);
+  DynamicMeshActor->SetSemanticSegmentationLabel(SemanticSegmentationLabel);
   ActorMap.Add(SpawnId++, DynamicMeshActor);
   DynamicMeshActor->OnDestroyed.AddDynamic(this, &ADynamicMeshDispatcher::OnActorDestroyed);
 

@@ -151,3 +151,8 @@ void ADynamicMeshActor::SetTileMesh(FVector BoundsMin, FVector BoundsMax, const 
   MaterialDynamic->SetTextureParameterValue(FName("DynamicTexture"), Texture2D);
   MeshComponent->SetMaterial(0, MaterialDynamic);
 }
+
+void ADynamicMeshActor::SetSemanticSegmentationLabel(uint8 Label) {
+  MeshComponent->SetCustomDepthStencilValue(Label);
+  MeshComponent->SetRenderCustomDepth(Label != 0);
+}

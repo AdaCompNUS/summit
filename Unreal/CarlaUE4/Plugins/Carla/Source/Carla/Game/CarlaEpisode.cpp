@@ -135,13 +135,13 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FActorView ActorView) const
   return Actor;
 }
 
-uint32 UCarlaEpisode::SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material)
+uint32 UCarlaEpisode::SpawnDynamicMesh(const TArray<FVector>& Triangles, const FString& Material, uint8 SemanticSegmentationLabel)
 {
-  return DynamicMeshDispatcher->SpawnDynamicMesh(Triangles, Material);
+  return DynamicMeshDispatcher->SpawnDynamicMesh(Triangles, Material, SemanticSegmentationLabel);
 }
   
-uint32 UCarlaEpisode::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data) { 
-  return DynamicMeshDispatcher->SpawnDynamicTileMesh(BoundsMin, BoundsMax, Data);
+uint32 UCarlaEpisode::SpawnDynamicTileMesh(FVector BoundsMin, FVector BoundsMax, const TArray<uint8>& Data, uint8 SemanticSegmentationLabel) { 
+  return DynamicMeshDispatcher->SpawnDynamicTileMesh(BoundsMin, BoundsMax, Data, SemanticSegmentationLabel);
 }
   
 bool UCarlaEpisode::DestroyDynamicMesh(uint32 id) {

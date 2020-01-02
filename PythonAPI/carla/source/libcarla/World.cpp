@@ -144,28 +144,28 @@ void export_world() {
     .def("get_spectator", CONST_CALL_WITHOUT_GIL(cc::World, GetSpectator))
     .def("get_settings", CONST_CALL_WITHOUT_GIL(cc::World, GetSettings))
     .def("spawn_dynamic_mesh", 
-        +[](cc::World& self, const std::vector<carla::geom::Vector3D>& triangles, std::string material) {
-          return self.SpawnDynamicMesh(triangles, material);
+        +[](cc::World& self, const std::vector<carla::geom::Vector3D>& triangles, std::string material, uint8_t semantic_segmentation_label) {
+          return self.SpawnDynamicMesh(triangles, material, semantic_segmentation_label);
         })
     .def("spawn_dynamic_mesh", 
-        +[](cc::World& self, const list& triangles_py, std::string material) {
+        +[](cc::World& self, const list& triangles_py, std::string material, uint8_t semantic_segmentation_label) {
           std::vector<carla::geom::Vector3D> triangles{
             stl_input_iterator<carla::geom::Vector3D>(triangles_py),
             stl_input_iterator<carla::geom::Vector3D>()};
-          return self.SpawnDynamicMesh(triangles, material);
+          return self.SpawnDynamicMesh(triangles, material, semantic_segmentation_label);
         })
     .def("spawn_dynamic_tile_mesh", 
         +[](cc::World& self, const carla::geom::Vector3D& bounds_min, const carla::geom::Vector3D& bounds_max, 
-            const std::vector<uint8_t>& data) {
-          return self.SpawnDynamicTileMesh(bounds_min, bounds_max, data);
+            const std::vector<uint8_t>& data, uint8_t semantic_segmentation_label) {
+          return self.SpawnDynamicTileMesh(bounds_min, bounds_max, data, semantic_segmentation_label);
         })
     .def("spawn_dynamic_tile_mesh", 
         +[](cc::World& self, const carla::geom::Vector3D& bounds_min, const carla::geom::Vector3D& bounds_max, 
-            const list& data_py) {
+            const list& data_py, uint8_t semantic_segmentation_label) {
           std::vector<uint8_t> data{
             stl_input_iterator<uint8_t>(data_py),
             stl_input_iterator<uint8_t>()};
-          return self.SpawnDynamicTileMesh(bounds_min, bounds_max, data);
+          return self.SpawnDynamicTileMesh(bounds_min, bounds_max, data, semantic_segmentation_label);
         })
     .def("destroy_dynamic_mesh", &cc::World::DestroyDynamicMesh)
     .def("apply_settings", CALL_WITHOUT_GIL_1(cc::World, ApplySettings, cr::EpisodeSettings), arg("settings"))
