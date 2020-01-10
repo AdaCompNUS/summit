@@ -194,6 +194,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Landmark.cpp"
 #include "Segments.cpp"
 #include "AABB.cpp"
+#include "MicroSim.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"
 #include "Client.cpp"
@@ -223,6 +224,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_sidewalk();
   export_segments();
   export_aabb();
+  export_microsim();
   export_blueprint();
   export_actor();
   export_sensor();

@@ -92,6 +92,12 @@ file(GLOB libcarla_carla_landmark_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_landmark_sources}")
 install(FILES ${libcarla_carla_landmark_sources} DESTINATION include/carla/landmark)
 
+file(GLOB libcarla_carla_microsim_sources
+    "${libcarla_source_path}/carla/microsim/*.cpp"
+    "${libcarla_source_path}/carla/microsim/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_microsim_sources}")
+install(FILES ${libcarla_carla_microsim_sources} DESTINATION include/carla/microsim)
+
 file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.cpp"
     "${libcarla_source_path}/carla/lanenetwork/*.h")

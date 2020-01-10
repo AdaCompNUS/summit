@@ -57,7 +57,7 @@ namespace geom {
       }
     }
   
-    Vector2D Rotate(float angle) {
+    Vector2D Rotate(float angle) const {
       const float s = std::sin(angle);
       const float c = std::cos(angle);
       return Vector2D(x * c - y * s, x * s + y * c);
