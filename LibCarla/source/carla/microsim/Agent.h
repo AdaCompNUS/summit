@@ -7,6 +7,12 @@ namespace microsim {
 
 class Agent {
 
+/*
+public:
+
+  virtual geom::Vector2D GetPreferredVelocity() const = 0;
+*/
+
 protected:
 
   Agent() { }

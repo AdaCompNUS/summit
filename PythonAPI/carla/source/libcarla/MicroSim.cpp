@@ -31,15 +31,55 @@ void export_microsim() {
   ;
 
   class_<PedestrianAgent>("PedestrianAgent", no_init)
-    .def(init<float, float, const geom::Vector2D&>())
+    .def("__init__", make_constructor(
+          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position) {
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position));
+          }))
+    .def("__init__", make_constructor(
+          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position,
+              const std::vector<sidewalk::SidewalkRoutePoint>& path) {
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position, path));
+          }))
+    .def("__init__", make_constructor(
+          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position,
+              const list& path_py) {
+            std::vector<sidewalk::SidewalkRoutePoint> path{
+              stl_input_iterator<sidewalk::SidewalkRoutePoint>(path_py),
+              stl_input_iterator<sidewalk::SidewalkRoutePoint>()};
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position, path));
+          }))
     .add_property("radius", &PedestrianAgent::Radius)
     .add_property("max_speed", &PedestrianAgent::MaxSpeed)
     .add_property("position", 
         make_function(&PedestrianAgent::Position, return_internal_reference<>()))
+    .add_property("path", 
+        make_function(&PedestrianAgent::Path, return_internal_reference<>()))
   ;
 
   class_<VehicleAgent>("VehicleAgent", no_init)
-    .def(init<const geom::Vector2D&, const geom::Vector2D&, float, float, const geom::Vector2D&, const geom::Vector2D&>())
+    .def("__init__", make_constructor(
+          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
+              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading) {
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
+                  wheel_base, max_speed, position, heading));
+          }))
+    .def("__init__", make_constructor(
+          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
+              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading, 
+              const std::vector<sumonetwork::RoutePoint>& path) {
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
+                  wheel_base, max_speed, position, heading, path));
+          }))
+    .def("__init__", make_constructor(
+          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
+              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading, 
+              const list& path_py) {
+            std::vector<sumonetwork::RoutePoint> path{
+              stl_input_iterator<sumonetwork::RoutePoint>(path_py),
+              stl_input_iterator<sumonetwork::RoutePoint>()};
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
+                  wheel_base, max_speed, position, heading, path));
+          }))
     .add_property("extent_min", 
         make_function(&VehicleAgent::ExtentMin, return_internal_reference<>()))
     .add_property("extent_max", 
@@ -50,6 +90,8 @@ void export_microsim() {
         make_function(&VehicleAgent::Position, return_internal_reference<>()))
     .add_property("heading",
         make_function(&VehicleAgent::Heading, return_internal_reference<>()))
+    .add_property("path",
+        make_function(&VehicleAgent::Path, return_internal_reference<>()))
   ;
 
   class_<Simulator>("Simulator", no_init)

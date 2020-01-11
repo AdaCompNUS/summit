@@ -33,8 +33,8 @@ public:
 
 private:
 
-  const sumonetwork::SumoNetwork* _sumo_network;
-  const sidewalk::Sidewalk* _sidewalk;
+  const sumonetwork::SumoNetwork* const _sumo_network;
+  const sidewalk::Sidewalk* const _sidewalk;
   const VehicleAgent _ego_agent;
   const std::vector<Agent> _exo_agents;
 
