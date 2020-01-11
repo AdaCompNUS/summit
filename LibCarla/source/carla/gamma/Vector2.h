@@ -28,6 +28,8 @@
  * United States of America
  *
  * <http://gamma.cs.unc.edu/RVO2/>
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #ifndef RVO_VECTOR2_H_

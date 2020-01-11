@@ -17,6 +17,8 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program (see COPYING.txt and COPYING.LESSER.txt).
  * If not, see <http://www.gnu.org/licenses/>.
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #ifndef RVO_CONVEX_HULL_H_

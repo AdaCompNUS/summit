@@ -28,6 +28,8 @@
  * United States of America
  *
  * <http://gamma.cs.unc.edu/RVO2/>
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #include "KdTree.h"
@@ -45,12 +47,6 @@ namespace RVO {
 	}
 
 	void KdTree::clearAllAgents(){
-		// for(size_t i=0; i<agents_.size(); i++){
-		// 	if(agents_[i] != NULL) {
-		// 		delete agents_[i];
-		// 		agents_[i]=NULL;
-		// 	}
-		// }
 		agents_.clear();
 	}
 

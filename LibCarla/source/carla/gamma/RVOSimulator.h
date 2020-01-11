@@ -28,6 +28,8 @@
  * United States of America
  *
  * <http://gamma.cs.unc.edu/RVO2/>
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #ifndef RVO_RVO_SIMULATOR_H_
@@ -46,6 +48,14 @@
 #include "AgentParams.h"
 
 namespace RVO {
+
+	enum AgentBehaviorType
+	{
+		Gamma,
+		SimplifiedGamma,
+		AgentBehaviorTypeCount
+	};
+
 	/**
 	 * \brief       Error value.
 	 *
@@ -195,18 +205,6 @@ namespace RVO {
 						float timeHorizonObst, float radius, float maxSpeed,
 						const Vector2 &velocity = Vector2());
 
-		// size_t addAgent(const Vector2 &position, float neighborDist, 
-		// 	size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
-		// 	float radius, float maxSpeed, 
-		// 	const Vector2 &velocity = Vector2(), 
-		// 	std::string tag = "People", float max_tracking_angle = 90);
-
-		// size_t addAgent(const Vector2 &position, float neighborDist, 
-		// 	size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
-		// 	float radius, float maxSpeed, 
-		// 	const Vector2 &velocity = Vector2(), 
-		// 	std::string tag = "People", float max_tracking_angle = 90, int agent_id = -1);
-
 		size_t addAgent(const Vector2 &position, float neighborDist, 
 			size_t maxNeighbors, float timeHorizon, float timeHorizonObst, 
 			float radius, float maxSpeed, 
@@ -249,6 +247,8 @@ namespace RVO {
 
 		void setAgentPathForward(size_t agentNo, Vector2 path_forward);
 
+		void setAgentBehaviorType(int agentNo, AgentBehaviorType agent_behavior_type);
+
 		std::vector<Vector2> bicycleMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
 		std::vector<Vector2> holonomicMove (Vector2 cur_pos, Vector2 cur_heading, Vector2 pref_vel, float dt, float max_speed, float car_len, float max_tracking_angle_deg);
 
@@ -271,6 +271,9 @@ namespace RVO {
 		 *             each agent.
 		 */
 		void doStep();
+
+		void doPreStep();
+		void doStepForOneAgent(int i);
 
 		/**
 		 * \brief      Returns the specified agent neighbor of the specified

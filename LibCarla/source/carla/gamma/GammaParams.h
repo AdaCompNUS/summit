@@ -1,3 +1,7 @@
+/* 
+ * Author: Yuanfu Luo <yuanfu@comp.nus.edu.sg>
+ */
+
 #ifndef GAMMA_PARAMS_H_
 #define GAMMA_PARAMS_H_
 
