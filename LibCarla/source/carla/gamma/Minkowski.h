@@ -1,4 +1,8 @@
-﻿#ifndef RVO_MINKOWSKI_H_
+﻿/* 
+ * Author: Yuanfu Luo <yuanfu@comp.nus.edu.sg>
+ */
+
+#ifndef RVO_MINKOWSKI_H_
 #define RVO_MINKOWSKI_H_
 
 #include "ConvexHull.h"

@@ -28,6 +28,8 @@
  * United States of America
  *
  * <http://gamma.cs.unc.edu/RVO2/>
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #ifndef RVO_AGENT_H_
@@ -42,7 +44,6 @@
 #include "RVOSimulator.h"
 #include "GammaParams.h"
 #include "Minkowski.h"
-
 
 namespace RVO {
 	/**
@@ -103,8 +104,7 @@ namespace RVO {
 
         void computeLaneConstrains ();
 
-
-
+        void updateBehaviorParams();
 
 		std::vector<std::pair<float, const Agent *> > agentNeighbors_;
 		size_t maxNeighbors_;
@@ -123,17 +123,6 @@ namespace RVO {
 
 		size_t id_;
 
-
-		// std::vector<Vector2> bounding_corners_ = new List<Point> ();
-		// string tag_ = "People";
-		// float max_tracking_angle_ = 90.0f;
-		// Vector2 heading_ = new Vector2 (0.0f, 1.0f);
-
-		// int tracking_id_ = 0;
-		// float r_front_=20f;
-		// float r_rear_=0f;
-		// float res_dec_rate_ = 0.1f;
-
 		std::vector<Vector2> bounding_corners_;
 		std::vector<Vector2> velocity_convex_;
 		std::string tag_;
@@ -149,6 +138,11 @@ namespace RVO {
 		bool right_lane_constrained_;
 		Vector2 path_forward_;
 
+		bool use_polygon_;
+		bool consider_kinematics_;
+		bool use_dynamic_resp_;
+		bool use_dynamic_att_;
+		AgentBehaviorType agent_behavior_type_;
 
 		friend class KdTree;
 		friend class RVOSimulator;

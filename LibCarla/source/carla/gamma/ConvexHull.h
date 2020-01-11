@@ -1,3 +1,7 @@
+/* 
+ * Author: Yuanfu Luo <yuanfu@comp.nus.edu.sg>
+ */
+
 #include <algorithm>
 #include "Definitions.h"
 #include "RVOSimulator.h"

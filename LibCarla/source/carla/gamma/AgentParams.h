@@ -1,3 +1,7 @@
+/* 
+ * Author: Yuanfu Luo <yuanfu@comp.nus.edu.sg>
+ */
+
 #ifndef AGENT_PARAMS_H_
 #define AGENT_PARAMS_H_
 

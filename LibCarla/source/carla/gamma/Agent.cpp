@@ -28,6 +28,8 @@
  * United States of America
  *
  * <http://gamma.cs.unc.edu/RVO2/>
+ *
+ * modified by Yuanfu Luo <yuanfu@comp.nus.edu.sg>
  */
 
 #include "Agent.h"
@@ -37,7 +39,14 @@
 #include <limits>
 
 namespace RVO {
-	Agent::Agent(RVOSimulator *sim) : maxNeighbors_(0), maxSpeed_(0.0f), neighborDist_(0.0f), radius_(0.0f), sim_(sim), timeHorizon_(0.0f), timeHorizonObst_(0.0f), id_(0) { }
+	Agent::Agent(RVOSimulator *sim) : maxNeighbors_(0), maxSpeed_(0.0f), neighborDist_(0.0f), radius_(0.0f), sim_(sim), timeHorizon_(0.0f), timeHorizonObst_(0.0f), id_(0)
+	{
+		agent_behavior_type_ = Gamma;
+		use_polygon_ = true;
+		consider_kinematics_ = true;
+		use_dynamic_resp_ = true;
+		use_dynamic_att_ = true;
+	}
 
 	void Agent::computeNeighbors()
 	{
@@ -736,166 +745,13 @@ namespace RVO {
 		}
 	}
 
-	// void Agent::computeAgentOrcaLinesPoly(){
-
-	// 	const float invTimeHorizon = 1.0f / timeHorizon_;
-
-	// 	/* Create agent ORCA lines. */
-	// 	for (size_t i = 0; i < agentNeighbors_.size(); ++i) {
-
-	// 		const Agent *const other = agentNeighbors_[i].second;
-
-	// 		float attention = computeAttention (other);
-	// 		if (attention == 0.0f)
-	// 			continue;
-
-	// 		std::vector<Vector2> minkowski_diff = Minkowski::Diff(other->bounding_corners_, bounding_corners_);
-
-	// 		bool in_collision = inCollision (minkowski_diff, Vector2(0,0));
-
-	// 		const Vector2 relativeVelocity = velocity_ - other->velocity_;
-
-	// 		Line line;
-	// 		Vector2 u;
-
-	// 		if (!in_collision) {
-	// 			Vector2 left_most_vector = Vector2 (0.0f, 0.0f);
-	// 			Vector2 right_most_vector = Vector2 (0.0f, 0.0f);
-
-	// 			computeLeftAndRightMostVector (left_most_vector, right_most_vector, minkowski_diff);
-
-	// 			float shortest_dist_sq = std::numeric_limits<float>::infinity();
-	// 			float tmp_shortest_dist_sq;
-	// 			Vector2 nearest_point = Vector2 (0.0f, 0.0f);
-	// 			Vector2 tmp_nearest_point = Vector2 (0.0f, 0.0f);
-
-	// 			size_t shortest_line_idx = 0;
-
-	// 			for(size_t j=0; j<minkowski_diff.size() - 1; j++){
-	// 				if (leftOf (right_most_vector, left_most_vector, minkowski_diff [j]) < 0 || minkowski_diff [j] == right_most_vector) {
-	// 					//it is okay not to multiply invTimeHorizon in the condition, because it is only used for pruning out the the unnecessary edges of the minkowski diff
-	// 					continue;
-	// 				}
-						
-	// 				tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * minkowski_diff[j], invTimeHorizon * minkowski_diff[j+1], relativeVelocity, tmp_nearest_point);
-	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 					shortest_dist_sq = tmp_shortest_dist_sq;
-	// 					nearest_point = tmp_nearest_point;
-	// 					shortest_line_idx = j;
-	// 				}
-	// 			}
-
-	// 			if (leftOf (right_most_vector, left_most_vector, minkowski_diff [minkowski_diff.size() - 1]) < 0 || minkowski_diff [minkowski_diff.size() - 1] == right_most_vector) {
-	// 				;
-	// 			} else {
-	// 				tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * minkowski_diff[minkowski_diff.size() - 1], invTimeHorizon * minkowski_diff[0], relativeVelocity, tmp_nearest_point);
-	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 					shortest_dist_sq = tmp_shortest_dist_sq;
-	// 					nearest_point = tmp_nearest_point;
-	// 					shortest_line_idx = minkowski_diff.size() - 1;
-	// 				}
-	// 			}
-
-	// 			// note that both right_most_vector and left_most_vector go through origin
-	// 			tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * right_most_vector, 10000 * invTimeHorizon * right_most_vector, relativeVelocity, tmp_nearest_point);
-	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 				shortest_dist_sq = tmp_shortest_dist_sq;
-	// 				nearest_point = tmp_nearest_point;
-	// 				shortest_line_idx = minkowski_diff.size();
-	// 			}
-
-	// 			tmp_shortest_dist_sq = distSqPointLineSegment(invTimeHorizon * left_most_vector, 10000 * invTimeHorizon * left_most_vector, relativeVelocity, tmp_nearest_point);
-	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 				shortest_dist_sq = tmp_shortest_dist_sq;
-	// 				nearest_point = tmp_nearest_point;
-	// 				shortest_line_idx = minkowski_diff.size() + 1 ;
-	// 			}
-
-
-	// 			//shortest_line_start and shortest_line_end are used to tell whether relative velocity is on 
-	// 			// the left side or the right side of the nearest edge, hence we don't need to multiply invTimeHorizon
-	// 			Vector2 shortest_line_start = Vector2 (0, 0);
-	// 			Vector2 shortest_line_end = Vector2 (0, 0);
-	// 			if (shortest_line_idx < minkowski_diff.size() - 1) {
-	// 				shortest_line_start = minkowski_diff [shortest_line_idx];
-	// 				shortest_line_end = minkowski_diff [shortest_line_idx + 1];
-	// 			} else if (shortest_line_idx == minkowski_diff.size() - 1) {
-	// 				shortest_line_start = minkowski_diff [shortest_line_idx];
-	// 				shortest_line_end = minkowski_diff [0];
-	// 			} else if (shortest_line_idx == minkowski_diff.size()) {
-	// 				shortest_line_start = right_most_vector;
-	// 				shortest_line_end = 10000*right_most_vector;
-	// 			} else if (shortest_line_idx == minkowski_diff.size() + 1) {
-	// 				shortest_line_start = 10000*left_most_vector;
-	// 				shortest_line_end = left_most_vector;
-	// 			}
-
-	// 			u = nearest_point - relativeVelocity;
-	// 			float uLength = abs (u);
-	// 			Vector2 unitU = u / uLength;
-	// 			if (leftOf (shortest_line_start, shortest_line_end, relativeVelocity) > 0) {
-	// 				line.direction = Vector2 (unitU.y (), -unitU.x ()); //rotate 90 degree clockwisely
-	// 			} else {
-	// 				line.direction = Vector2 (-unitU.y (), unitU.x ()); //rotate 90 degree counter-clockwisely
-	// 			}
-
-	// 		} else {
-	// 			/* Collision. Project on cut-off circle of time timeStep. */
-	// 			//const float invTimeStep = 1.0f / sim_->timeStep_;
-
-	// 			float shortest_dist_sq = std::numeric_limits<float>::infinity();
-	// 			float tmp_shortest_dist_sq;
-	// 			Vector2 nearest_point = Vector2 (0.0f, 0.0f);
-	// 			Vector2 tmp_nearest_point = Vector2 (0.0f, 0.0f);
-
-	// 			size_t shortest_line_idx = 0;
-
-	// 			for(size_t j=0; j<minkowski_diff.size() - 1; j++){
-	// 				tmp_shortest_dist_sq = distSqPointLineSegment(minkowski_diff[j], minkowski_diff[j+1], relativeVelocity, tmp_nearest_point);
-	// 				if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 					shortest_dist_sq = tmp_shortest_dist_sq;
-	// 					nearest_point = tmp_nearest_point;
-	// 					shortest_line_idx = j;
-	// 				}
-	// 			}
-
-	// 			tmp_shortest_dist_sq = distSqPointLineSegment(minkowski_diff[minkowski_diff.size() - 1], minkowski_diff[0], relativeVelocity, tmp_nearest_point);
-	// 			if (tmp_shortest_dist_sq < shortest_dist_sq){
-	// 				shortest_dist_sq = tmp_shortest_dist_sq;
-	// 				nearest_point = tmp_nearest_point;
-	// 				shortest_line_idx = minkowski_diff.size() - 1;
-	// 			}
-
-	// 			Vector2 shortest_line_start = minkowski_diff[shortest_line_idx];
-	// 			Vector2 shortest_line_end = Vector2 (0, 0);
-	// 			if (shortest_line_idx == minkowski_diff.size() - 1) {
-	// 				shortest_line_end = minkowski_diff [0];
-	// 			} else {
-	// 				shortest_line_end = minkowski_diff [shortest_line_idx + 1];
-	// 			}
-
-	// 			u = nearest_point - relativeVelocity;
-	// 			float uLength = abs (u);
-	// 			Vector2 unitU = u / uLength;
-	// 			if (leftOf (shortest_line_start, shortest_line_end, relativeVelocity) > 0) {
-	// 				line.direction = Vector2 (unitU.y (), -unitU.x ()); //rotate 90 degree clockwisely
-	// 			} else {
-	// 				line.direction = Vector2 (-unitU.y (), unitU.x ()); //rotate 90 degree counter-clockwisely
-	// 			}
-	// 		}
-
-	// 		line.point = velocity_ + computeResponsibility(other) * u;
-	// 		orcaLines_.push_back(line);
-	// 	}
-	// }
-
 	/* Search for the best new velocity. */
 	void Agent::computeNewVelocity()
 	{
 		orcaLines_.clear();
 
 		if(tag_ != "People"){
-			if (GammaParams::use_polygon) {
+			if (use_polygon_) {
 				computeObstacleOrcaLinesPoly ();
 			} else {
 				computeObstacleOrcaLinesDisc ();
@@ -908,13 +764,13 @@ namespace RVO {
 
 		const size_t numObstLines = orcaLines_.size();
 
-		if (GammaParams::use_polygon) {
+		if (use_polygon_) {
 			computeAgentOrcaLinesPoly ();
 		} else {
 			computeAgentOrcaLinesDisc ();
 		}
 
-		if (GammaParams::consider_kinematics) {
+		if (consider_kinematics_) {
 			//computeKinematicVelSet (max_tracking_angle_);
 			computeKinematicVelSet ();
 		}
@@ -1023,7 +879,7 @@ namespace RVO {
 	}
 
 	float Agent::computeResponsibility(const Agent * other){
-		if(!GammaParams::use_dynamic_resp || tag_ == other->tag_)
+		if(!use_dynamic_resp_ || tag_ == other->tag_)
 			return 0.5f;
 
 		Vector2 relativePosition = other->position_ - position_;
@@ -1049,7 +905,7 @@ namespace RVO {
 	}
 
 	float Agent::computeAttention(const Agent * other){
-		if (!GammaParams::use_dynamic_att)
+		if (!use_dynamic_att_)
 			return 1.0f;
 
 		if (heading_ * (other->position_ - position_) >= 0.0f) { //  other agent is in front of the ego agent
@@ -1066,6 +922,19 @@ namespace RVO {
 		}
 	}
 
+	void Agent::updateBehaviorParams(){
+		if (agent_behavior_type_ == Gamma){
+			use_polygon_ = true;
+			consider_kinematics_ = true;
+			use_dynamic_resp_ = true;
+			use_dynamic_att_ = true;
+		} else if (agent_behavior_type_ == SimplifiedGamma){
+			use_polygon_ = false;
+			consider_kinematics_ = false;
+			use_dynamic_resp_ = true;
+			use_dynamic_att_ = false;
+		}
+	}
 
 	void Agent::insertAgentNeighbor(const Agent *agent, float &rangeSq)
 	{
