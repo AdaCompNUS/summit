@@ -11,6 +11,11 @@ void export_gamma() {
   static const auto GeomToGamma = [](const geom::Vector2D& v) { return Vector2(v.x, v.y); };
   static const auto GammaToGeom = [](const Vector2& v) { return geom::Vector2D(v.x(), v.y()); };
   
+  enum_<AgentBehaviorType>("AgentBehaviorType")
+    .value("Gamma", AgentBehaviorType::Gamma)
+    .value("SimplifiedGamma", AgentBehaviorType::SimplifiedGamma)
+  ;
+
   class_<AgentParams>("AgentParams", init<>())
     .def("get_default", 
         &AgentParams::getDefaultAgentParam, 
@@ -144,6 +149,12 @@ void export_gamma() {
           self.setAgentPathForward(
               agent_no,
               GeomToGamma(path_forward));
+        })
+    .def("set_agent_behavior_type",
+        +[](RVOSimulator& self, int agent_no, AgentBehaviorType behavior_type) {
+          self.setAgentBehaviorType(
+              agent_no,
+              behavior_type);
         })
   ;
 }
