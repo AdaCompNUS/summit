@@ -3,12 +3,8 @@
 namespace carla {
 namespace microsim {
 
-Simulator Simulator::Step(float delta, float ego_control_speed, float ego_control_steer) const {
-  return Simulator(
-      _sumo_network, 
-      _sidewalk, 
-      _ego_agent.Step(delta, ego_control_speed, ego_control_steer),
-      _exo_agents);
+void Simulator::Step(float delta, float ego_control_speed, float ego_control_steer) {
+  this->ego_agent.Step(delta, ego_control_speed, ego_control_steer);
 }
 
 /*

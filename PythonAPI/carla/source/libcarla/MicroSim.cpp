@@ -29,69 +29,67 @@ void export_microsim() {
   class_<std::vector<Agent>>("vector_of_agent")
       .def(boost::python::vector_indexing_suite<std::vector<Agent>>())
   ;
+  
+  class_<PedestrianAttributes>("PedestrianAttributes", init<>())
+    .def_readwrite("radius", &PedestrianAttributes::radius)
+    .def_readwrite("max_speed", &PedestrianAttributes::max_speed)
+  ;
 
   class_<PedestrianAgent>("PedestrianAgent", no_init)
     .def("__init__", make_constructor(
-          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position) {
-            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position));
+          +[](const sidewalk::Sidewalk* sidewalk, const PedestrianAttributes& attributes, const geom::Vector2D& position) {
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, attributes, position));
           }))
     .def("__init__", make_constructor(
-          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position,
+          +[](const sidewalk::Sidewalk* sidewalk, const PedestrianAttributes& attributes, const geom::Vector2D& position,
               const std::vector<sidewalk::SidewalkRoutePoint>& path) {
-            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position, path));
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, attributes, position, path));
           }))
     .def("__init__", make_constructor(
-          +[](const sidewalk::Sidewalk* sidewalk, float radius, float max_speed, const geom::Vector2D& position,
+          +[](const sidewalk::Sidewalk* sidewalk, const PedestrianAttributes& attributes, const geom::Vector2D& position,
               const list& path_py) {
             std::vector<sidewalk::SidewalkRoutePoint> path{
               stl_input_iterator<sidewalk::SidewalkRoutePoint>(path_py),
               stl_input_iterator<sidewalk::SidewalkRoutePoint>()};
-            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, radius, max_speed, position, path));
+            return boost::shared_ptr<PedestrianAgent>(new PedestrianAgent(sidewalk, attributes, position, path));
           }))
-    .add_property("radius", &PedestrianAgent::Radius)
-    .add_property("max_speed", &PedestrianAgent::MaxSpeed)
-    .add_property("position", 
-        make_function(&PedestrianAgent::Position, return_internal_reference<>()))
-    .add_property("path", 
-        make_function(&PedestrianAgent::Path, return_internal_reference<>()))
+    .def_readwrite("attributes", &PedestrianAgent::attributes)
+    .def_readwrite("position", &PedestrianAgent::position)
+    .def_readwrite("path", &PedestrianAgent::path)
+  ;
+
+  class_<VehicleAttributes>("VehicleAttributes", init<>())
+    .def_readwrite("extent_min", &VehicleAttributes::extent_min)
+    .def_readwrite("extent_max", &VehicleAttributes::extent_max)
+    .def_readwrite("wheel_base", &VehicleAttributes::wheel_base)
+    .def_readwrite("max_speed", &VehicleAttributes::max_speed)
   ;
 
   class_<VehicleAgent>("VehicleAgent", no_init)
     .def("__init__", make_constructor(
-          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
-              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading) {
-            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
-                  wheel_base, max_speed, position, heading));
+          +[](const sumonetwork::SumoNetwork* sumo_network, const VehicleAttributes& attributes,
+              const geom::Vector2D& position, const geom::Vector2D& heading) {
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, attributes, position, heading));
           }))
     .def("__init__", make_constructor(
-          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
-              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading, 
+          +[](const sumonetwork::SumoNetwork* sumo_network, const VehicleAttributes& attributes, 
+              const geom::Vector2D& position, const geom::Vector2D& heading, 
               const std::vector<sumonetwork::RoutePoint>& path) {
-            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
-                  wheel_base, max_speed, position, heading, path));
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, attributes, position, heading, path));
           }))
     .def("__init__", make_constructor(
-          +[](const sumonetwork::SumoNetwork* sumo_network, const geom::Vector2D& extent_min, const geom::Vector2D& extent_max,
-              float wheel_base, float max_speed, const geom::Vector2D& position, const geom::Vector2D& heading, 
+          +[](const sumonetwork::SumoNetwork* sumo_network, const VehicleAttributes& attributes, 
+              const geom::Vector2D& position, const geom::Vector2D& heading, 
               const list& path_py) {
             std::vector<sumonetwork::RoutePoint> path{
               stl_input_iterator<sumonetwork::RoutePoint>(path_py),
               stl_input_iterator<sumonetwork::RoutePoint>()};
-            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, extent_min, extent_max,
-                  wheel_base, max_speed, position, heading, path));
+            return boost::shared_ptr<VehicleAgent>(new VehicleAgent(sumo_network, attributes, position, heading, path));
           }))
-    .add_property("extent_min", 
-        make_function(&VehicleAgent::ExtentMin, return_internal_reference<>()))
-    .add_property("extent_max", 
-        make_function(&VehicleAgent::ExtentMax, return_internal_reference<>()))
-    .add_property("wheel_base", &VehicleAgent::WheelBase)
-    .add_property("max_speed", &VehicleAgent::MaxSpeed)
-    .add_property("position",
-        make_function(&VehicleAgent::Position, return_internal_reference<>()))
-    .add_property("heading",
-        make_function(&VehicleAgent::Heading, return_internal_reference<>()))
-    .add_property("path",
-        make_function(&VehicleAgent::Path, return_internal_reference<>()))
+    .def_readwrite("attributes", &VehicleAgent::attributes)
+    .def_readwrite("position", &VehicleAgent::position)
+    .def_readwrite("heading", &VehicleAgent::heading)
+    .def_readwrite("path", &VehicleAgent::path)
   ;
 
   class_<Simulator>("Simulator", no_init)
@@ -110,14 +108,10 @@ void export_microsim() {
               stl_input_iterator<Agent>()};
             return boost::shared_ptr<Simulator>(new Simulator(sumo_network, sidewalk, ego_agent, exo_agents));
           }))
-    .add_property("sumo_network", 
-        make_function(&Simulator::SumoNetwork, return_internal_reference<>()))
-    .add_property("sidewalk", 
-        make_function(&Simulator::Sidewalk, return_internal_reference<>()))
-    .add_property("ego_agent", 
-        make_function(&Simulator::EgoAgent, return_internal_reference<>()))
-    .add_property("exo_agents", 
-        make_function(&Simulator::ExoAgents, return_internal_reference<>()))
+    .def_readwrite("sumo_network", &Simulator::sumo_network)
+    .def_readwrite("sidewalk", &Simulator::sidewalk)
+    .def_readwrite("ego_agent", &Simulator::ego_agent)
+    .def_readwrite("exo_agents", &Simulator::exo_agents)
     .def("step", &Simulator::Step)
   ;
 
