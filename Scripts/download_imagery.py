@@ -9,9 +9,9 @@ ZOOM_MIN = 18
 ZOOM_MAX = 19
 
 
-map_locations = ['map', 'meskel_square', 'magic', 'highway', 'chandni_chowk', 'shi_men_er_lu', 'beijing']
+# map_locations = ['map', 'meskel_square', 'magic', 'highway', 'chandni_chowk', 'shi_men_er_lu', 'beijing']
 # map_locations = ['shi_men_er_lu', 'beijing']
-
+map_locations = ['shibuya']
 
 def set_map_bounds(map_location):
     if map_location is 'map':
@@ -34,6 +34,9 @@ def set_map_bounds(map_location):
 
     if map_location is 'beijing':
         (BOUNDS_MIN, BOUNDS_MAX) = ((39.8992818, 116.4099687), (39.9476116, 116.4438916))
+    
+    if map_location is 'shibuya':
+        (BOUNDS_MIN, BOUNDS_MAX) = ((35.658508, 139.699345), (35.660425, 139.702785))
 
     return BOUNDS_MIN, BOUNDS_MAX
     
@@ -90,7 +93,7 @@ def get_tiles(zoom, (min_lat, min_lon), (max_lat, max_lon), output_dir):
 
 if __name__ == '__main__':
     cur_path = os.path.dirname(os.path.abspath(__file__))
-    imagery_path = os.path.join(cur_path, "../../Data/imagery")
+    imagery_path = os.path.join(cur_path, "../Data/imagery")
     print("Data folder {}".format(imagery_path))
 
     for map_location in map_locations:

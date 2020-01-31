@@ -10,12 +10,12 @@ sys.path.append(glob.glob('../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
-data = 'beijing'
+data = 'shibuya'
 
 if __name__ == '__main__':
 
     print('Loading SUMO network...')
-    network = carla.SumoNetwork.load('../../Data/' + data + '.net.xml')
+    network = carla.SumoNetwork.load('../Data/' + data + '.net.xml')
     
     print('Testing network segments...')
     segment_map = network.create_segment_map()
@@ -24,13 +24,13 @@ if __name__ == '__main__':
     network_occupancy_map = network.create_occupancy_map()
 
     print('Writing SUMO network occupancy map...')
-    network_occupancy_map.save('../../Data/' + data + '.wkt')
+    network_occupancy_map.save('../Data/' + data + '.wkt')
 
     print('Test loading SUMO network occupancy map...')
-    carla.OccupancyMap.load('../../Data/' + data + '.wkt')
+    carla.OccupancyMap.load('../Data/' + data + '.wkt')
 
     print('Writing SUMO network occupancy map mesh triangles...')
-    with open('../../Data/' + data + '.mesh', 'w') as file:
+    with open('../Data/' + data + '.mesh', 'w') as file:
         file.write(','.join('{},{},{}'.format(v.x, v.y, v.z) for v in network_occupancy_map.get_mesh_triangles()))
 
     print('Calculating sidewalk...')
@@ -40,11 +40,11 @@ if __name__ == '__main__':
     sidewalk_occupancy_map = sidewalk.create_occupancy_map(3)
     
     print('Writing sidewalk occupancy map...')
-    sidewalk_occupancy_map.save('../../Data/' + data + '.sidewalk.wkt')
+    sidewalk_occupancy_map.save('../Data/' + data + '.sidewalk.wkt')
 
     print('Test loading sidewalk occupancy map...')
-    carla.OccupancyMap.load('../../Data/' + data + '.sidewalk.wkt')
+    carla.OccupancyMap.load('../Data/' + data + '.sidewalk.wkt')
     
     print('Writing sidewalk occupancy map mesh triangles...')
-    with open('../../Data/' + data + '.sidewalk.mesh', 'w') as file:
+    with open('../Data/' + data + '.sidewalk.mesh', 'w') as file:
         file.write(','.join('{},{},{}'.format(v.x, v.y, v.z) for v in sidewalk_occupancy_map.get_mesh_triangles()))
