@@ -92,9 +92,9 @@ SumoNetwork SumoNetwork::Load(const std::string& file) {
   sumo_network._bounds_max = bounds.second;
   
   // (x, y) -> (lon, lat)
-  std::pair<geom::Vector2D, geom::Vector2D> originalBoundsSpherical = parse_bounds(location_node.attribute("origBoundary").value());
-  sumo_network._original_bounds_min_spherical = originalBoundsSpherical.first;
-  sumo_network._original_bounds_max_spherical = originalBoundsSpherical.second;
+  std::pair<geom::Vector2D, geom::Vector2D> originalBounds = parse_bounds(location_node.attribute("origBoundary").value());
+  sumo_network._original_bounds_min = originalBounds.first;
+  sumo_network._original_bounds_max = originalBounds.second;
 
   for (pugi::xml_node edge_node : net_node.children("edge")) {
     Edge edge;

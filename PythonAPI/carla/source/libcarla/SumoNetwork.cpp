@@ -191,10 +191,10 @@ void export_sumo_network() {
     .add_property("offset", make_function(&SumoNetwork::Offset))
     .add_property("bounds_min", make_function(&SumoNetwork::BoundsMin)) 
     .add_property("bounds_max", make_function(&SumoNetwork::BoundsMax)) 
-    .add_property("original_bounds_min_spherical", 
-        make_function(&SumoNetwork::OriginalBoundsMinSpherical)) 
-    .add_property("original_bounds_max_spherical", 
-        make_function(&SumoNetwork::OriginalBoundsMaxSpherical)) 
+    .add_property("original_bounds_min", 
+        make_function(&SumoNetwork::OriginalBoundsMin)) 
+    .add_property("original_bounds_max", 
+        make_function(&SumoNetwork::OriginalBoundsMax)) 
     .add_property("edges", 
         make_function(&SumoNetwork::Edges, return_internal_reference<>()))
     .add_property("junctions", 
