@@ -275,6 +275,7 @@ occupancy::OccupancyMap SumoNetwork::CreateOccupancyMap() const {
   for (const auto& edge_entry : _edges) {
     const Edge& edge = edge_entry.second;
     for (const Lane& lane : edge.lanes) {
+      // Extra 0.10m to close any gap between lanes.
       occupancy_map = occupancy_map.Union(occupancy::OccupancyMap(lane.shape, 4.10f));
     }
   }
