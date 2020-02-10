@@ -1,44 +1,43 @@
+'''
+Downloads the imagery for a given SUMO network located in Data/ and stores the
+downloaded image tiles into Data/imagery.
+
+Note the Data/imagery folder is shared across all datasets, since the image tiles
+are global.
+
+Usage:
+  python3 download_imagery.py <dataset>
+
+  Downloads the respective imagery for the SUMO network located at 
+  Data/<dataset>.net.xml and stores the tiles in Data/imagery.
+
+Example:
+  python3 download_imagery.py meskel_square 
+'''
+
+#/usr/bin/env python3
+
+import glob
 import os
 import math
-import numpy as np
+import sys
+
+sys.path.append(glob.glob('../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.version_info.major,
+    sys.version_info.minor,
+    'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+
+import carla
+
 import requests
+from pathlib import Path
+
+DATA_PATH = Path(os.path.realpath(__file__)).parent.parent/'Data'
+IMAGERY_PATH = DATA_PATH/'imagery'
 
 TILE_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{0}/{1}/{2}' # z/y/x
 CHECK_URL = 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tilemap/{0}/{1}/{2}'
-ZOOM_MIN = 18
-ZOOM_MAX = 19
-
-
-# map_locations = ['map', 'meskel_square', 'magic', 'highway', 'chandni_chowk', 'shi_men_er_lu', 'beijing']
-# map_locations = ['shi_men_er_lu', 'beijing']
-map_locations = ['shibuya']
-
-def set_map_bounds(map_location):
-    if map_location is 'map':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((1.2894000, 103.7669000), (1.3088000, 103.7853000))
-
-    if map_location is 'meskel_square':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((9.00802, 38.76009), (9.01391, 38.76603))
-
-    if map_location is 'magic':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((51.5621800, -1.7729100), (51.5633900, -1.7697300))
-
-    if map_location is 'highway':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((1.2983800, 103.7777000), (1.3003700, 103.7814900))
-
-    if map_location is 'chandni_chowk':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((28.653888, 77.223296), (28.660295, 77.236850))
-
-    if map_location is 'shi_men_er_lu':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((31.229828, 121.438702), (31.242810,121.464944))
-
-    if map_location is 'beijing':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((39.8992818, 116.4099687), (39.9476116, 116.4438916))
-    
-    if map_location is 'shibuya':
-        (BOUNDS_MIN, BOUNDS_MAX) = ((35.658508, 139.699345), (35.660425, 139.702785))
-
-    return BOUNDS_MIN, BOUNDS_MAX
+ZOOM_LEVEL = 18
     
 # https://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
 def deg2num(zoom, lat_deg, lon_deg):
@@ -56,7 +55,7 @@ def get_tile(zoom, row, column):
     r = requests.get(TILE_URL.format(zoom, row, column))
     return r.content
 
-def get_tiles(zoom, (min_lat, min_lon), (max_lat, max_lon), output_dir):
+def get_tiles(zoom, min_lat, min_lon, max_lat, max_lon, output_dir):
     bottom_left_id = deg2num(zoom, min_lat, min_lon)
     top_right_id = deg2num(zoom, max_lat, max_lon)
     top_left_id = (zoom, top_right_id[1], bottom_left_id[2])
@@ -82,7 +81,6 @@ def get_tiles(zoom, (min_lat, min_lon), (max_lat, max_lon), output_dir):
                 height * width,
                 1 if has_tile else 0))
 
-            # TODO: Determine if output is PNG, JPEG or something else.
             if has_tile:
                 tile = get_tile(zoom, row, column)
                 if not os.path.exists('{}/{}'.format(output_dir, zoom)):
@@ -92,13 +90,14 @@ def get_tiles(zoom, (min_lat, min_lon), (max_lat, max_lon), output_dir):
 
 
 if __name__ == '__main__':
-    cur_path = os.path.dirname(os.path.abspath(__file__))
-    imagery_path = os.path.join(cur_path, "../Data/imagery")
-    print("Data folder {}".format(imagery_path))
 
-    for map_location in map_locations:
-        BOUNDS_MIN, BOUNDS_MAX = set_map_bounds(map_location)
-        print("Parsing map for {} from {} to {}".format(map_location, BOUNDS_MIN, BOUNDS_MAX))
+    data = sys.argv[1]
 
-        for i in range(ZOOM_MIN, ZOOM_MAX + 1):
-            get_tiles(i, BOUNDS_MIN, BOUNDS_MAX, imagery_path)
+    print('Loading SUMO network...')
+    network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(data)))
+
+    # Extract (x, y) from SUMO network and convert into LatLon.
+    bounds_min = (network.original_bounds_min.y, network.original_bounds_min.x)
+    bounds_max = (network.original_bounds_max.y, network.original_bounds_max.x)
+
+    get_tiles(ZOOM_LEVEL, *bounds_min, *bounds_max, str(IMAGERY_PATH))
