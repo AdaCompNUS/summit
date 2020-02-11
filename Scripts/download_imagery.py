@@ -1,18 +1,8 @@
+#!/usr/bin/env python3
+
 '''
-Downloads the imagery for a given SUMO network located in Data/ and stores the
-downloaded image tiles into Data/imagery.
-
-Note the Data/imagery folder is shared across all datasets, since the image tiles
-are global.
-
-Usage:
-  python3 download_imagery.py <dataset>
-
-  Downloads the respective imagery for the SUMO network located at 
-  Data/<dataset>.net.xml and stores the tiles in Data/imagery.
-
-Example:
-  python3 download_imagery.py meskel_square 
+Downloads imagery for a dataset located in (<summit_root>/Data/) and stores the
+downloaded image tiles into (<summit_root>/Data/imagery/).
 '''
 
 #/usr/bin/env python3
@@ -29,8 +19,10 @@ sys.path.append(glob.glob('../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
 
 import carla
 
+import argparse
 import requests
 from pathlib import Path
+from multiprocessing import Pool
 
 DATA_PATH = Path(os.path.realpath(__file__)).parent.parent/'Data'
 IMAGERY_PATH = DATA_PATH/'imagery'
@@ -51,11 +43,23 @@ def check_tile(zoom, row, column):
     r = requests.get(CHECK_URL.format(zoom, row, column))
     return r.json()['data'][0] == 1
 
-def get_tile(zoom, row, column):
+def download_tile(zoom, row, column):
     r = requests.get(TILE_URL.format(zoom, row, column))
     return r.content
 
-def get_tiles(zoom, min_lat, min_lon, max_lat, max_lon, output_dir):
+def process_tile(tile):
+    (zoom, row, column) = tile
+
+    has_tile = check_tile(zoom, row, column)
+
+    if has_tile:
+        tile = download_tile(zoom, row, column)
+        if not (IMAGERY_PATH/str(zoom)).exists():
+            (IMAGERY_PATH/str(zoom)).mkdir(parents=True, exist_ok=True)
+        with (IMAGERY_PATH/str(zoom)/'{}_{}.jpeg'.format(row, column)).open('wb') as f:
+            f.write(tile)
+
+def get_tiles(zoom, min_lat, min_lon, max_lat, max_lon, jobs):
     bottom_left_id = deg2num(zoom, min_lat, min_lon)
     top_right_id = deg2num(zoom, max_lat, max_lon)
     top_left_id = (zoom, top_right_id[1], bottom_left_id[2])
@@ -71,33 +75,35 @@ def get_tiles(zoom, min_lat, min_lon, max_lat, max_lon, output_dir):
     else:
         width = (top_left_id[2] + 1) + (2**zoom - bottom_right_id[2])
 
+    tiles = []
     for row in range(top_left_id[1], bottom_right_id[1] + 1):
         for column in range(top_left_id[2], bottom_right_id[2] + 1):
-            has_tile = check_tile(zoom, row, column)
+            tiles.append((zoom, row, column))
 
-            print('{}: {} / {} -> {}'.format(
-                zoom, 
-                (column - top_left_id[2]) + (row - top_left_id[1]) * width + 1, 
-                height * width,
-                1 if has_tile else 0))
+    p = Pool(jobs)
 
-            if has_tile:
-                tile = get_tile(zoom, row, column)
-                if not os.path.exists('{}/{}'.format(output_dir, zoom)):
-                    os.makedirs('{}/{}'.format(output_dir, zoom)) 
-                with open('{}/{}/{}_{}.jpeg'.format(output_dir, zoom, row, column), 'w+') as f:
-                    f.write(tile)
-
+    for i, _ in enumerate(p.imap_unordered(process_tile, tiles), 1):
+        print('Completed {} / {}'.format(i, len(tiles)))
 
 if __name__ == '__main__':
 
-    data = sys.argv[1]
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '-d', '--dataset',
+        metavar='D',
+        default='meskel_square',
+        help='Name of dataset (default: meskel_square)')
+    argparser.add_argument(
+        '-j', '--jobs',
+        metavar='J',
+        default='4',
+        help='Number of jobs to run at once (default: 4)')
+    args = argparser.parse_args()
 
-    print('Loading SUMO network...')
-    network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(data)))
+    sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
 
-    # Extract (x, y) from SUMO network and convert into LatLon.
-    bounds_min = (network.original_bounds_min.y, network.original_bounds_min.x)
-    bounds_max = (network.original_bounds_max.y, network.original_bounds_max.x)
+    # Get geographical bounds in LatLon (XY).
+    bounds_min = (sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y)
+    bounds_max = (sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y)
 
-    get_tiles(ZOOM_LEVEL, *bounds_min, *bounds_max, str(IMAGERY_PATH))
+    get_tiles(ZOOM_LEVEL, *bounds_min, *bounds_max, int(args.jobs))
