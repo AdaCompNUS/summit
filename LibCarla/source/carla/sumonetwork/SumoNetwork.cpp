@@ -91,7 +91,7 @@ SumoNetwork SumoNetwork::Load(const std::string& file) {
   sumo_network._bounds_min = bounds.first;
   sumo_network._bounds_max = bounds.second;
   
-  // (x, y) -> (lon, lat)
+  // origBoundary: LonLat -> (parse_bounds swaps) -> LatLon
   std::pair<geom::Vector2D, geom::Vector2D> originalBounds = parse_bounds(location_node.attribute("origBoundary").value());
   sumo_network._original_bounds_min = originalBounds.first;
   sumo_network._original_bounds_max = originalBounds.second;
