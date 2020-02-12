@@ -44,7 +44,6 @@ if __name__ == '__main__':
     landmark_occupancies = [l.difference(sumo_network_occupancy).difference(sidewalk_occupancy) 
             for l in landmark_occupancies]
     landmark_occupancies = [l for l in landmark_occupancies if not l.is_empty]
-    sumo_network_occupancy = sumo_network_occupancy.difference(roadmark_occupancy)
 
     print('Writing occupancy data...')
     sumo_network_occupancy.save(str(DATA_PATH/'{}.network.wkt'.format(args.dataset)))

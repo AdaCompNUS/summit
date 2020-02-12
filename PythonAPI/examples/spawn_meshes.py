@@ -66,7 +66,7 @@ def spawn_meshes(client, dataset):
 
     # SUMO network mesh.
     commands.append(carla.command.SpawnDynamicMesh(
-        sumo_network_occupancy.get_mesh_triangles(),
+        sumo_network_occupancy.difference(roadmark_occupancy).get_mesh_triangles(),
         '/Game/Carla/Static/GenericMaterials/Masters/LowComplexity/M_Road1',
         7)) # 7 = Road
     
