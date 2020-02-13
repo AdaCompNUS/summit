@@ -44,22 +44,17 @@ Pyro4.util.SerializerBase.register_dict_to_class(
         'carla.Vector2D',
         lambda c, o: carla.Vector2D(o['x'], o['y']))
 
-bounds_center = carla.Vector2D(450, 400)
-bounds_min = carla.Vector2D(350, 300)
-bounds_max = carla.Vector2D(550, 500)
+bounds_center = carla.Vector2D(180, 220)
+bounds_min = carla.Vector2D(80, 120)
+bounds_max = carla.Vector2D(280, 320)
+bounds_occupancy = carla.OccupancyMap(bounds_min, bounds_max)
 
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
-DEFAULT_AGENT_POS = carla.Vector2D(10000, 10000)
-DEFAULT_AGENT_BBOX = [
-        DEFAULT_AGENT_POS + carla.Vector2D(1, -1), 
-        DEFAULT_AGENT_POS + carla.Vector2D(1, 1),
-        DEFAULT_AGENT_POS + carla.Vector2D(-1, 1), 
-        DEFAULT_AGENT_POS + carla.Vector2D(-1, -1)]
 VEHICLE_SPEED_KP = 0.3
 VEHICLE_SPEED_KI = 0.1
 VEHICLE_SPEED_KD = 0.005
-VEHICLE_STEER_KP = 1.0
+VEHICLE_STEER_KP = 2.5
 
 ''' Crowd service class definition '''
 @Pyro4.expose
@@ -148,9 +143,9 @@ def get_vehicle_bounding_box_corners(actor):
     loc = carla.Vector2D(bbox.location.x, bbox.location.y) + get_position(actor)
     forward_vec = get_forward_direction(actor).make_unit_vector()
     sideward_vec = forward_vec.rotate(np.deg2rad(90))
-    half_y_len = bbox.extent.y + 0.05
-    half_x_len_forward = bbox.extent.x + 1.5
-    half_x_len_backward = bbox.extent.x + 0.05
+    half_y_len = bbox.extent.y + 0.3
+    half_x_len_forward = bbox.extent.x + 1.0
+    half_x_len_backward = bbox.extent.x + 0.1
     corners = [loc - half_x_len_backward * forward_vec + half_y_len * sideward_vec,
                loc + half_x_len_forward * forward_vec + half_y_len * sideward_vec,
                loc + half_x_len_forward * forward_vec - half_y_len * sideward_vec,
@@ -360,6 +355,43 @@ class Context(object):
 
 
 
+''' Destroys agents that are out of bounds or are stuck. 
+    Also includes update logic for stuck timeouts. '''
+def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
+    
+    update_time = time.time()
+
+    commands = []
+    for agents in [car_agents, bike_agents, pedestrian_agents]:
+        next_agents = []
+        for agent in agents:
+            actor = c.world.get_actor(agent.actor_id)
+            delete = False
+            if not delete and not bounds_occupancy.contains(get_position(actor)):
+                delete = True
+            if not delete and get_position_3d(actor).z < -10:
+                delete = True
+            if not delete and \
+                    ((agent.type_tag in ['Car', 'Bicycle']) and not c.sumo_network_occupancy.contains(get_position(actor))):
+                delete = True
+            if get_velocity(actor).length() < c.args.stuck_speed:
+                if agent.stuck_time is not None:
+                    if update_time - agent.stuck_time >= c.args.stuck_duration:
+                        delete = True
+                else:
+                    agent.stuck_time = update_time
+            else:
+                agent.stuck_time = None
+            
+            if delete:
+                commands.append(carla.command.DestroyActor(agent.actor_id))
+            else:
+                next_agents.append(agent)
+        agents[:] = next_agents
+
+    c.client.apply_batch_sync(commands)
+
+
 ''' Spawn step. '''
 def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
@@ -422,7 +454,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
     # Spawn at most one pedestrian.
     if len(pedestrian_agents) < c.args.num_pedestrian:
-        path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.probability_cross, bounds_min, bounds_max, c.rng)
+        path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, bounds_min, bounds_max, c.rng)
         if not aabb_map.intersects(carla.AABB2D(
                 carla.Vector2D(path.get_position(c.sidewalk, 0).x - c.args.clearance_pedestrian,
                                path.get_position(c.sidewalk, 0).y - c.args.clearance_pedestrian),
@@ -445,12 +477,13 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     agents = car_agents + bike_agents + pedestrian_agents
 
+    next_agents = []
+    agents_to_destroy = []
     if len(agents) > 0:
         gamma = carla.RVOSimulator()
         
         for (i, agent) in enumerate(agents):
             actor = c.world.get_actor(agent.actor_id)
-            gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), i)
 
             is_valid = True
             pref_vel = None
@@ -461,7 +494,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
             if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
                 position = get_position(actor)
                 # Lane change if possible.
-                if c.rng.uniform(0.0, 1.0) <= c.args.probability_lane_change:
+                if c.rng.uniform(0.0, 1.0) <= c.args.lane_change_probability:
                     new_path_candidates = c.sumo_network.get_next_route_paths(
                             c.sumo_network.get_nearest_route_point(position),
                             agent.path.min_points - 1, agent.path.interval)
@@ -487,11 +520,11 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
             elif agent.type_tag == 'People':
                 position = get_position(actor)
                 # Cut, resize, check.
-                if not agent.path.resize(c.sidewalk, c.args.probability_cross):
+                if not agent.path.resize(c.sidewalk, c.args.cross_probability):
                     is_valid = False
                 else:
                     agent.path.cut(c.sidewalk, position)
-                    if not agent.path.resize(c.sidewalk, c.args.probability_cross):
+                    if not agent.path.resize(c.sidewalk, c.args.cross_probability):
                         is_valid = False
                 # Calculate pref_vel.
                 if is_valid:
@@ -503,6 +536,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
             
             # Add info to GAMMA.
             if pref_vel:
+                gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), len(next_agents))
                 gamma.set_agent_position(i, get_position(actor))
                 gamma.set_agent_velocity(i, get_velocity(actor))
                 gamma.set_agent_heading(i, get_forward_direction(actor))
@@ -511,21 +545,25 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
                 gamma.set_agent_path_forward(i, path_forward)
                 (left, right) = get_lane_constraints(c.sidewalk, actor)
                 gamma.set_agent_lane_constraints(i, right, left) # Flip since GAMMA uses right-handed instead. 
+                next_agents.append(agent)
             else:
-                gamma.set_agent_position(i, DEFAULT_AGENT_POS)
-                gamma.set_agent_pref_velocity(i, carla.Vector2D(0, 0))
-                gamma.set_agent_velocity(i, carla.Vector2D(0, 0))
-                gamma.set_agent_bounding_box_corners(i, DEFAULT_AGENT_BBOX)
+                agents_to_destroy.append(agent)
 
         gamma.do_step()
 
-        for (i, agent) in enumerate(agents):
+        for (i, agent) in enumerate(next_agents):
             agent.control_velocity = gamma.get_agent_velocity(i)
+
+    car_agents[:] = [a for a in next_agents if a.type_tag == 'Car']
+    bike_agents[:] = [a for a in next_agents if a.type_tag == 'Bicycle']
+    pedestrian_agents[:] = [a for a in next_agents if a.type_tag == 'People']
+                
+    c.client.apply_batch_sync([carla.command.DestroyActor(a.actor_id) for a in agents_to_destroy])
 
     c.crowd_service.acquire_control_velocities()
     c.crowd_service.control_velocities = [
             (agent.actor_id, agent.type_tag, agent.control_velocity, agent.preferred_speed, agent.steer_angle_range)
-            for agent in agents]
+            for agent in next_agents]
     c.crowd_service.release_control_velocities()
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
@@ -544,6 +582,13 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
 
     for (actor_id, type_tag, control_velocity, preferred_speed, steer_angle_range) in control_velocities:
         actor = c.world.get_actor(actor_id)
+        if actor is None:
+            if actor_id in pid_integrals:
+                del pid_integrals[actor_id]
+            if actor_id in pid_last_errors:
+                del pid_last_errors[actor_id]
+            continue
+
         cur_vel = get_velocity(actor)
 
         angle_diff = get_signed_angle_diff(control_velocity, cur_vel)
@@ -553,38 +598,48 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
         if type_tag == 'Car' or type_tag == 'Bicycle':
             speed = get_velocity(actor).length()
             target_speed = control_velocity.length()
-
-            # Calculate error.
-            speed_error = target_speed - speed
-
-            # Add to integral.
-            pid_integrals[actor_id] += speed_error * dt
-
-            # Calculate output.
-            speed_control = VEHICLE_SPEED_KP * speed_error + VEHICLE_SPEED_KI * pid_integrals[actor_id]
-            if pid_last_update_time is not None and actor_id in pid_last_errors:
-                speed_control += VEHICLE_SPEED_KD * (speed_error - pid_last_errors[actor_id]) / dt
-            
-            # Update history.
-            pid_last_errors[actor_id] = speed_error
-
-            # Get control.
             control = actor.get_control()
-            if speed_control >= 0:
-                control.throttle = speed_control
-                control.brake = 0.0
-                control.hand_brake = False
+
+            if target_speed < 1e-5 and speed < 0.5:
+                control.throttle = 0
+                control.brake = 1.0
+                control.hand_brake = True
+
+                if actor_id in pid_integrals:
+                    del pid_integrals[actor_id]
+                if actor_id in pid_last_errors:
+                    del pid_last_errors[actor_id]
             else:
-                control.throttle = 0.0
-                control.brake = -speed_control
-                control.hand_brake = False
-            control.steer = np.clip(
-                    np.clip(
-                        VEHICLE_STEER_KP * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
-                        -45.0, 45.0) / steer_angle_range,
-                    -1.0, 1.0)
-            control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
-            control.gear = 1 # DO NOT REMOVE: Reduces transmission lag.
+                # Calculate error.
+                speed_error = target_speed - speed
+
+                # Add to integral.
+                pid_integrals[actor_id] += speed_error * dt
+
+                # Calculate output.
+                speed_control = VEHICLE_SPEED_KP * speed_error + VEHICLE_SPEED_KI * pid_integrals[actor_id]
+                if pid_last_update_time is not None and actor_id in pid_last_errors:
+                    speed_control += VEHICLE_SPEED_KD * (speed_error - pid_last_errors[actor_id]) / dt
+                
+                # Update history.
+                pid_last_errors[actor_id] = speed_error
+
+                # Set control.
+                if speed_control >= 0:
+                    control.throttle = speed_control
+                    control.brake = 0.0
+                    control.hand_brake = False
+                else:
+                    control.throttle = 0.0
+                    control.brake = -speed_control
+                    control.hand_brake = False
+                control.steer = np.clip(
+                        np.clip(
+                            VEHICLE_STEER_KP * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
+                            -45.0, 45.0) / steer_angle_range,
+                        -1.0, 1.0)
+                control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
+                control.gear = 1 # DO NOT REMOVE: Reduces transmission lag.
             
             # Append to commands.
             commands.append(carla.command.ApplyVehicleControl(actor_id, control))
@@ -624,9 +679,10 @@ def gamma_loop(args):
 
     while True:
         start = time.time()
+        do_destroy(c, car_agents, bike_agents, pedestrian_agents)
         do_spawn(c, car_agents, bike_agents, pedestrian_agents)
         do_gamma(c, car_agents, bike_agents, pedestrian_agents)
-        time.sleep(max(0, 0.05 - (time.time() - start)))
+        time.sleep(max(0, 0.02 - (time.time() - start)))
         print('GAMMA', 1 / max(time.time() - start, 0.001))
 
 
@@ -673,27 +729,37 @@ def main():
     argparser.add_argument(
         '--clearance-car',
         default='3.0',
-        help='Minimum clearance in meters when spawning a car (default: 5.0)',
+        help='Minimum clearance (m) when spawning a car (default: 5.0)',
         type=float)
     argparser.add_argument(
         '--clearance-bike',
         default='3.0',
-        help='Minimum clearance in meters when spawning a bike (default: 5.0)',
+        help='Minimum clearance (m) when spawning a bike (default: 5.0)',
         type=float)
     argparser.add_argument(
         '--clearance-pedestrian',
         default='0.5',
-        help='Minimum clearance in meters when spawning a pedestrian (default: 0.5)',
+        help='Minimum clearance (m) when spawning a pedestrian (default: 0.5)',
         type=float)
     argparser.add_argument(
-        '--probability-lane-change',
+        '--lane-change-probability',
         default='0.1',
         help='Probability of lane change for cars and bikes (default: 0.1)',
         type=float)
     argparser.add_argument(
-        '--probability-cross',
+        '--cross-probability',
         default='0.05',
         help='Probability of crossing road for pedestrians (default: 0.05)',
+        type=float)
+    argparser.add_argument(
+        '--stuck-speed',
+        default='0.2',
+        help='Maximum speed (m/s) for an agent to be considered stuck (default: 0.2)',
+        type=float)
+    argparser.add_argument(
+        '--stuck-duration',
+        default='5.0',
+        help='Minimum duration (s) for an agent to be considered stuck (default: 5)',
         type=float)
     args = argparser.parse_args()
 
