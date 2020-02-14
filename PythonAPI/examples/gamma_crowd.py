@@ -319,6 +319,11 @@ class Context(object):
         self.args = args
         self.rng = random.Random(args.seed)
 
+        with (DATA_PATH/'{}.sim_bounds'.format(c.args.dataset)).open('r') as f:
+            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
+
         self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
         self.sumo_network_segments = self.sumo_network.create_segment_map()
         self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
@@ -331,12 +336,6 @@ class Context(object):
         self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
 
-        with (DATA_PATH/'{}.sim_bounds'.format(c.args.dataset)).open('r') as f:
-            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
-            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
-            self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
-
-    
         self.client = carla.Client(args.host, args.port)
         self.client.set_timeout(10.0)
         self.world = self.client.get_world()
