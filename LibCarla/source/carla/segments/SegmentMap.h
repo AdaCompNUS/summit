@@ -49,7 +49,7 @@ private:
   std::vector<std::pair<size_t, size_t>> _index_to_segment_map;
   std::discrete_distribution<size_t> _index_distribution;
 
-  std::default_random_engine _rng;
+  std::mt19937 _rng;
 
   void Build();
 };

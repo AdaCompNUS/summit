@@ -185,18 +185,15 @@ class SumoNetworkAgentPath:
         self.interval = interval
 
     @staticmethod
-    def rand_path(sumo_network, min_points, interval, segment_map, min_safe_points=None, rng=random):
-        if min_safe_points is None:
-            min_safe_points = min_points
-
+    def rand_path(sumo_network, min_points, interval, segment_map, rng=random):
         spawn_point = None
         route_paths = None
         while not spawn_point or len(route_paths) < 1:
             spawn_point = segment_map.rand_point()
             spawn_point = sumo_network.get_nearest_route_point(spawn_point)
-            route_paths = sumo_network.get_next_route_paths(spawn_point, min_safe_points - 1, interval)
+            route_paths = sumo_network.get_next_route_paths(spawn_point, min_points - 1, interval)
 
-        return SumoNetworkAgentPath(rng.choice(route_paths)[0:min_points], min_points, interval)
+        return SumoNetworkAgentPath(rng.choice(route_paths), min_points, interval)
 
     def resize(self, sumo_network, rng=random):
         while len(self.route_points) < self.min_points:
@@ -253,19 +250,18 @@ class SidewalkAgentPath:
         self.route_orientations = route_orientations
 
     @staticmethod
-    def rand_path(sidewalk, min_points, interval, cross_probability, bounds_min, bounds_max, rng=None,):
+    def rand_path(sidewalk, min_points, interval, cross_probability, segment_map, rng=None):
         if rng is None:
             rng = random
     
-        point = None
-        while point is None or not (bounds_min.x <= point_position.x <= bounds_max.x and bounds_min.y <= point_position.y <= bounds_max.y):
-            point = carla.Vector2D(rng.uniform(bounds_min.x, bounds_max.x), rng.uniform(bounds_min.y, bounds_max.y))
-            point = sidewalk.get_nearest_route_point(point)
-            point_position = sidewalk.get_route_point_position(point)
+        spawn_point = sidewalk.get_nearest_route_point(segment_map.rand_point())
 
-        path = SidewalkAgentPath([point], [rng.choice([True, False])], min_points, interval)
+        path = SidewalkAgentPath([spawn_point], [rng.choice([True, False])], min_points, interval)
         path.resize(sidewalk, cross_probability)
         return path
+
+
+        return SumoNetworkAgentPath(rng.choice(route_paths)[0:min_points], min_points, interval)
 
     def resize(self, sidewalk, cross_probability, rng=None):
         if rng is None:
@@ -334,13 +330,20 @@ class Agent(object):
 ''' Class to hold contextual information. '''
 class Context(object):
     def __init__(self, args):
-        self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
-        self.sumo_network_segment_map = self.sumo_network.create_segment_map()
-        self.sumo_network_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.network.wkt'.format(args.dataset)))
-        self.sidewalk = self.sumo_network_occupancy.create_sidewalk(1.5)
-        self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
-        self.rng = random.Random(args.seed)
         self.args = args
+        self.rng = random.Random(args.seed)
+
+        self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
+        self.sumo_network_segments = self.sumo_network.create_segment_map()
+        self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
+        self.sumo_network_spawn_segments.seed_rand(self.rng.getrandbits(32))
+        self.sumo_network_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.network.wkt'.format(args.dataset)))
+
+        self.sidewalk = self.sumo_network_occupancy.create_sidewalk(1.5)
+        self.sidewalk_segments = self.sidewalk.create_segment_map()
+        self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
+        self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
+        self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
     
         self.client = carla.Client(args.host, args.port)
         self.client.set_timeout(10.0)
@@ -395,18 +398,13 @@ def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
 ''' Spawn step. '''
 def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
-    # Get segment map within ego range.
-    spawn_segment_map = c.sumo_network_segment_map.intersection(
-            carla.OccupancyMap(bounds_min, bounds_max))
-    spawn_segment_map.seed_rand(c.rng.getrandbits(32))
-
     # Get AABB.
     aabb_map = carla.AABBMap(
         [get_aabb(actor) for actor in get_cars(c.world) + get_bikes(c.world) + get_pedestrians(c.world)])
 
     # Spawn at most one car.
     if len(car_agents) < c.args.num_car:
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segment_map, rng=c.rng)
+        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
         if not aabb_map.intersects(carla.AABB2D(
                 carla.Vector2D(path.get_position(c.sumo_network, 0).x - c.args.clearance_car,
                                path.get_position(c.sumo_network, 0).y - c.args.clearance_car),
@@ -430,7 +428,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
     # Spawn at most one bike.
     if len(bike_agents) < c.args.num_bike:
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segment_map, rng=c.rng)
+        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
         if not aabb_map.intersects(carla.AABB2D(
                 carla.Vector2D(path.get_position(c.sumo_network, 0).x - c.args.clearance_bike,
                                path.get_position(c.sumo_network, 0).y - c.args.clearance_bike),
@@ -454,7 +452,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
     # Spawn at most one pedestrian.
     if len(pedestrian_agents) < c.args.num_pedestrian:
-        path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, bounds_min, bounds_max, c.rng)
+        path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)
         if not aabb_map.intersects(carla.AABB2D(
                 carla.Vector2D(path.get_position(c.sidewalk, 0).x - c.args.clearance_pedestrian,
                                path.get_position(c.sidewalk, 0).y - c.args.clearance_pedestrian),

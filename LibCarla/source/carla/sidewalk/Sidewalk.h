@@ -3,6 +3,7 @@
 #include "carla/geom/Vector2D.h"
 #include "carla/occupancy/OccupancyMap.h"
 #include "carla/Memory.h"
+#include "carla/segments/SegmentMap.h"
 #include <boost/optional.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
@@ -10,11 +11,8 @@
 #include <boost/geometry/index/rtree.hpp>
 
 namespace carla {
-namespace occupancy {
-
-class OccupancyMap;
-
-}
+namespace occupancy { class OccupancyMap; }
+namespace segments { class SegmentMap; }
 }
 
 namespace carla {
@@ -35,6 +33,8 @@ public:
   const std::vector<std::vector<geom::Vector2D>>& Polygons() const { return _polygons; }
 
   occupancy::OccupancyMap CreateOccupancyMap(float width) const;
+  segments::SegmentMap CreateSegmentMap() const;
+
   geom::Vector2D GetRoutePointPosition(const SidewalkRoutePoint& route_point) const;
   SidewalkRoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   SidewalkRoutePoint GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;

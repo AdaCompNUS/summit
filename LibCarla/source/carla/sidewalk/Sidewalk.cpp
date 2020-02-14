@@ -40,6 +40,20 @@ occupancy::OccupancyMap Sidewalk::CreateOccupancyMap(float width) const {
   }
   return occupancy_map;
 }
+
+segments::SegmentMap Sidewalk::CreateSegmentMap() const {
+  std::vector<geom::Segment2D> segments;
+
+  for (const auto& polygon : _polygons) {
+    for (size_t i = 0; i < polygon.size(); i++) {
+      segments.emplace_back(
+          polygon[i],
+          polygon[(i + 1) % polygon.size()]);
+    }
+  }
+
+  return segments::SegmentMap(std::move(segments));
+}
   
 geom::Vector2D Sidewalk::GetRoutePointPosition(const SidewalkRoutePoint& route_point) const {
   const geom::Vector2D segment_start = _polygons[route_point.polygon_id][route_point.segment_id]; 

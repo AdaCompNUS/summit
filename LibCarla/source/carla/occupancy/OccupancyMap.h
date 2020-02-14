@@ -9,19 +9,8 @@
 #include <boost/geometry/geometries/geometries.hpp>
 
 namespace carla {
-namespace sidewalk {
-
-class Sidewalk;
-
-}
-}
-
-namespace carla {
-namespace segments {
-
-class SegmentMap;
-
-}
+namespace sidewalk { class Sidewalk; }
+namespace segments { class SegmentMap; }
 }
 
 namespace carla {

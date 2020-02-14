@@ -49,6 +49,8 @@ void export_sidewalk() {
         make_function(&Sidewalk::Polygons, return_internal_reference<>()))
     .def("create_occupancy_map",
         &Sidewalk::CreateOccupancyMap)
+    .def("create_segment_map",
+        &Sidewalk::CreateSegmentMap)
     .def("get_route_point_position",
         &Sidewalk::GetRoutePointPosition)
     .def("get_nearest_route_point",
