@@ -18,21 +18,19 @@ from pathlib import Path
 from threading import RLock
 import Pyro4
 import argparse
-import atexit
 import carla
 import math
 import numpy as np
 import random
 import time
 
-DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 
-# This applies to all processes.
+
+''' ========== CONSTANTS ========== '''
+DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 Pyro4.config.COMMTIMEOUT = 2.0
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
 Pyro4.config.SERIALIZER = 'serpent'
-
-# Serialization for carla.Vector2D.
 Pyro4.util.SerializerBase.register_class_to_dict(
         carla.Vector2D, 
         lambda o: { 
@@ -43,12 +41,6 @@ Pyro4.util.SerializerBase.register_class_to_dict(
 Pyro4.util.SerializerBase.register_dict_to_class(
         'carla.Vector2D',
         lambda c, o: carla.Vector2D(o['x'], o['y']))
-
-bounds_center = carla.Vector2D(180, 220)
-bounds_min = carla.Vector2D(80, 120)
-bounds_max = carla.Vector2D(280, 320)
-bounds_occupancy = carla.OccupancyMap(bounds_min, bounds_max)
-
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
 VEHICLE_SPEED_KP = 0.3
@@ -56,7 +48,9 @@ VEHICLE_SPEED_KI = 0.1
 VEHICLE_SPEED_KD = 0.005
 VEHICLE_STEER_KP = 2.5
 
-''' Crowd service class definition '''
+
+
+''' ========== MESSAGE PASSING SERVICE ========== '''
 @Pyro4.expose
 @Pyro4.behavior(instance_mode="single")
 class CrowdService():
@@ -80,7 +74,7 @@ class CrowdService():
 
 
 
-''' Utility functions. '''
+''' ========== UTILITY FUNCTIONS AND CLASSES ========== '''
 def get_signed_angle_diff(vector1, vector2):
     theta = math.atan2(vector1.y, vector1.x) - math.atan2(vector2.y, vector2.x)
     theta = np.rad2deg(theta)
@@ -166,18 +160,13 @@ def get_pedestrian_bounding_box_corners(actor):
                loc - half_x_len * forward_vec - half_y_len * sideward_vec]
     return corners
     
-def get_lane_constraints(sidewalk, actor):
-    position = get_position(actor)
-    forward_vec = get_forward_direction(actor)
+def get_lane_constraints(sidewalk, position, forward_vec):
     left_line_end = position + (1.5 + 2.0 + 0.8) * ((forward_vec.rotate(np.deg2rad(-90))).make_unit_vector())
     right_line_end = position + (1.5 + 2.0 + 0.5) * ((forward_vec.rotate(np.deg2rad(90))).make_unit_vector())
     left_lane_constrained_by_sidewalk = sidewalk.intersects(position, left_line_end)
     right_lane_constrained_by_sidewalk = sidewalk.intersects(position, right_line_end)
     return left_lane_constrained_by_sidewalk, right_lane_constrained_by_sidewalk
 
-
-
-''' Represents a path on the SUMO network. '''
 class SumoNetworkAgentPath:
     def __init__(self, route_points, min_points, interval):
         self.route_points = route_points
@@ -241,7 +230,6 @@ class SumoNetworkAgentPath:
         next_pos = sumo_network.get_route_point_position(self.route_points[index + 1])
         return np.rad2deg(math.atan2(next_pos.y - pos.y, next_pos.x - pos.x))
 
-''' Represents a path on the sidewalk. '''
 class SidewalkAgentPath:
     def __init__(self, route_points, route_orientations, min_points, interval):
         self.min_points = min_points
@@ -316,7 +304,6 @@ class SidewalkAgentPath:
         next_pos = sidewalk.get_route_point_position(self.route_points[index + 1])
         return np.rad2deg(math.atan2(next_pos.y - pos.y, next_pos.x - pos.x))
 
-''' Represents an agent. '''
 class Agent(object):
     def __init__(self, actor_id, type_tag, path, preferred_speed, steer_angle_range=0.0):
         self.actor_id = actor_id
@@ -327,7 +314,6 @@ class Agent(object):
         self.control_velocity = carla.Vector2D(0, 0)
         self.steer_angle_range = steer_angle_range
 
-''' Class to hold contextual information. '''
 class Context(object):
     def __init__(self, args):
         self.args = args
@@ -344,6 +330,12 @@ class Context(object):
         self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
         self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
+
+        with (DATA_PATH/'{}.sim_bounds'.format(c.args.dataset)).open('r') as f:
+            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
+
     
         self.client = carla.Client(args.host, args.port)
         self.client.set_timeout(10.0)
@@ -358,8 +350,7 @@ class Context(object):
 
 
 
-''' Destroys agents that are out of bounds or are stuck. 
-    Also includes update logic for stuck timeouts. '''
+''' ========== MAIN LOGIC FUNCTIONS ========== '''
 def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
     
     update_time = time.time()
@@ -394,8 +385,6 @@ def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
 
     c.client.apply_batch_sync(commands)
 
-
-''' Spawn step. '''
 def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
     # Get AABB.
@@ -471,7 +460,6 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
                 pedestrian_agents.append(Agent(
                     actor.id, 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5)))
 
-''' GAMMA step. '''
 def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     agents = car_agents + bike_agents + pedestrian_agents
 
@@ -483,12 +471,14 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
         for (i, agent) in enumerate(agents):
             actor = c.world.get_actor(agent.actor_id)
 
+            # Declare variables.
             is_valid = True
             pref_vel = None
             path_forward = None
             bounding_box_corners = None
+            lane_constraints = None
 
-            # Update path, check, proces variables.
+            # Update path, check validity, process variables.
             if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
                 position = get_position(actor)
                 # Lane change if possible.
@@ -515,6 +505,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
                     path_forward = (agent.path.get_position(c.sumo_network, 1) - 
                             agent.path.get_position(c.sumo_network, 0)).make_unit_vector()
                     bounding_box_corners = get_vehicle_bounding_box_corners(actor)
+                    side_constraints = get_lane_constraints(c.sidewalk, position, path_forward)
             elif agent.type_tag == 'People':
                 position = get_position(actor)
                 # Cut, resize, check.
@@ -541,8 +532,9 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
                 gamma.set_agent_bounding_box_corners(i, bounding_box_corners)
                 gamma.set_agent_pref_velocity(i, pref_vel)
                 gamma.set_agent_path_forward(i, path_forward)
-                (left, right) = get_lane_constraints(c.sidewalk, actor)
-                gamma.set_agent_lane_constraints(i, right, left) # Flip since GAMMA uses right-handed instead. 
+                if lane_constraints is not None:
+                    # Flip LR -> RL since GAMMA uses right-handed instead.
+                    gamma.set_agent_lane_constraints(i, lane_constraints[1], lane_constraints[0])  
                 next_agents.append(agent)
             else:
                 agents_to_destroy.append(agent)
@@ -651,8 +643,6 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
 
     return cur_time # New pid_last_update_time.
 
-
-
 def control_loop(args):
     c = Context(args)
     print('Control loop running.')
@@ -665,7 +655,7 @@ def control_loop(args):
         start = time.time()
         pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
         time.sleep(max(0, 0.05 - (time.time() - start)))
-        print('CONTROL', 1 / max(time.time() - start, 0.001))
+        print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
 def gamma_loop(args):
     c = Context(args)
@@ -681,8 +671,7 @@ def gamma_loop(args):
         do_spawn(c, car_agents, bike_agents, pedestrian_agents)
         do_gamma(c, car_agents, bike_agents, pedestrian_agents)
         time.sleep(max(0, 0.02 - (time.time() - start)))
-        print('GAMMA', 1 / max(time.time() - start, 0.001))
-
+        print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -711,43 +700,43 @@ def main():
         action='store_true')
     argparser.add_argument(
         '--num-car',
-        default='10',
-        help='Number of cars to spawn (default: 10)',
+        default='20',
+        help='Number of cars to spawn (default: 20)',
         type=int)
     argparser.add_argument(
         '--num-bike',
-        default='10',
-        help='Number of bikes to spawn (default: 10)',
+        default='20',
+        help='Number of bikes to spawn (default: 20)',
         type=int)
     argparser.add_argument(
         '--num-pedestrian',
-        default='10',
-        help='Number of pedestrians to spawn (default: 10)',
+        default='20',
+        help='Number of pedestrians to spawn (default: 20)',
         type=int)
     argparser.add_argument(
         '--clearance-car',
-        default='3.0',
+        default='5.0',
         help='Minimum clearance (m) when spawning a car (default: 5.0)',
         type=float)
     argparser.add_argument(
         '--clearance-bike',
-        default='3.0',
+        default='5.0',
         help='Minimum clearance (m) when spawning a bike (default: 5.0)',
         type=float)
     argparser.add_argument(
         '--clearance-pedestrian',
-        default='0.5',
+        default='1.0',
         help='Minimum clearance (m) when spawning a pedestrian (default: 0.5)',
         type=float)
     argparser.add_argument(
         '--lane-change-probability',
-        default='0.1',
-        help='Probability of lane change for cars and bikes (default: 0.1)',
+        default='0.0',
+        help='Probability of lane change for cars and bikes (default: 0.0)',
         type=float)
     argparser.add_argument(
         '--cross-probability',
-        default='0.05',
-        help='Probability of crossing road for pedestrians (default: 0.05)',
+        default='0.1',
+        help='Probability of crossing road for pedestrians (default: 0.1)',
         type=float)
     argparser.add_argument(
         '--stuck-speed',

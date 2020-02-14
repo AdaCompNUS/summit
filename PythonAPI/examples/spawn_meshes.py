@@ -55,6 +55,9 @@ def spawn_meshes(client, dataset):
     landmark_occupancies = []
     for p in (DATA_PATH/'{}.landmarks'.format(dataset)).glob('*.landmark.wkt'):
         landmark_occupancies.append(carla.OccupancyMap.load(str(p)))
+    with (DATA_PATH/'{}.sim_bounds'.format(dataset)).open('r') as f:
+        bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+        bounds_max = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
 
     commands = []
     
@@ -90,6 +93,11 @@ def spawn_meshes(client, dataset):
             landmark_occupancy.get_wall_mesh_triangles(20), # Walls
             random.choice(WALL_MAT),
             1)) # 1 = Building
+        
+    box = carla.BoundingBox(
+            carla.Location((bounds_min.x + bounds_max.x) / 2, (bounds_min.y + bounds_max.y) / 2, 0),
+            carla.Vector3D((bounds_max.x - bounds_min.x) / 2, (bounds_max.y - bounds_min.y) / 2, 0))
+    client.get_world().debug.draw_box(box, carla.Rotation(), 2, carla.Color(255, 0, 0), -1.0)
 
     client.apply_batch_sync(commands)
 
