@@ -453,6 +453,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
             actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
+            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
@@ -477,6 +478,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
             actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
+            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
@@ -500,6 +502,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
             trans.location.z = 0.5
             trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
             actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
+            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
