@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import glob
 import os
@@ -15,7 +15,6 @@ except IndexError:
 
 from collections import defaultdict
 from multiprocessing import Process
-from pathlib import Path
 from threading import RLock
 import Pyro4
 import argparse
@@ -24,11 +23,22 @@ import math
 import numpy as np
 import random
 import time
+if sys.version_info.major == 2:
+    from pathlib2 import Path
+else:
+    from pathlib import Path
 
 
 
 ''' ========== CONSTANTS ========== '''
 DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
+PATH_MIN_POINTS = 20
+PATH_INTERVAL = 1.0
+VEHICLE_SPEED_KP = 0.3
+VEHICLE_SPEED_KI = 0.1
+VEHICLE_SPEED_KD = 0.005
+VEHICLE_STEER_KP = 2.0
+
 Pyro4.config.COMMTIMEOUT = 2.0
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
 Pyro4.config.SERIALIZER = 'serpent'
@@ -42,12 +52,39 @@ Pyro4.util.SerializerBase.register_class_to_dict(
 Pyro4.util.SerializerBase.register_dict_to_class(
         'carla.Vector2D',
         lambda c, o: carla.Vector2D(o['x'], o['y']))
-PATH_MIN_POINTS = 20
-PATH_INTERVAL = 1.0
-VEHICLE_SPEED_KP = 0.3
-VEHICLE_SPEED_KI = 0.1
-VEHICLE_SPEED_KD = 0.005
-VEHICLE_STEER_KP = 2.5
+Pyro4.util.SerializerBase.register_class_to_dict(	
+        carla.SumoNetworkRoutePoint, 	
+        lambda o: { 	
+            '__class__': 'carla.SumoNetworkRoutePoint',	
+            'edge': o.edge,	
+            'lane': o.lane,	
+            'segment': o.segment,	
+            'offset': o.offset	
+        })	
+def dict_to_sumo_network_route_point(c, o):	
+    r = carla.SumoNetworkRoutePoint()	
+    r.edge = o['edge']	
+    r.lane = o['lane']	
+    r.segment = o['segment']	
+    r.offset = o['offset']	
+    return r	
+Pyro4.util.SerializerBase.register_dict_to_class(	
+        'carla.SumoNetworkRoutePoint', dict_to_sumo_network_route_point)	
+Pyro4.util.SerializerBase.register_class_to_dict(	
+        carla.SidewalkRoutePoint, 	
+        lambda o: { 	
+            '__class__': 'carla.SidewalkRoutePoint',	
+            'polygon_id': o.polygon_id,	
+            'segment_id': o.segment_id,	
+            'offset': o.offset	
+        })	
+def dict_to_sidewalk_route_point(c, o):	
+    r = carla.SidewalkRoutePoint()	
+    r.polygon_id = o['polygon_id']	
+    r.segment_id = o['segment_id']	
+    return r	
+Pyro4.util.SerializerBase.register_dict_to_class(	
+        'carla.SidewalkRoutePoint', dict_to_sidewalk_route_point)
 
 
 
@@ -58,6 +95,9 @@ class CrowdService():
     def __init__(self):
         self._control_velocities = []
         self._control_velocities_lock = RLock()
+
+        self._local_intentions = []
+        self._local_intentions_lock = RLock()
    
     @property
     def control_velocities(self):
@@ -72,6 +112,20 @@ class CrowdService():
 
     def release_control_velocities(self):
         self._control_velocities_lock.release()
+    
+    @property
+    def local_intentions(self):
+        return self._local_intentions
+
+    @local_intentions.setter
+    def local_intentions(self, velocities):
+        self._local_intentions = velocities
+
+    def acquire_local_intentions(self):
+        self._local_intentions_lock.acquire()
+
+    def release_local_intentions(self):
+        self._local_intentions_lock.release()
 
 
 
@@ -248,9 +302,6 @@ class SidewalkAgentPath:
         path = SidewalkAgentPath([spawn_point], [rng.choice([True, False])], min_points, interval)
         path.resize(sidewalk, cross_probability)
         return path
-
-
-        return SumoNetworkAgentPath(rng.choice(route_paths)[0:min_points], min_points, interval)
 
     def resize(self, sidewalk, cross_probability, rng=None):
         if rng is None:
@@ -450,7 +501,7 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
             trans = carla.Transform()
             trans.location.x = path.get_position(c.sidewalk, 0).x
             trans.location.y = path.get_position(c.sidewalk, 0).y
-            trans.location.z = 0.2
+            trans.location.z = 0.5
             trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
             actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
             if actor:
@@ -462,99 +513,140 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
 def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     agents = car_agents + bike_agents + pedestrian_agents
+    agents_lookup = {}
+    for agent in agents:
+        agents_lookup[agent.actor_id] = agent
 
     next_agents = []
+    next_agent_gamma_ids = []
     agents_to_destroy = []
     if len(agents) > 0:
         gamma = carla.RVOSimulator()
         
-        for (i, agent) in enumerate(agents):
-            actor = c.world.get_actor(agent.actor_id)
-
-            # Declare variables.
-            is_valid = True
-            pref_vel = None
-            path_forward = None
-            bounding_box_corners = None
-            lane_constraints = None
-
-            # Update path, check validity, process variables.
-            if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
-                position = get_position(actor)
-                # Lane change if possible.
-                if c.rng.uniform(0.0, 1.0) <= c.args.lane_change_probability:
-                    new_path_candidates = c.sumo_network.get_next_route_paths(
-                            c.sumo_network.get_nearest_route_point(position),
-                            agent.path.min_points - 1, agent.path.interval)
-                    if len(new_path_candidates) > 0:
-                        new_path = SumoNetworkAgentPath(c.rng.choice(new_path_candidates)[0:agent.path.min_points], 
-                                agent.path.min_points, agent.path.interval)
-                        agent.path = new_path
-                # Cut, resize, check.
-                if not agent.path.resize(c.sumo_network):
-                    is_valid = False
+        gamma_id = 0
+        for actor in c.world.get_actors():
+            if actor.id not in agents_lookup:
+                if isinstance(actor, carla.Vehicle):
+                    if actor.attributes['number_of_wheels'] == 2:
+                        type_tag = 'Bicycle'
+                    else:
+                        type_tag = 'Car'
+                    bounding_box_corners = get_vehicle_bounding_box_corners(actor)
+                elif isinstance(actor, carla.Walker):
+                    type_tag = 'People'
+                    bounding_box_corners = get_pedestrian_bounding_box_corners(actor)
                 else:
-                    agent.path.cut(c.sumo_network, position)
+                    continue
+
+                gamma.add_agent(carla.AgentParams.get_default(type_tag), gamma_id)
+                gamma.set_agent_position(gamma_id, get_position(actor))
+                gamma.set_agent_velocity(gamma_id, get_velocity(actor))
+                gamma.set_agent_heading(gamma_id, get_forward_direction(actor))
+                gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
+                gamma.set_agent_pref_velocity(gamma_id, get_velocity(actor))
+                gamma_id += 1
+            else:
+                agent = agents_lookup[actor.id]
+
+                # Declare variables.
+                is_valid = True
+                pref_vel = None
+                path_forward = None
+                bounding_box_corners = None
+                lane_constraints = None
+
+                # Update path, check validity, process variables.
+                if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
+                    position = get_position(actor)
+                    # Lane change if possible.
+                    if c.rng.uniform(0.0, 1.0) <= c.args.lane_change_probability:
+                        new_path_candidates = c.sumo_network.get_next_route_paths(
+                                c.sumo_network.get_nearest_route_point(position),
+                                agent.path.min_points - 1, agent.path.interval)
+                        if len(new_path_candidates) > 0:
+                            new_path = SumoNetworkAgentPath(c.rng.choice(new_path_candidates)[0:agent.path.min_points], 
+                                    agent.path.min_points, agent.path.interval)
+                            agent.path = new_path
+                    # Cut, resize, check.
                     if not agent.path.resize(c.sumo_network):
                         is_valid = False
-                # Calculate variables.
-                if is_valid:
-                    target_position = agent.path.get_position(c.sumo_network, 5)  ## to check
-                    velocity = (target_position - position).make_unit_vector()
-                    pref_vel = agent.preferred_speed * velocity
-                    path_forward = (agent.path.get_position(c.sumo_network, 1) - 
-                            agent.path.get_position(c.sumo_network, 0)).make_unit_vector()
-                    bounding_box_corners = get_vehicle_bounding_box_corners(actor)
-                    side_constraints = get_lane_constraints(c.sidewalk, position, path_forward)
-            elif agent.type_tag == 'People':
-                position = get_position(actor)
-                # Cut, resize, check.
-                if not agent.path.resize(c.sidewalk, c.args.cross_probability):
-                    is_valid = False
-                else:
-                    agent.path.cut(c.sidewalk, position)
+                    else:
+                        agent.path.cut(c.sumo_network, position)
+                        if not agent.path.resize(c.sumo_network):
+                            is_valid = False
+                    # Calculate variables.
+                    if is_valid:
+                        target_position = agent.path.get_position(c.sumo_network, 5)  ## to check
+                        velocity = (target_position - position).make_unit_vector()
+                        pref_vel = agent.preferred_speed * velocity
+                        path_forward = (agent.path.get_position(c.sumo_network, 1) - 
+                                agent.path.get_position(c.sumo_network, 0)).make_unit_vector()
+                        bounding_box_corners = get_vehicle_bounding_box_corners(actor)
+                        side_constraints = get_lane_constraints(c.sidewalk, position, path_forward)
+                elif agent.type_tag == 'People':
+                    position = get_position(actor)
+                    # Cut, resize, check.
                     if not agent.path.resize(c.sidewalk, c.args.cross_probability):
                         is_valid = False
-                # Calculate pref_vel.
-                if is_valid:
-                    target_position = agent.path.get_position(c.sidewalk, 0)
-                    velocity = (target_position - position).make_unit_vector()
-                    pref_vel = agent.preferred_speed * velocity
-                    path_forward = carla.Vector2D(0, 0) # Irrelevant for pedestrian.
-                    bounding_box_corners = get_pedestrian_bounding_box_corners(actor)
-            
-            # Add info to GAMMA.
-            if pref_vel:
-                gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), len(next_agents))
-                gamma.set_agent_position(i, get_position(actor))
-                gamma.set_agent_velocity(i, get_velocity(actor))
-                gamma.set_agent_heading(i, get_forward_direction(actor))
-                gamma.set_agent_bounding_box_corners(i, bounding_box_corners)
-                gamma.set_agent_pref_velocity(i, pref_vel)
-                gamma.set_agent_path_forward(i, path_forward)
-                if lane_constraints is not None:
-                    # Flip LR -> RL since GAMMA uses right-handed instead.
-                    gamma.set_agent_lane_constraints(i, lane_constraints[1], lane_constraints[0])  
-                next_agents.append(agent)
-            else:
-                agents_to_destroy.append(agent)
+                    else:
+                        agent.path.cut(c.sidewalk, position)
+                        if not agent.path.resize(c.sidewalk, c.args.cross_probability):
+                            is_valid = False
+                    # Calculate pref_vel.
+                    if is_valid:
+                        target_position = agent.path.get_position(c.sidewalk, 0)
+                        velocity = (target_position - position).make_unit_vector()
+                        pref_vel = agent.preferred_speed * velocity
+                        path_forward = carla.Vector2D(0, 0) # Irrelevant for pedestrian.
+                        bounding_box_corners = get_pedestrian_bounding_box_corners(actor)
+                
+                # Add info to GAMMA.
+                if pref_vel:
+                    gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), gamma_id)
+                    gamma.set_agent_position(gamma_id, get_position(actor))
+                    gamma.set_agent_velocity(gamma_id, get_velocity(actor))
+                    gamma.set_agent_heading(gamma_id, get_forward_direction(actor))
+                    gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
+                    gamma.set_agent_pref_velocity(gamma_id, pref_vel)
+                    gamma.set_agent_path_forward(gamma_id, path_forward)
+                    if lane_constraints is not None:
+                        # Flip LR -> RL since GAMMA uses right-handed instead.
+                        gamma.set_agent_lane_constraints(gamma_id, lane_constraints[1], lane_constraints[0])  
+                    next_agents.append(agent)
+                    next_agent_gamma_ids.append(gamma_id)
+                    gamma_id += 1
+                else:
+                    agents_to_destroy.append(agent)
 
         gamma.do_step()
 
-        for (i, agent) in enumerate(next_agents):
-            agent.control_velocity = gamma.get_agent_velocity(i)
+        for (agent, gamma_id) in zip(next_agents, next_agent_gamma_ids):
+            agent.control_velocity = gamma.get_agent_velocity(gamma_id)
 
     car_agents[:] = [a for a in next_agents if a.type_tag == 'Car']
     bike_agents[:] = [a for a in next_agents if a.type_tag == 'Bicycle']
     pedestrian_agents[:] = [a for a in next_agents if a.type_tag == 'People']
                 
     c.client.apply_batch_sync([carla.command.DestroyActor(a.actor_id) for a in agents_to_destroy])
+    c.world.wait_for_tick(1.0)
 
     c.crowd_service.acquire_control_velocities()
     c.crowd_service.control_velocities = [
             (agent.actor_id, agent.type_tag, agent.control_velocity, agent.preferred_speed, agent.steer_angle_range)
             for agent in next_agents]
     c.crowd_service.release_control_velocities()
+   
+    '''
+    local_intentions = []
+    for agent in next_agents:
+        if agent.type_tag == 'People':
+            local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0], agent.path.route_orientations[0]))
+        else:
+            local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0]))
+    c.crowd_service.acquire_local_intentions()
+    c.crowd_service.local_intentions = local_intentions
+    c.crowd_service.release_local_intentions()
+    '''
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
     start = time.time()
@@ -655,7 +747,7 @@ def control_loop(args):
         start = time.time()
         pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
         time.sleep(max(0, 0.05 - (time.time() - start)))
-        print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+        #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
 def gamma_loop(args):
     c = Context(args)
@@ -671,7 +763,7 @@ def gamma_loop(args):
         do_spawn(c, car_agents, bike_agents, pedestrian_agents)
         do_gamma(c, car_agents, bike_agents, pedestrian_agents)
         time.sleep(max(0, 0.02 - (time.time() - start)))
-        print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+        #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -750,8 +842,13 @@ def main():
         type=float)
     args = argparser.parse_args()
 
-    Process(target=control_loop, args=(args,), daemon=True).start()
-    Process(target=gamma_loop, args=(args,), daemon=True).start()
+    control_process = Process(target=control_loop, args=(args,))
+    control_process.daemon = True
+    control_process.start()
+    
+    gamma_process = Process(target=gamma_loop, args=(args,))
+    gamma_process.daemon = True
+    gamma_process.start()
     
     Pyro4.Daemon.serveSimple(
             {
