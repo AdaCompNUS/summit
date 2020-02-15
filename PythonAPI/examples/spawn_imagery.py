@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """Spawns downloaded imagery for a dataset located in (<summit_root>/Data/)."""
 
@@ -18,9 +18,12 @@ except IndexError:
 import carla
 
 import argparse
-from pathlib import Path
 import random
 import math
+if sys.version_info.major == 2:
+    from pathlib2 import Path
+else:
+    from pathlib import Path
 
 DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'   
 IMAGERY_PATH = DATA_PATH/'imagery'
@@ -73,12 +76,12 @@ def spawn_imagery(client, zoom, min_lat, min_lon, max_lat, max_lon, offset):
 
             path = IMAGERY_PATH/'{}/{}_{}.jpeg'.format(zoom, row, column)
 
-            if not os.path.exists(path):
+            if not path.exists():
                 print('Path not found! {}/{}_{}'.format(zoom, row, column))
                 continue
 
-            with open(path, "rb") as f:
-                data = [b for b in f.read()]
+            with path.open('rb') as f:
+                data = [ord(b) if isinstance(b, str) else b for b in f.read()]
 
             bounds_min = project(num2deg(zoom, row + 1, column)) + offset
             bounds_min = carla.Vector3D(bounds_min.x, bounds_min.y, VERTICAL_OFFSET)
@@ -116,7 +119,10 @@ def main():
     bounds_min = (sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y)
     bounds_max = (sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y)
 
-    spawn_imagery(client, ZOOM_LEVEL, *bounds_min, *bounds_max, sumo_network.offset)
+    spawn_imagery(client, ZOOM_LEVEL, 
+            sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y,
+            sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y,
+            sumo_network.offset)
 
 if __name__ == '__main__':
     main()

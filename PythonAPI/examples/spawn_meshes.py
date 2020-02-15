@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """Spawns meshes extracted from a dataset located in (<summit_root>/Data/)."""
 
@@ -18,8 +18,11 @@ except IndexError:
 import carla
 
 import argparse
-from pathlib import Path
 import random
+if sys.version_info.major == 2:
+    from pathlib2 import Path
+else:
+    from pathlib import Path
 
 DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'   
 WALL_MAT = [
