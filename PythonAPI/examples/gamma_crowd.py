@@ -139,15 +139,6 @@ def get_signed_angle_diff(vector1, vector2):
         theta += 360
     return theta
 
-def get_cars(world):
-    return [a for a in world.get_actors().filter('vehicle.*') if int(a.attributes['number_of_wheels']) > 2]
-
-def get_bikes(world):
-    return [a for a in world.get_actors().filter('vehicle.*') if int(a.attributes['number_of_wheels']) == 2]
-
-def get_pedestrians(world):
-    return [a for a in world.get_actors().filter('walker.*')]
-    
 def get_steer_angle_range(actor):
     actor_physics_control = actor.get_physics_control()
     return (actor_physics_control.wheels[0].max_steer_angle + actor_physics_control.wheels[1].max_steer_angle) / 2
@@ -439,8 +430,11 @@ def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
 def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
     # Get AABB.
-    aabb_map = carla.AABBMap(
-        [get_aabb(actor) for actor in get_cars(c.world) + get_bikes(c.world) + get_pedestrians(c.world)])
+    aabbs = []
+    for actor in c.world.get_actors():
+        if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
+            aabbs.append(get_aabb(actor))
+    aabb_map = carla.AABBMap(aabbs)
 
     # Spawn at most one car.
     if len(car_agents) < c.args.num_car:
@@ -525,7 +519,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
         
         gamma_id = 0
         for actor in c.world.get_actors():
-            if actor.id not in agents_lookup:
+            if actor.id not in agents_lookup: # For external agents not tracked.
                 if isinstance(actor, carla.Vehicle):
                     if actor.attributes['number_of_wheels'] == 2:
                         type_tag = 'Bicycle'
@@ -545,7 +539,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
                 gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
                 gamma.set_agent_pref_velocity(gamma_id, get_velocity(actor))
                 gamma_id += 1
-            else:
+            else: # For tracked agents.
                 agent = agents_lookup[actor.id]
 
                 # Declare variables.
@@ -626,7 +620,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     car_agents[:] = [a for a in next_agents if a.type_tag == 'Car']
     bike_agents[:] = [a for a in next_agents if a.type_tag == 'Bicycle']
     pedestrian_agents[:] = [a for a in next_agents if a.type_tag == 'People']
-                
+
     c.client.apply_batch_sync([carla.command.DestroyActor(a.actor_id) for a in agents_to_destroy])
     c.world.wait_for_tick(1.0)
 
@@ -736,6 +730,8 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
     return cur_time # New pid_last_update_time.
 
 def control_loop(args):
+    # Wait for crowd service.
+    time.sleep(2)
     c = Context(args)
     print('Control loop running.')
             
@@ -750,6 +746,8 @@ def control_loop(args):
         #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
 def gamma_loop(args):
+    # Wait for crowd service.
+    time.sleep(2)
     c = Context(args)
     print('GAMMA loop running.')
     
