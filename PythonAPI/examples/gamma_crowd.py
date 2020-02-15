@@ -5,10 +5,11 @@ import os
 import sys
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
+    sys.path.append(glob.glob(os.path.abspath('%s/../../carla/dist/carla-*%d.%d-%s.egg' % (
+        os.path.realpath(__file__),
         sys.version_info.major,
         sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64')))[0])
 except IndexError:
     pass
 
@@ -319,20 +320,20 @@ class Context(object):
         self.args = args
         self.rng = random.Random(args.seed)
 
-        with (DATA_PATH/'{}.sim_bounds'.format(c.args.dataset)).open('r') as f:
+        with (DATA_PATH/'{}.sim_bounds'.format(args.dataset)).open('r') as f:
             self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
-            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_max = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
             self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
 
         self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
         self.sumo_network_segments = self.sumo_network.create_segment_map()
-        self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
+        self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
         self.sumo_network_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sumo_network_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.network.wkt'.format(args.dataset)))
 
         self.sidewalk = self.sumo_network_occupancy.create_sidewalk(1.5)
         self.sidewalk_segments = self.sidewalk.create_segment_map()
-        self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(bounds_min, bounds_max))
+        self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
         self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
 
@@ -360,7 +361,7 @@ def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
         for agent in agents:
             actor = c.world.get_actor(agent.actor_id)
             delete = False
-            if not delete and not bounds_occupancy.contains(get_position(actor)):
+            if not delete and not c.bounds_occupancy.contains(get_position(actor)):
                 delete = True
             if not delete and get_position_3d(actor).z < -10:
                 delete = True
