@@ -395,7 +395,7 @@ class Context(object):
 
 ''' ========== MAIN LOGIC FUNCTIONS ========== '''
 def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
-    
+   
     update_time = time.time()
 
     commands = []
@@ -427,6 +427,7 @@ def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
         agents[:] = next_agents
 
     c.client.apply_batch_sync(commands)
+    c.world.wait_for_tick()
 
 def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
 
@@ -676,7 +677,7 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             target_speed = control_velocity.length()
             control = actor.get_control()
 
-            if target_speed < 1e-5 and speed < 0.5:
+            if target_speed < 1e-5 and speed < 0.2:
                 control.throttle = 0
                 control.brake = 1.0
                 control.hand_brake = True
