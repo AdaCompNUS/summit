@@ -52,7 +52,7 @@ Pyro4.util.SerializerBase.register_class_to_dict(
 Pyro4.util.SerializerBase.register_dict_to_class(
         'carla.Vector2D',
         lambda c, o: carla.Vector2D(o['x'], o['y']))
-Pyro4.util.SerializerBase.register_class_to_dict(	
+Pyro4.util.SerializerBase.register_class_to_dict(
         carla.SumoNetworkRoutePoint, 	
         lambda o: { 	
             '__class__': 'carla.SumoNetworkRoutePoint',	
@@ -60,10 +60,10 @@ Pyro4.util.SerializerBase.register_class_to_dict(
             'lane': o.lane,	
             'segment': o.segment,	
             'offset': o.offset	
-        })	
+        })
 def dict_to_sumo_network_route_point(c, o):	
     r = carla.SumoNetworkRoutePoint()	
-    r.edge = o['edge']	
+    r.edge = str(o['edge']) # In python2, this is a unicode, so use str() to convert.
     r.lane = o['lane']	
     r.segment = o['segment']	
     r.offset = o['offset']	
@@ -82,6 +82,7 @@ def dict_to_sidewalk_route_point(c, o):
     r = carla.SidewalkRoutePoint()	
     r.polygon_id = o['polygon_id']	
     r.segment_id = o['segment_id']	
+    r.offset = o['offset']
     return r	
 Pyro4.util.SerializerBase.register_dict_to_class(	
         'carla.SidewalkRoutePoint', dict_to_sidewalk_route_point)
@@ -630,17 +631,16 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
             for agent in next_agents]
     c.crowd_service.release_control_velocities()
    
-    '''
     local_intentions = []
     for agent in next_agents:
         if agent.type_tag == 'People':
             local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0], agent.path.route_orientations[0]))
         else:
             local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0]))
+
     c.crowd_service.acquire_local_intentions()
     c.crowd_service.local_intentions = local_intentions
     c.crowd_service.release_local_intentions()
-    '''
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
     start = time.time()
