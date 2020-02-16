@@ -2,6 +2,7 @@
 #include "ConstructorHelpers.h"
 #include "IImageWrapper.h"
 #include "IImageWrapperModule.h"
+#include "Materials/MaterialInstanceDynamic.h"
 
 ADynamicMeshActor::ADynamicMeshActor(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)

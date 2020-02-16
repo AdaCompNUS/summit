@@ -13,7 +13,7 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
-#include "carla/opendrive/OpenDriveParser.h"
+#include <carla/opendrive/OpenDriveParser.h>
 #include <compiler/enable-ue4-macros.h>
 
 #include "Carla/OpenDrive/OpenDrive.h"

@@ -17,7 +17,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 
+#include <compiler/disable-ue4-macros.h>
 #include <carla/road/Map.h>
+#include <compiler/enable-ue4-macros.h>
 
 #include "CarlaGameModeBase.generated.h"
 
@@ -50,6 +52,8 @@ protected:
   void Tick(float DeltaSeconds) override;
 
 private:
+
+  void SpawnActorFactories();
 
   UPROPERTY()
   UCarlaGameInstance *GameInstance = nullptr;
