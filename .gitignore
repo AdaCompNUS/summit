@@ -2,13 +2,14 @@ Build
 Dist
 Doxygen
 Deprecated/PythonClient/dist
+TrafficManager/build
 Util/Build
 Install
 LinuxNoEditor
 
 /ExportedMaps
-/Import
-/RoadRunnerFiles/*/
+/Import/*
+!/Import/README.md
 
 *.VC.db
 *.VC.opendb

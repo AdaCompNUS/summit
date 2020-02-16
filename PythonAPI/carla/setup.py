@@ -16,8 +16,10 @@ import sys
 
 def get_libcarla_extensions():
     include_dirs = ['dependencies/include']
+
     library_dirs = ['dependencies/lib']
     libraries = []
+
 
     sources = ['source/libcarla/libcarla.cpp']
 
@@ -65,6 +67,11 @@ def get_libcarla_extensions():
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             
+            if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
+                print('Building AD RSS variant.')
+                extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad-rss.a')]
+
             if True: #'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
                 print('Travis CI build detected: disabling PNG support.')
                 extra_link_args += ['-ljpeg', '-ltiff']
@@ -73,7 +80,6 @@ def get_libcarla_extensions():
                 extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
 
-            # @todo Why would we need this?
             # Temporarily disabled to prevent errors in OpenCV's headers.
             # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
@@ -135,7 +141,7 @@ def get_libcarla_extensions():
 
 setup(
     name='carla',
-    version='0.9.6',
+    version='0.9.7',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),

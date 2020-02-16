@@ -44,7 +44,7 @@ def draw_transform(debug, trans, col=carla.Color(255, 0, 0), lt=-1):
         x=trans.location.x + math.cos(pitch_in_rad) * math.cos(yaw_in_rad),
         y=trans.location.y + math.cos(pitch_in_rad) * math.sin(yaw_in_rad),
         z=trans.location.z + math.sin(pitch_in_rad))
-    debug.draw_arrow(trans.location, p1, thickness=0.05, arrow_size=1.0, color=col, life_time=lt)
+    debug.draw_arrow(trans.location, p1, thickness=0.05, arrow_size=0.1, color=col, life_time=lt)
 
 
 def draw_waypoint_union(debug, w0, w1, color=carla.Color(255, 0, 0), lt=5):
@@ -61,6 +61,38 @@ def draw_waypoint_info(debug, w, lt=5):
     debug.draw_string(w_loc + carla.Location(z=1.0), "road: " + str(w.road_id), False, blue, lt)
     debug.draw_string(w_loc + carla.Location(z=-.5), str(w.lane_change), False, red, lt)
 
+def draw_junction(debug, junction, l_time=10):
+    """Draws a junction bounding box and the initial and final waypoint of every lane."""
+    # draw bounding box
+    box = junction.bounding_box
+    point1 = box.location + carla.Location(x=box.extent.x, y=box.extent.y, z=2)
+    point2 = box.location + carla.Location(x=-box.extent.x, y=box.extent.y, z=2)
+    point3 = box.location + carla.Location(x=-box.extent.x, y=-box.extent.y, z=2)
+    point4 = box.location + carla.Location(x=box.extent.x, y=-box.extent.y, z=2)
+    debug.draw_line(
+        point1, point2,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point2, point3,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point3, point4,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    debug.draw_line(
+        point4, point1,
+        thickness=0.1, color=orange, life_time=l_time, persistent_lines=False)
+    # draw junction pairs (begin-end) of every lane
+    junction_w = junction.get_waypoints(carla.LaneType.Any)
+    for pair_w in junction_w:
+        draw_transform(debug, pair_w[0].transform, orange, l_time)
+        debug.draw_point(
+            pair_w[0].transform.location + carla.Location(z=0.75), 0.1, orange, l_time, False)
+        draw_transform(debug, pair_w[1].transform, orange, l_time)
+        debug.draw_point(
+            pair_w[1].transform.location + carla.Location(z=0.75), 0.1, orange, l_time, False)
+        debug.draw_line(
+            pair_w[0].transform.location + carla.Location(z=0.75),
+            pair_w[1].transform.location + carla.Location(z=0.75), 0.1, white, l_time, False)
 
 def main():
     argparser = argparse.ArgumentParser()
@@ -75,6 +107,10 @@ def main():
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-i', '--info',
+        action='store_true',
+        help='Show text information')
     argparser.add_argument(
         '-x',
         default=0.0,
@@ -142,15 +178,20 @@ def main():
             potential_w.remove(next_w)
 
             # Render some nice information, notice that you can't see the strings if you are using an editor camera
-            draw_waypoint_info(debug, current_w, trail_life_time)
+            if args.info:
+                draw_waypoint_info(debug, current_w, trail_life_time)
             draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, trail_life_time)
             draw_transform(debug, current_w.transform, white, trail_life_time)
 
             # print the remaining waypoints
             for p in potential_w:
-                debug.draw_string(p.transform.location, str(p.lane_id), False, orange, trail_life_time)
                 draw_waypoint_union(debug, current_w, p, red, trail_life_time)
                 draw_transform(debug, p.transform, white, trail_life_time)
+
+            # draw all junction waypoints and bounding box
+            if next_w.is_junction:
+                junction = next_w.get_junction()
+                draw_junction(debug, junction, trail_life_time)
 
             # update the current waypoint and sleep for some time
             current_w = next_w

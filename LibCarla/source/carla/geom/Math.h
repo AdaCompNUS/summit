@@ -28,6 +28,12 @@ namespace geom {
     }
 
     template <typename T>
+    static constexpr T Pi2() {
+      static_assert(std::is_floating_point<T>::value, "type must be floating point");
+      return static_cast<T>(static_cast<T>(2) * Pi<T>());
+    }
+
+    template <typename T>
     static constexpr T ToDegrees(T rad) {
       static_assert(std::is_floating_point<T>::value, "type must be floating point");
       return rad * (T(180.0) / Pi<T>());
@@ -72,6 +78,9 @@ namespace geom {
     static auto Distance2D(const Vector3D &a, const Vector3D &b) {
       return std::sqrt(DistanceSquared2D(a, b));
     }
+
+    /// Returns the angle between 2 vectors in radians
+    static double GetVectorAngle(const Vector3D &a, const Vector3D &b);
 
     /// Returns a pair containing:
     /// - @b first:  distance from v to p' where p' = p projected on segment

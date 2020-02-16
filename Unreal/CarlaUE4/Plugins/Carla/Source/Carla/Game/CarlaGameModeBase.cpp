@@ -13,7 +13,10 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/WeatherParameters.h>
+#include "carla/opendrive/OpenDriveParser.h"
 #include <compiler/enable-ue4-macros.h>
+
+#include "Carla/OpenDrive/OpenDrive.h"
 
 ACarlaGameModeBase::ACarlaGameModeBase(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)
@@ -94,6 +97,16 @@ void ACarlaGameModeBase::InitGame(
 
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
+
+  std::string opendrive_xml = carla::rpc::FromFString(UOpenDrive::LoadXODR(MapName));
+
+  boost::optional<carla::road::Map> map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+  if (!map.has_value()) {
+    UE_LOG(LogCarla, Error, TEXT("Invalid Map"));
+  } else {
+    Episode->MapGeoReference = map->GetGeoReference();
+  }
+
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)

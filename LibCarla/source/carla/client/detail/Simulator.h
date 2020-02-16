@@ -192,6 +192,10 @@ namespace detail {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
 
+    rpc::VehicleLightState GetVehicleLightState(const Vehicle &vehicle) const {
+      return _client.GetVehicleLightState(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -207,6 +211,8 @@ namespace detail {
     std::shared_ptr<WalkerNavigation> GetNavigation() {
       return _episode->GetNavigation();
     }
+
+    void SetPedestriansCrossFactor(float percentage);
 
     /// @}
     // =========================================================================
@@ -324,6 +330,10 @@ namespace detail {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
     }
 
+    void SetLightsToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
+      _client.ApplyControlToVehicle(vehicle.GetId(), control);
+    }
+
     void ApplyControlToVehicle(Vehicle &vehicle, const rpc::VehicleControl &control) {
       _client.ApplyControlToVehicle(vehicle.GetId(), control);
     }
@@ -339,6 +349,11 @@ namespace detail {
     void ApplyPhysicsControlToVehicle(Vehicle &vehicle, const rpc::VehiclePhysicsControl &physicsControl) {
       _client.ApplyPhysicsControlToVehicle(vehicle.GetId(), physicsControl);
     }
+
+    void SetLightStateToVehicle(Vehicle &vehicle, const rpc::VehicleLightState light_state) {
+      _client.SetLightStateToVehicle(vehicle.GetId(), light_state);
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

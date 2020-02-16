@@ -78,6 +78,4 @@ private:
   UPROPERTY()
   TArray<ACarlaActorFactory *> ActorFactoryInstances;
 
-  void SpawnActorFactories();
-
 };

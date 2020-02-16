@@ -7,8 +7,8 @@ CARLA Simulator
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
+[![forum](Docs/img/btn/forum.png)](https://forum.carla.org)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
-<!-- [![forum](Docs/img/btn/forum.png)](link here) -->
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has
 been developed from the ground up to support development, training, and
@@ -18,7 +18,7 @@ vehicles) that were created for this purpose and can be used freely. The
 simulation platform supports flexible specification of sensor suites and
 environmental conditions.
 
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=BjH-pFGlZ0M)
+[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
 
 If you want to benchmark your model in the same conditions as in our CoRL’17
 paper, check out
@@ -36,6 +36,8 @@ Repositories associated to the CARLA simulation platform:
 * [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
+
+**Like what you see? Star us on GitHub to support the project!**
 
 Paper
 -----
@@ -94,5 +96,7 @@ License
 CARLA specific code is distributed under MIT License.
 
 CARLA specific assets are distributed under CC-BY License.
+
+The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/rss_lib_integration.md) introduces LGPL-2.1-only License.
 
 Note that UE4 itself follows its own license terms.

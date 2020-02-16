@@ -14,6 +14,7 @@
 > features. Keep in mind that the API and features in this channel can (and
 > probably will) change.
 
+- [CARLA 0.9.7](https://github.com/carla-simulator/carla/releases/tag/0.9.7)
 - [CARLA 0.9.6](https://github.com/carla-simulator/carla/releases/tag/0.9.6)
 - [CARLA 0.9.5](https://github.com/carla-simulator/carla/releases/tag/0.9.5)
 - [CARLA 0.9.4](https://github.com/carla-simulator/carla/releases/tag/0.9.4)
@@ -36,12 +37,12 @@
 
 All the versions are also available to pull from DockerHub
 
-```
+```sh
 docker pull carlasim/carla:X.X.X
 ```
 
-use tag "latest" for the nightly build
+Use tag "latest" for the nightly build
 
-```
+```sh
 docker pull carlasim/carla:latest
 ```
