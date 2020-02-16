@@ -34,10 +34,16 @@ else:
 DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
-VEHICLE_SPEED_KP = 0.3
-VEHICLE_SPEED_KI = 0.1
-VEHICLE_SPEED_KD = 0.005
-VEHICLE_STEER_KP = 2.0
+
+CAR_SPEED_KP = 1.5
+CAR_SPEED_KI = 0.5
+CAR_SPEED_KD = 0.005
+CAR_STEER_KP = 2.5
+
+BIKE_SPEED_KP = 0.8
+BIKE_SPEED_KI = 0.2
+BIKE_SPEED_KD = 0.0
+BIKE_STEER_KP = 2.5
 
 Pyro4.config.COMMTIMEOUT = 2.0
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
@@ -209,7 +215,7 @@ def get_pedestrian_bounding_box_corners(actor):
     
 def get_lane_constraints(sidewalk, position, forward_vec):
     left_line_end = position + (1.5 + 2.0 + 0.8) * ((forward_vec.rotate(np.deg2rad(-90))).make_unit_vector())
-    right_line_end = position + (1.5 + 2.0 + 0.5) * ((forward_vec.rotate(np.deg2rad(90))).make_unit_vector())
+    right_line_end = position + (1.5 + 2.0 + 0.8) * ((forward_vec.rotate(np.deg2rad(90))).make_unit_vector())
     left_lane_constrained_by_sidewalk = sidewalk.intersects(position, left_line_end)
     right_lane_constrained_by_sidewalk = sidewalk.intersects(position, right_line_end)
     return left_lane_constrained_by_sidewalk, right_lane_constrained_by_sidewalk
@@ -680,46 +686,40 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             target_speed = control_velocity.length()
             control = actor.get_control()
 
-            if target_speed < 1e-5 and speed < 0.2:
-                control.throttle = 0
-                control.brake = 1.0
-                control.hand_brake = True
+            # Calculate error.
+            speed_error = target_speed - speed
 
-                if actor_id in pid_integrals:
-                    del pid_integrals[actor_id]
-                if actor_id in pid_last_errors:
-                    del pid_last_errors[actor_id]
+            # Add to integral.
+            pid_integrals[actor_id] += speed_error * dt
+
+            kp = CAR_SPEED_KP if type_tag == 'Car' else BIKE_SPEED_KP
+            ki = CAR_SPEED_KI if type_tag == 'Car' else BIKE_SPEED_KI
+            kd = CAR_SPEED_KD if type_tag == 'Car' else BIKE_SPEED_KD
+
+            # Calculate output.
+            speed_control = kp * speed_error + ki * pid_integrals[actor_id]
+            if pid_last_update_time is not None and actor_id in pid_last_errors:
+                speed_control += kd * (speed_error - pid_last_errors[actor_id]) / dt
+            
+            # Update history.
+            pid_last_errors[actor_id] = speed_error
+
+            # Set control.
+            if speed_control >= 0:
+                control.throttle = speed_control
+                control.brake = 0.0
+                control.hand_brake = False
             else:
-                # Calculate error.
-                speed_error = target_speed - speed
-
-                # Add to integral.
-                pid_integrals[actor_id] += speed_error * dt
-
-                # Calculate output.
-                speed_control = VEHICLE_SPEED_KP * speed_error + VEHICLE_SPEED_KI * pid_integrals[actor_id]
-                if pid_last_update_time is not None and actor_id in pid_last_errors:
-                    speed_control += VEHICLE_SPEED_KD * (speed_error - pid_last_errors[actor_id]) / dt
-                
-                # Update history.
-                pid_last_errors[actor_id] = speed_error
-
-                # Set control.
-                if speed_control >= 0:
-                    control.throttle = speed_control
-                    control.brake = 0.0
-                    control.hand_brake = False
-                else:
-                    control.throttle = 0.0
-                    control.brake = -speed_control
-                    control.hand_brake = False
-                control.steer = np.clip(
-                        np.clip(
-                            VEHICLE_STEER_KP * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
-                            -45.0, 45.0) / steer_angle_range,
-                        -1.0, 1.0)
-                control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
-                control.gear = 1 # DO NOT REMOVE: Reduces transmission lag.
+                control.throttle = 0.0
+                control.brake = -speed_control
+                control.hand_brake = False
+            control.steer = np.clip(
+                    np.clip(
+                        kp * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
+                        -45.0, 45.0) / steer_angle_range,
+                    -1.0, 1.0)
+            control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
+            control.gear = 1 # DO NOT REMOVE: Reduces transmission lag.
             
             # Append to commands.
             commands.append(carla.command.ApplyVehicleControl(actor_id, control))
