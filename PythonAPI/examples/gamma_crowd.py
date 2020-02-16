@@ -809,18 +809,18 @@ def main():
         type=int)
     argparser.add_argument(
         '--clearance-car',
-        default='5.0',
-        help='Minimum clearance (m) when spawning a car (default: 5.0)',
+        default='7.0',
+        help='Minimum clearance (m) when spawning a car (default: 7.0)',
         type=float)
     argparser.add_argument(
         '--clearance-bike',
-        default='5.0',
-        help='Minimum clearance (m) when spawning a bike (default: 5.0)',
+        default='7.0',
+        help='Minimum clearance (m) when spawning a bike (default: 7.0)',
         type=float)
     argparser.add_argument(
         '--clearance-pedestrian',
         default='1.0',
-        help='Minimum clearance (m) when spawning a pedestrian (default: 0.5)',
+        help='Minimum clearance (m) when spawning a pedestrian (default: 1.0)',
         type=float)
     argparser.add_argument(
         '--lane-change-probability',
