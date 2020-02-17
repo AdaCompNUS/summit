@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 '''
-Downloads imagery for a dataset located in (<summit_root>/Data/) and stores the
-downloaded image tiles into (<summit_root>/Data/imagery/).
+Downloads imagery for a map (using its OSM file located in <summit_root>/Data/) and stores 
+the downloaded image tiles into (<summit_root>/Data/imagery/).
 '''
 
 #/usr/bin/env python3

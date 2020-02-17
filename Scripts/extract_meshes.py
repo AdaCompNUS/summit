@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 '''
-Processes a dataset (using OSM and SUMO network data) located in (<summit_root>/Data/) to produce the respective mesh files in the same folder (<summit_root>/Data/).
+Processes a map (using its OSM file and SUMO network located in (<summit_root>/Data/)
+to produce the respective map object mesh files in the same folder (<summit_root>/Data/).
 '''
 
 import glob
