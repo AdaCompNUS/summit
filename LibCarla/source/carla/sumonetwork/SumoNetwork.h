@@ -92,6 +92,8 @@ public:
   occupancy::OccupancyMap CreateOccupancyMap() const;
   occupancy::OccupancyMap CreateRoadmarkOccupancyMap() const;
   segments::SegmentMap CreateSegmentMap() const;
+  
+  std::vector<RoutePoint> QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const;
 
 private:
   
