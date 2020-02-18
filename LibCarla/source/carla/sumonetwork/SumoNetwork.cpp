@@ -321,28 +321,5 @@ segments::SegmentMap SumoNetwork::CreateSegmentMap() const {
   return segments::SegmentMap(std::move(segments));
 }
 
-std::vector<RoutePoint> SumoNetwork::QueryIntersect(const geom::Vector2D& bounds_min, const geom::Vector2D& bounds_max) const {
-
-  rt_box_t box(
-      rt_point_t(bounds_min.x, bounds_min.y),
-      rt_point_t(bounds_max.x, bounds_max.y));
-
-  std::vector<rt_value_t> results;
-  _segments_index.query(
-      boost::geometry::index::intersects(box), 
-      std::back_inserter(results));
-
-  std::vector<RoutePoint> route_points;
-  for (const rt_value_t& result : results) {
-    route_points.push_back({
-        std::get<0>(result.second),
-        std::get<1>(result.second),
-        std::get<2>(result.second),
-        0});
-  }
-
-  return route_points;
-}
-
 }
 }
