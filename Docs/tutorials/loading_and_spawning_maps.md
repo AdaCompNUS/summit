@@ -156,4 +156,4 @@ sumo_network_occupancy = carla.OccupancyMap.load(SAVE_PATH)
 world.spawn_dynamic_mesh(sumo_network_occupancy.get_mesh_triangles(), road_material, road_segmentation)
 ```
 
-This example works for any carla.OccupancyMap instance, not just for roads.
+This example works for any `carla.OccupancyMap` instance, not just for roads.
