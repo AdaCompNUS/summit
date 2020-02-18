@@ -8,11 +8,11 @@ SUMMIT was built upon the very successful [CARLA](http://carla.org/). Updates to
 # The simulator
 SUMMIT adds on top of CARLA a set of capabilities to enable the simulation of sophisticated traffic behaviors on real-world maps:
 
-  * **Road contexts: ** In SUMMIT, the `SumoNetwork` interface is exposed to allow for easy interaction with road contexts, which are represented using [SUMO networks](https://sumo.dlr.de/docs/Networks/SUMO_Road_Networks.html). It is optimized for fast spatial and topological queries.
-  * **Sidewalk contexts: ** Sidewalk contexts are represented using a collection of oriented polygons. SUMMIT exposes the `Sidewalk` interface to easily interact with sidewalk contexts. It is optimized for fast spatial and topological queries.
+  * **Road contexts: ** In SUMMIT, the `SumoNetwork` interface is exposed to allow for easy interaction with roads, which are represented using [SUMO networks](https://sumo.dlr.de/docs/Networks/SUMO_Road_Networks.html). It is optimized for fast spatial and topological queries.
+  * **Sidewalk contexts: ** Sidewalks are represented using a collection of oriented polygons with holes. SUMMIT exposes the `Sidewalk` interface to easily interact with sidewalks. It is optimized for fast spatial and topological queries. Sidewalks are automatically generated as boundaries along roads.
   * **Geometric utilities: ** SUMMIT provides a range of utility classes to help with various geometric operations.
     * `OccupancyMap`: Manipulation for general 2D areas. Useful for exact collision detection. 
     * `AABBMap`: Manipulation for axis aligned bounding boxes. Useful for fast approximate collision detection. 
-    * `SegmentsMap`: Maipulation for collections of 2D line segments. Primarily used to sample high quality uniformly distributed spawn points against road and sidewalk contexts.
+    * `SegmentsMap`: Maipulation for collections of 2D line segments. Primarily used to sample high quality uniformly distributed spawn points on roads and sidewalks.
   * **Procedural simulation:** Spawning a scenario is entirely procedural, and no recompilation the simulator is required for simulation on a new map. Mesh information for map objects such as roads, sidewalks, landmarks, and satellite imagery are sent from the client to the simulation server, where the objects are dynamically spawned.
   * **Crowd simulator:** SUMMIT provides a client side Python script that simulates unregulated traffic in the simulation. It is capable of generating dense crowds, involving vehicles on the road and pedestrians on the sidewalk, where agents operate interactively with one another. [GAMMA](https://arxiv.org/abs/1906.01566), a state-of-the-art traffic motion prediction model, is used to produce sophisticated and realistic behaviors in the simulated crowd.
