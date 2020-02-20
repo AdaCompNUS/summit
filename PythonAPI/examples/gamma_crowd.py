@@ -216,8 +216,8 @@ def get_pedestrian_bounding_box_corners(actor):
 def get_lane_constraints(sidewalk, position, forward_vec):
     left_line_end = position + (1.5 + 2.0 + 0.8) * ((forward_vec.rotate(np.deg2rad(-90))).make_unit_vector())
     right_line_end = position + (1.5 + 2.0 + 0.8) * ((forward_vec.rotate(np.deg2rad(90))).make_unit_vector())
-    left_lane_constrained_by_sidewalk = sidewalk.intersects(position, left_line_end)
-    right_lane_constrained_by_sidewalk = sidewalk.intersects(position, right_line_end)
+    left_lane_constrained_by_sidewalk = sidewalk.intersects(carla.Segment2D(position, left_line_end))
+    right_lane_constrained_by_sidewalk = sidewalk.intersects(carla.Segment2D(position, right_line_end))
     return left_lane_constrained_by_sidewalk, right_lane_constrained_by_sidewalk
 
 class SumoNetworkAgentPath:
@@ -308,7 +308,7 @@ class SidewalkAgentPath:
         while len(self.route_points) < self.min_points:
             if rng.random() <= cross_probability:
                 adjacent_route_points = sidewalk.get_adjacent_route_points(self.route_points[-1], 50.0)
-                if adjacent_route_points:
+                if adjacent_route_points is not None:
                     self.route_points.append(adjacent_route_points[0])
                     self.route_orientations.append(rng.randint(0, 1) == 1)
                     continue

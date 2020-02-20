@@ -125,7 +125,7 @@ SidewalkRoutePoint Sidewalk::GetPreviousRoutePoint(const SidewalkRoutePoint& rou
   }
 }
   
-std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point, float max_cross_distance) const {
+boost::optional<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoint(const SidewalkRoutePoint& route_point, float max_cross_distance) const {
   const geom::Vector2D& segment_start = _polygons[route_point.polygon_id][route_point.segment_id];
   const geom::Vector2D& segment_end = _polygons[route_point.polygon_id][(route_point.segment_id + 1) % _polygons[route_point.polygon_id].size()];
   geom::Vector2D direction = (segment_end - segment_start).MakeUnitVector();
@@ -160,30 +160,27 @@ std::vector<SidewalkRoutePoint> Sidewalk::GetAdjacentRoutePoints(const SidewalkR
     }
   }
 
-  std::vector<SidewalkRoutePoint> adjacent_route_points;
-
   if (best_distance) {
     size_t best_polygon_id = best_result->second.first;
     size_t best_segment_id = best_result->second.second;
     float best_offset = (geom::Vector2D(best_intersection->get<0>(), best_intersection->get<1>()) - _polygons[best_polygon_id][best_segment_id]).Length();
 
-    adjacent_route_points.push_back(SidewalkRoutePoint{
-        best_polygon_id,
-        best_segment_id,
-        best_offset});
+    return boost::optional<SidewalkRoutePoint>({
+        best_polygon_id, best_segment_id, best_offset});
+  } else {
+    return boost::optional<SidewalkRoutePoint>();
   }
 
-  return adjacent_route_points;
 }
   
-bool Sidewalk::Intersects(const geom::Vector2D& segment_start, const geom::Vector2D& segment_end) const {
-  rt_segment_t segment(
-      rt_point_t(segment_start.x, segment_start.y),
-      rt_point_t(segment_end.x, segment_end.y));
+bool Sidewalk::Intersects(const geom::Segment2D& segment) const {
+  rt_segment_t segment_(
+      rt_point_t(segment.start.x, segment.start.y),
+      rt_point_t(segment.end.x, segment.end.y));
 
   std::vector<rt_value_t> results;
   _segments_index.query(
-      boost::geometry::index::intersects(segment), 
+      boost::geometry::index::intersects(segment_), 
       std::back_inserter(results));
 
   return results.size() > 0;

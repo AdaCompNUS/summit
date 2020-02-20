@@ -70,8 +70,8 @@ void export_commands() {
 
   class_<cr::Command::SpawnDynamicMesh>("SpawnDynamicMesh")
     .def("__init__", &command_impl::CustomInit<const std::vector<carla::geom::Vector3D>&, std::string, uint8_t>,
-        (arg("triangles"), arg("material"), arg("semantic_segmentation_label")))
-    .def(init<const std::vector<carla::geom::Vector3D>&, std::string, uint8_t>((arg("triangles"), arg("material"), arg("semantic_segmentation_label"))))
+        (arg("triangles"), arg("material"), arg("semantic_tag")))
+    .def(init<const std::vector<carla::geom::Vector3D>&, std::string, uint8_t>((arg("triangles"), arg("material"), arg("semantic_tag"))))
     .def("__init__", make_constructor(
           +[](const list& triangles_py, const std::string& material, uint8_t semantic_segmentation_label) {
             std::vector<carla::geom::Vector3D> triangles{
@@ -81,7 +81,7 @@ void export_commands() {
           }))
     .def_readwrite("triangles", &cr::Command::SpawnDynamicMesh::triangles)
     .def_readwrite("material", &cr::Command::SpawnDynamicMesh::material)
-    .def_readwrite("semantic_segmentation_label", &cr::Command::SpawnDynamicMesh::semantic_segmentation_label)
+    .def_readwrite("semantic_tag", &cr::Command::SpawnDynamicMesh::semantic_segmentation_label)
   ;
 
   class_<cr::Command::DestroyDynamicMesh>("DestroyDynamicMesh")

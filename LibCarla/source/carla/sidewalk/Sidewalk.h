@@ -39,8 +39,8 @@ public:
   SidewalkRoutePoint GetNearestRoutePoint(const geom::Vector2D& position) const;
   SidewalkRoutePoint GetNextRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;
   SidewalkRoutePoint GetPreviousRoutePoint(const SidewalkRoutePoint& route_point, float lookahead_distance) const;
-  std::vector<SidewalkRoutePoint> GetAdjacentRoutePoints(const SidewalkRoutePoint& route_point, float max_cross_distance) const;
-  bool Intersects(const geom::Vector2D& segment_start, const geom::Vector2D& segment_end) const;
+  boost::optional<SidewalkRoutePoint> GetAdjacentRoutePoint(const SidewalkRoutePoint& route_point, float max_cross_distance) const;
+  bool Intersects(const geom::Segment2D& segment) const;
 
 private:
   

@@ -9,7 +9,6 @@ void export_segments() {
   using namespace carla::segments;
 
   class_<SegmentMap>("SegmentMap", no_init)
-    .def(init<>())
     .def(init<const std::vector<geom::Segment2D>&>())
     .def("__init__", make_constructor(
           +[](const list& segments_py) {
