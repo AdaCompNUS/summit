@@ -307,9 +307,9 @@ class SidewalkAgentPath:
 
         while len(self.route_points) < self.min_points:
             if rng.random() <= cross_probability:
-                adjacent_route_points = sidewalk.get_adjacent_route_points(self.route_points[-1], 50.0)
-                if adjacent_route_points is not None:
-                    self.route_points.append(adjacent_route_points[0])
+                adjacent_route_point = sidewalk.get_adjacent_route_point(self.route_points[-1], 50.0)
+                if adjacent_route_point is not None:
+                    self.route_points.append(adjacent_route_point)
                     self.route_orientations.append(rng.randint(0, 1) == 1)
                     continue
 

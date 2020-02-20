@@ -61,10 +61,10 @@ void export_sidewalk() {
         &Sidewalk::GetPreviousRoutePoint)
     .def("get_adjacent_route_point",
         +[](const Sidewalk& self,  const SidewalkRoutePoint& route_point, float max_cross_distance) {
-          boost::optinal<SidewalkRoutePoint> adjacent_route_point = self.GetAdjacentRoutePoint(
+          boost::optional<SidewalkRoutePoint> adjacent_route_point = self.GetAdjacentRoutePoint(
               route_point, max_cross_distance);
           if (adjacent_route_point) {
-            return adjacent_route_point;
+            return object(*adjacent_route_point);
           } else {
             return object();
           }
