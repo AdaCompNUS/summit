@@ -2,7 +2,6 @@
 
 #include "carla/geom/Triangle2D.h"
 #include "carla/geom/Vector3D.h"
-#include "carla/occupancy/OccupancyGrid.h"
 #include "carla/sidewalk/Sidewalk.h"
 #include "carla/segments/SegmentMap.h"
 #include <boost/geometry/geometries/point_xy.hpp>

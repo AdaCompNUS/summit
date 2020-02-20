@@ -45,8 +45,6 @@ void export_sidewalk() {
   ;
 
   class_<Sidewalk>("Sidewalk", no_init)
-    .add_property("polygons", 
-        make_function(&Sidewalk::Polygons, return_internal_reference<>()))
     .def("create_occupancy_map",
         &Sidewalk::CreateOccupancyMap)
     .def("create_segment_map",
