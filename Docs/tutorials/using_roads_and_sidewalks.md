@@ -136,7 +136,7 @@ route_point_transform.z = 0.5 # Spawn at a height of 0.5 meters.
 world.spawn_actor(BLUEPRINT, route_point_transform)
 ```
 
-Alternatively, you can use the `carla.SegmentMap` class to generate route points uniformly distributed along the segments of the sidewalk. The `carla.SegmentMap` class is a data structure to work with line segments, optimized for uniform sampling of points over stored line segments. 
+Alternatively, you can use the `carla.SegmentMap` class to generate route points uniformly distributed along the paths of the sidewalk. The `carla.SegmentMap` class is a data structure to work with line segments, optimized for uniform sampling of points over stored line segments. 
 
 ```python
 # Get segments of sidewalk.
@@ -208,9 +208,8 @@ You can also fetch the nearest point on an adjacent sidewalk polygon (i.e. on th
 
 ```python
 # Get nearest adjacent route point, at most 50 meters away.
-# If such a route point exists, this returns a list of exactly one item.
-# If not, this returns an empty list.
-next_route_points = sidewalk.get_adjacent_route_points(route_point, 50.0)
+# If such a route point exists, this returns None. a list of exactly one item.
+next_route_point = sidewalk.get_adjacent_route_point(route_point, 50.0)
 ```
 
 Since the route point only holds semantic information and not the actual position, a translational query is required to determine the actual position:
