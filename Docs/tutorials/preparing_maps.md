@@ -23,21 +23,24 @@ To obtain high-quality real-world OSM files, we recommend using [OpenStreetMap's
 
 You may wish to preprocess the OSM files using [JOSM](https://josm.openstreetmap.de/) to remove road information unwanted from the simulation, such as service roads and footbridges.
 
-!!! important
+!!! note
     In SUMMIT, we do not impose any restrictions on the source of OSM files. You are free to use any OSM file, even those produced by yourself.
 
 # Obtaining SUMO networks
 A SUMO network can be automatically obtained from an OSM file by using SUMO's [NETCONVERT utility](https://sumo.dlr.de/docs/NETCONVERT.html). This assumes that you have already setup the SUMO tools, as recommended in the [requirements section](/getting_started/quick_start/#requirements). The SUMO network should then be stored at `<summit_root>/Data/<map_name>.net.xml`, where `<map_name>` follows from that of the OSM file.
 
-We provide an example script at `<summit_root>/Scripts/osm2sumo.sh` to convert an OSM file into a SUMO network. Note that in SUMMIT's standard dataset, we have done some postprocessing after the conversion, so it will be different from what is produced by simply calling the script.
+We provide an example script at `<summit_root>/Scripts/osm2sumo.sh` to convert an OSM file into a SUMO network. 
 
-You may wish recommended to postprocess the SUMO network using [SUMO's NETEDIT](https://sumo.dlr.de/docs/NETEDIT.html) after the conversion. The conversion process is not perfect, and we highly recommend postprocessing the SUMO network to eliminate any ambiguities.
+You are recommended to postprocess the SUMO network using [SUMO's NETEDIT](https://sumo.dlr.de/docs/NETEDIT.html) after the conversion. The conversion process is not perfect, and we highly recommend postprocessing the SUMO network to eliminate any ambiguities.
 
 !!! important
     Similar to the OSM files, you are free to use any source of SUMO networks, including those produce by yourself. There are some restrictions however:
       
       * All lanes in SUMMIT are assumed to have a fixed width of 4.0 meters.
       * Bounds for OSM file and corresponding SUMO network must line up, if not landmarks and satellite imagery may spawn incorrectly.
+
+!!! note
+    For SUMMIT's built in maps, we have done some postprocessing after the conversion, so it will be different from what is produced by simply calling the script.
 
 # (Optional) Specifying simulation bounds
 For a given map, SUMMIT's traffic simulation script simulates traffic in a user defined bounds, specified in `<summit_root>/Data/<map_name>.sim_bounds`. We recommend specifying a suitable bounds if you are using a custom map, in order to use SUMMIT's built in traffic simulation script.
