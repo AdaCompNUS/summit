@@ -1,5 +1,5 @@
 !!! important
-    SUMMIT comes with a [set of maps ready for use](/references/summit_map_library.md). This page is required only if you wish to use additional maps.
+    SUMMIT comes with a [set of maps ready for use](/references/summit_map_library). This page is required only if you wish to use additional maps.
 
 # Map data sources
 For a given map, SUMMIT requires both a corresponding OSM file and SUMO network, which provide the respective information:
