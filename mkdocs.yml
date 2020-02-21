@@ -4,7 +4,7 @@ nav:
   - Home: index.md
   - Getting started:
     - Introduction: getting_started/introduction.md
-    - Quick start: getting_started/quick_start.md
+    - Setting up SUMMIT: getting_started/setting_up.md
     - Building SUMMIT: getting_started/building.md
   - Tutorials:
     - Preparing maps: tutorials/preparing_maps.md
