@@ -4,8 +4,8 @@
 # Map data sources
 For a given map, SUMMIT requires both a corresponding OSM file and SUMO network, which provide the respective information:
 
-  * OSM file: Landmark data for spawning landmark objects, and geographical bounds for satellite imagery.
-  * SUMO network: Road contexts.
+  * OSM file: Landmark data for spawning landmark objects.
+  * SUMO network: Road contexts, and geographical bounds for satellite imagery.
 
 Note that sidewalk information is not required at all, since SUMMIT automatically calculates the sidewalks as boundaries along roads.
 
@@ -37,7 +37,7 @@ You are recommended to postprocess the SUMO network using [SUMO's NETEDIT](https
     Similar to the OSM files, you are free to use any source of SUMO networks, including those produce by yourself. There are some restrictions however:
       
       * All lanes in SUMMIT are assumed to have a fixed width of 4.0 meters.
-      * Bounds for OSM file and corresponding SUMO network must line up, if not landmarks and satellite imagery may spawn incorrectly.
+      * Bounds for OSM file and corresponding SUMO network must line up, if not landmarks may spawn incorrectly.
 
 !!! note
     For SUMMIT's built in maps, we have done some postprocessing after the conversion, so it will be different from what is produced by simply calling the script.
@@ -76,7 +76,7 @@ uses `meskel_square.osm` (OSM file) and `meskel_square.net.xml` (SUMO network) t
   * `meskel_square.landmarks/*.landmark.wkt`: Landmarks' meshes.
 
 # (Optional) Downloading satellite imagery
-To download satellite imagery for your map, ensure that you have your map's OSM file located at `<summit_root>/Data/<map_name>.osm`, so that SUMMIT can locate the geographic bounds. Then, run the following utility script:
+To download satellite imagery for your map, ensure that you have your map's SUMO network located at `<summit_root>/Data/<map_name>.net.xml`, so that SUMMIT can locate the geographic bounds. Then, run the following utility script:
 
 ```bash
 <summit_root>/Scripts/download_imagery.py --dataset <map_name>
