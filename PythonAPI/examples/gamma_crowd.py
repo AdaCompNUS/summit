@@ -892,53 +892,60 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
 
 
 def birth_loop(args):
-    # Wait for crowd service.
-    time.sleep(2)
-    c = Context(args)
-    print('Birth loop running.')
-    
-    while True:
-        start = time.time()
-        do_birth(c)
-        time.sleep(max(0, 0.05 - (time.time() - start)))
-        #print('Birth rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
-
+    try:
+        # Wait for crowd service.
+        time.sleep(2)
+        c = Context(args)
+        print('Birth loop running.')
+        
+        while True:
+            start = time.time()
+            do_birth(c)
+            time.sleep(max(0, 0.05 - (time.time() - start)))
+            #print('Birth rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+    except Pyro4.errors.PyroError:
+        pass
 
 def control_loop(args):
-    # Wait for crowd service.
-    time.sleep(2)
-    c = Context(args)
-    print('Control loop running.')
-            
-    pid_integrals = defaultdict(float)
-    pid_last_errors = defaultdict(float)
-    pid_last_update_time = None 
+    try:
+        # Wait for crowd service.
+        time.sleep(2)
+        c = Context(args)
+        print('Control loop running.')
+                
+        pid_integrals = defaultdict(float)
+        pid_last_errors = defaultdict(float)
+        pid_last_update_time = None 
 
-    while True:
-        start = time.time()
-        pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
-        time.sleep(max(0, 0.05 - (time.time() - start)))
-        #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+        while True:
+            start = time.time()
+            pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
+            time.sleep(max(0, 0.05 - (time.time() - start)))
+            #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+    except Pyro4.errors.PyroError:
+        pass
 
 
 def gamma_loop(args):
-    # Wait for crowd service.
-    time.sleep(2)
-    c = Context(args)
-    print('GAMMA loop running.')
-    
-    car_agents = []
-    bike_agents = []
-    pedestrian_agents = []
+    try:
+        # Wait for crowd service.
+        time.sleep(2)
+        c = Context(args)
+        print('GAMMA loop running.')
+        
+        car_agents = []
+        bike_agents = []
+        pedestrian_agents = []
 
-    while True:
-        start = time.time()
-        pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
-        do_gamma(c, car_agents, bike_agents, pedestrian_agents)
-        do_death(c, car_agents, bike_agents, pedestrian_agents)
-        time.sleep(max(0, 0.05 - (time.time() - start)))
-        #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
-
+        while True:
+            start = time.time()
+            pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
+            do_gamma(c, car_agents, bike_agents, pedestrian_agents)
+            do_death(c, car_agents, bike_agents, pedestrian_agents)
+            time.sleep(max(0, 0.05 - (time.time() - start)))
+            #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+    except Pyro4.errors.PyroError:
+        pass
 
 def main():
     argparser = argparse.ArgumentParser(
