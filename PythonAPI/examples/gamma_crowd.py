@@ -100,12 +100,103 @@ Pyro4.util.SerializerBase.register_dict_to_class(
 @Pyro4.behavior(instance_mode="single")
 class CrowdService():
     def __init__(self):
+        self._spawn_car = False
+        self._new_cars = []
+        self._new_cars_lock = RLock()
+
+        self._spawn_bike = False
+        self._new_bikes = []
+        self._new_bikes_lock = RLock()
+
+        self._spawn_pedestrian = False
+        self._new_pedestrians = []
+        self._new_pedestrians_lock = RLock()
+
         self._control_velocities = []
         self._control_velocities_lock = RLock()
 
         self._local_intentions = []
         self._local_intentions_lock = RLock()
+
+
+    @property
+    def spawn_car(self):
+        return self._spawn_car
+
+    @spawn_car.setter
+    def spawn_car(self, value):
+        self._spawn_car = value
+
+    @property
+    def new_cars(self):
+        return self._new_cars
+
+    @new_cars.setter
+    def new_cars(self, cars):
+        self._new_cars = cars
+    
+    def append_new_cars(self, info):
+        self._new_cars.append(info)
+
+    def acquire_new_cars(self):
+        self._new_cars_lock.acquire()
+
+    def release_new_cars(self):
+        self._new_cars_lock.release()
    
+
+    @property
+    def spawn_bike(self):
+        return self._spawn_bike
+
+    @spawn_bike.setter
+    def spawn_bike(self, value):
+        self._spawn_bike = value
+
+    @property
+    def new_bikes(self):
+        return self._new_bikes
+
+    @new_bikes.setter
+    def new_bikes(self, bikes):
+        self._new_bikes = bikes
+    
+    def append_new_bikes(self, info):
+        self._new_bikes.append(info)
+    
+    def acquire_new_bikes(self):
+        self._new_bikes_lock.acquire()
+
+    def release_new_bikes(self):
+        self._new_bikes_lock.release()
+    
+    
+    @property
+    def spawn_pedestrian(self):
+        return self._spawn_pedestrian
+
+    @spawn_pedestrian.setter
+    def spawn_pedestrian(self, value):
+        self._spawn_pedestrian = value
+
+    @property
+    def new_pedestrians(self):
+        return self._new_pedestrians
+
+    @new_pedestrians.setter
+    def new_pedestrians(self, pedestrians):
+        self._new_pedestrians = pedestrians
+    
+    def append_new_pedestrians(self, info):
+        self._new_pedestrians.append(info)
+    
+    def acquire_new_pedestrians(self):
+        self._new_pedestrians_lock.acquire()
+
+    def release_new_pedestrians(self):
+        self._new_pedestrians_lock.release()
+
+
     @property
     def control_velocities(self):
         return self._control_velocities
@@ -119,7 +210,8 @@ class CrowdService():
 
     def release_control_velocities(self):
         self._control_velocities_lock.release()
-    
+
+
     @property
     def local_intentions(self):
         return self._local_intentions
@@ -219,6 +311,15 @@ def get_lane_constraints(sidewalk, position, forward_vec):
     left_lane_constrained_by_sidewalk = sidewalk.intersects(carla.Segment2D(position, left_line_end))
     right_lane_constrained_by_sidewalk = sidewalk.intersects(carla.Segment2D(position, right_line_end))
     return left_lane_constrained_by_sidewalk, right_lane_constrained_by_sidewalk
+
+def is_car(actor):
+    return isinstance(actor, carla.Vehicle) and actor.attributes['number_of_wheels'] > 2
+
+def is_bike(actor):
+    return isinstance(actor, carla.Vehicle) and actor.attributes['number_of_wheels'] == 2
+
+def is_pedestrian(actor):
+    return isinstance(actor, carla.Walker)
 
 class SumoNetworkAgentPath:
     def __init__(self, route_points, min_points, interval):
@@ -355,8 +456,8 @@ class SidewalkAgentPath:
         return np.rad2deg(math.atan2(next_pos.y - pos.y, next_pos.x - pos.x))
 
 class Agent(object):
-    def __init__(self, actor_id, type_tag, path, preferred_speed, steer_angle_range=0.0):
-        self.actor_id = actor_id
+    def __init__(self, actor, type_tag, path, preferred_speed, steer_angle_range=0.0):
+        self.actor = actor
         self.type_tag = type_tag
         self.path = path
         self.preferred_speed = preferred_speed
@@ -400,43 +501,23 @@ class Context(object):
 
 
 ''' ========== MAIN LOGIC FUNCTIONS ========== '''
-def do_destroy(c, car_agents, bike_agents, pedestrian_agents):
-   
-    update_time = time.time()
+def do_birth(c):
+    
+    c.crowd_service.acquire_new_cars()
+    spawn_car = c.crowd_service.spawn_car
+    c.crowd_service.release_new_cars()
+    
+    c.crowd_service.acquire_new_bikes()
+    spawn_bike = c.crowd_service.spawn_bike
+    c.crowd_service.release_new_bikes()
+    
+    c.crowd_service.acquire_new_pedestrians()
+    spawn_pedestrian = c.crowd_service.spawn_pedestrian
+    c.crowd_service.release_new_pedestrians()
 
-    commands = []
-    for agents in [car_agents, bike_agents, pedestrian_agents]:
-        next_agents = []
-        for agent in agents:
-            actor = c.world.get_actor(agent.actor_id)
-            delete = False
-            if not delete and not c.bounds_occupancy.contains(get_position(actor)):
-                delete = True
-            if not delete and get_position_3d(actor).z < -10:
-                delete = True
-            if not delete and \
-                    ((agent.type_tag in ['Car', 'Bicycle']) and not c.sumo_network_occupancy.contains(get_position(actor))):
-                delete = True
-            if get_velocity(actor).length() < c.args.stuck_speed:
-                if agent.stuck_time is not None:
-                    if update_time - agent.stuck_time >= c.args.stuck_duration:
-                        delete = True
-                else:
-                    agent.stuck_time = update_time
-            else:
-                agent.stuck_time = None
-            
-            if delete:
-                commands.append(carla.command.DestroyActor(agent.actor_id))
-            else:
-                next_agents.append(agent)
-        agents[:] = next_agents
-
-    c.client.apply_batch_sync(commands)
-    c.world.wait_for_tick()
-
-def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
-
+    if not spawn_car and not spawn_bike and not spawn_pedestrian:
+        return
+    
     # Get AABB.
     aabbs = []
     for actor in c.world.get_actors():
@@ -444,17 +525,18 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
             aabbs.append(get_aabb(actor))
     aabb_map = carla.AABBMap(aabbs)
 
-    # Spawn at most one car.
-    if len(car_agents) < c.args.num_car:
+    # Find car spawn point.
+    if spawn_car:
         path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
+        position = path.get_position(c.sumo_network, 0)
         if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(path.get_position(c.sumo_network, 0).x - c.args.clearance_car,
-                               path.get_position(c.sumo_network, 0).y - c.args.clearance_car),
-                carla.Vector2D(path.get_position(c.sumo_network, 0).x + c.args.clearance_car,
-                               path.get_position(c.sumo_network, 0).y + c.args.clearance_car))):
+                carla.Vector2D(position.x - c.args.clearance_car,
+                               position.y - c.args.clearance_car),
+                carla.Vector2D(position.x + c.args.clearance_car,
+                               position.y + c.args.clearance_car))):
             trans = carla.Transform()
-            trans.location.x = path.get_position(c.sumo_network, 0).x
-            trans.location.y = path.get_position(c.sumo_network, 0).y
+            trans.location.x = position.x
+            trans.location.y = position.y
             trans.location.z = 0.2
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
@@ -464,22 +546,23 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
-                car_agents.append(Agent(
-                    actor.id, 'Car', path, 5.0 + c.rng.uniform(-0.5, 0.5),
-                    get_steer_angle_range(actor)))
+                c.crowd_service.acquire_new_cars()
+                c.crowd_service.append_new_cars((actor.id, path.route_points[0], get_steer_angle_range(actor)))
+                c.crowd_service.release_new_cars()
 
 
-    # Spawn at most one bike.
-    if len(bike_agents) < c.args.num_bike:
+    # Find bike spawn point.
+    if spawn_bike:
         path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
+        position = path.get_position(c.sumo_network, 0)
         if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(path.get_position(c.sumo_network, 0).x - c.args.clearance_bike,
-                               path.get_position(c.sumo_network, 0).y - c.args.clearance_bike),
-                carla.Vector2D(path.get_position(c.sumo_network, 0).x + c.args.clearance_bike,
-                               path.get_position(c.sumo_network, 0).y + c.args.clearance_bike))):
+                carla.Vector2D(position.x - c.args.clearance_bike,
+                               position.y - c.args.clearance_bike),
+                carla.Vector2D(position.x + c.args.clearance_bike,
+                               position.y + c.args.clearance_bike))):
             trans = carla.Transform()
-            trans.location.x = path.get_position(c.sumo_network, 0).x
-            trans.location.y = path.get_position(c.sumo_network, 0).y
+            trans.location.x = position.x
+            trans.location.y = position.y
             trans.location.z = 0.2
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
@@ -489,22 +572,22 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
-                bike_agents.append(Agent(
-                    actor.id, 'Bicycle', path, 3.0 + c.rng.uniform(-0.5, 0.5),
-                    get_steer_angle_range(actor)))
+                c.crowd_service.acquire_new_bikes()
+                c.crowd_service.append_new_bikes((actor.id, path.route_points[0], get_steer_angle_range(actor)))
+                c.crowd_service.release_new_bikes()
 
 
-    # Spawn at most one pedestrian.
-    if len(pedestrian_agents) < c.args.num_pedestrian:
+    if spawn_pedestrian:
         path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)
+        position = path.get_position(c.sidewalk, 0)
         if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(path.get_position(c.sidewalk, 0).x - c.args.clearance_pedestrian,
-                               path.get_position(c.sidewalk, 0).y - c.args.clearance_pedestrian),
-                carla.Vector2D(path.get_position(c.sidewalk, 0).x + c.args.clearance_pedestrian,
-                               path.get_position(c.sidewalk, 0).y + c.args.clearance_pedestrian))):
+                carla.Vector2D(position.x - c.args.clearance_pedestrian,
+                               position.y - c.args.clearance_pedestrian),
+                carla.Vector2D(position.x + c.args.clearance_pedestrian,
+                               position.y + c.args.clearance_pedestrian))):
             trans = carla.Transform()
-            trans.location.x = path.get_position(c.sidewalk, 0).x
-            trans.location.y = path.get_position(c.sidewalk, 0).y
+            trans.location.x = position.x
+            trans.location.y = position.y
             trans.location.z = 0.5
             trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
             actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
@@ -513,14 +596,86 @@ def do_spawn(c, car_agents, bike_agents, pedestrian_agents):
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
-                pedestrian_agents.append(Agent(
-                    actor.id, 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5)))
+                c.crowd_service.acquire_new_pedestrians()
+                c.crowd_service.append_new_pedestrians((actor.id, path.route_points[0]))
+                c.crowd_service.release_new_pedestrians()
+
+
+def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
+        
+    c.crowd_service.acquire_new_cars()
+    for (actor_id, route_point, steer_angle_range) in c.crowd_service.new_cars:
+        path = c.rng.choice(c.sumo_network.get_next_route_paths(route_point, PATH_MIN_POINTS - 1, PATH_INTERVAL))
+        path = SumoNetworkAgentPath(path, PATH_MIN_POINTS, PATH_INTERVAL)
+        car_agents.append(Agent(
+            c.world.get_actor(actor_id), 'Car', path, 5.0 + c.rng.uniform(-0.5, 0.5),
+            steer_angle_range))
+    c.crowd_service.new_cars = []
+    c.crowd_service.spawn_car = len(car_agents) < c.args.num_car
+    c.crowd_service.release_new_cars()
+    
+    c.crowd_service.acquire_new_bikes()
+    for (actor_id, route_point, steer_angle_range) in c.crowd_service.new_bikes:
+        path = c.rng.choice(c.sumo_network.get_next_route_paths(route_point, PATH_MIN_POINTS - 1, PATH_INTERVAL))
+        path = SumoNetworkAgentPath(path, PATH_MIN_POINTS, PATH_INTERVAL)
+        bike_agents.append(Agent(
+            c.world.get_actor(actor_id), 'Bicycle', path, 3.0 + c.rng.uniform(-0.5, 0.5),
+            steer_angle_range))
+    c.crowd_service.new_bikes = []
+    c.crowd_service.spawn_bike = len(bike_agents) < c.args.num_bike
+    c.crowd_service.release_new_bikes()
+    
+    c.crowd_service.acquire_new_pedestrians()
+    for (actor_id, route_point) in c.crowd_service.new_pedestrians:
+        path = SidewalkAgentPath([route_point], [c.rng.choice([True, False])], PATH_MIN_POINTS, PATH_INTERVAL)
+        path.resize(c.sidewalk, c.args.cross_probability)
+        pedestrian_agents.append(Agent(
+            c.world.get_actor(actor_id), 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5)))
+    c.crowd_service.new_pedestrians = []
+    c.crowd_service.spawn_pedestrian = len(pedestrian_agents) < c.args.num_pedestrian
+    c.crowd_service.release_new_pedestrians()
+
+
+def do_death(c, car_agents, bike_agents, pedestrian_agents):
+   
+    update_time = time.time()
+
+    commands = []
+    for agents in [car_agents, bike_agents, pedestrian_agents]:
+        next_agents = []
+        for agent in agents:
+            delete = False
+            if not delete and not c.bounds_occupancy.contains(get_position(agent.actor)):
+                delete = True
+            if not delete and get_position_3d(agent.actor).z < -10:
+                delete = True
+            if not delete and \
+                    ((agent.type_tag in ['Car', 'Bicycle']) and not c.sumo_network_occupancy.contains(get_position(agent.actor))):
+                delete = True
+            if get_velocity(agent.actor).length() < c.args.stuck_speed:
+                if agent.stuck_time is not None:
+                    if update_time - agent.stuck_time >= c.args.stuck_duration:
+                        delete = True
+                else:
+                    agent.stuck_time = update_time
+            else:
+                agent.stuck_time = None
+            
+            if delete:
+                commands.append(carla.command.DestroyActor(agent.actor.id))
+            else:
+                next_agents.append(agent)
+        agents[:] = next_agents
+
+    c.client.apply_batch_sync(commands)
+    c.world.wait_for_tick()
+
 
 def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     agents = car_agents + bike_agents + pedestrian_agents
     agents_lookup = {}
     for agent in agents:
-        agents_lookup[agent.actor_id] = agent
+        agents_lookup[agent.actor.id] = agent
 
     next_agents = []
     next_agent_gamma_ids = []
@@ -637,20 +792,21 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
 
     c.crowd_service.acquire_control_velocities()
     c.crowd_service.control_velocities = [
-            (agent.actor_id, agent.type_tag, agent.control_velocity, agent.preferred_speed, agent.steer_angle_range)
+            (agent.actor.id, agent.type_tag, agent.control_velocity, agent.preferred_speed, agent.steer_angle_range)
             for agent in next_agents]
     c.crowd_service.release_control_velocities()
    
     local_intentions = []
     for agent in next_agents:
         if agent.type_tag == 'People':
-            local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0], agent.path.route_orientations[0]))
+            local_intentions.append((agent.actor.id, agent.type_tag, agent.path.route_points[0], agent.path.route_orientations[0]))
         else:
-            local_intentions.append((agent.actor_id, agent.type_tag, agent.path.route_points[0]))
+            local_intentions.append((agent.actor.id, agent.type_tag, agent.path.route_points[0]))
 
     c.crowd_service.acquire_local_intentions()
     c.crowd_service.local_intentions = local_intentions
     c.crowd_service.release_local_intentions()
+
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
     start = time.time()
@@ -695,6 +851,7 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             kp = CAR_SPEED_KP if type_tag == 'Car' else BIKE_SPEED_KP
             ki = CAR_SPEED_KI if type_tag == 'Car' else BIKE_SPEED_KI
             kd = CAR_SPEED_KD if type_tag == 'Car' else BIKE_SPEED_KD
+            steer_kp = CAR_STEER_KP if type_tag == 'Car' else BIKE_STEER_KP
 
             # Calculate output.
             speed_control = kp * speed_error + ki * pid_integrals[actor_id]
@@ -715,7 +872,7 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
                 control.hand_brake = False
             control.steer = np.clip(
                     np.clip(
-                        kp * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
+                        steer_kp * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
                         -45.0, 45.0) / steer_angle_range,
                     -1.0, 1.0)
             control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
@@ -733,6 +890,20 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
 
     return cur_time # New pid_last_update_time.
 
+
+def birth_loop(args):
+    # Wait for crowd service.
+    time.sleep(2)
+    c = Context(args)
+    print('Birth loop running.')
+    
+    while True:
+        start = time.time()
+        do_birth(c)
+        time.sleep(max(0, 0.05 - (time.time() - start)))
+        #print('Birth rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+
+
 def control_loop(args):
     # Wait for crowd service.
     time.sleep(2)
@@ -749,6 +920,7 @@ def control_loop(args):
         time.sleep(max(0, 0.05 - (time.time() - start)))
         #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
 
+
 def gamma_loop(args):
     # Wait for crowd service.
     time.sleep(2)
@@ -761,11 +933,12 @@ def gamma_loop(args):
 
     while True:
         start = time.time()
-        do_destroy(c, car_agents, bike_agents, pedestrian_agents)
-        do_spawn(c, car_agents, bike_agents, pedestrian_agents)
+        pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
         do_gamma(c, car_agents, bike_agents, pedestrian_agents)
-        time.sleep(max(0, 0.02 - (time.time() - start)))
+        do_death(c, car_agents, bike_agents, pedestrian_agents)
+        time.sleep(max(0, 0.05 - (time.time() - start)))
         #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -843,6 +1016,10 @@ def main():
         help='Minimum duration (s) for an agent to be considered stuck (default: 5)',
         type=float)
     args = argparser.parse_args()
+    
+    birth_process = Process(target=birth_loop, args=(args,))
+    birth_process.daemon = True
+    birth_process.start()
 
     control_process = Process(target=control_loop, args=(args,))
     control_process.daemon = True
