@@ -118,6 +118,9 @@ class CrowdService():
         self._local_intentions = []
         self._local_intentions_lock = RLock()
 
+        self._destroy_list = []
+        self._destroy_list_lock = RLock()
+
 
     @property
     def spawn_car(self):
@@ -225,6 +228,27 @@ class CrowdService():
 
     def release_local_intentions(self):
         self._local_intentions_lock.release()
+   
+
+    @property
+    def destroy_list(self):
+        return self._destroy_list
+
+    @destroy_list.setter
+    def destroy_list(self, items):
+        self._destroy_list = items
+    
+    def append_destroy_list(self, item):
+        self._destroy_list.append(item)
+    
+    def extend_destroy_list(self, items):
+        self._destroy_list.extend(items)
+
+    def acquire_destroy_list(self):
+        self._destroy_list_lock.acquire()
+
+    def release_destroy_list(self):
+        self._destroy_list_lock.release()
 
 
 
@@ -501,7 +525,7 @@ class Context(object):
 
 
 ''' ========== MAIN LOGIC FUNCTIONS ========== '''
-def do_birth(c):
+def do_spawn(c):
     
     c.crowd_service.acquire_new_cars()
     spawn_car = c.crowd_service.spawn_car
@@ -541,13 +565,15 @@ def do_birth(c):
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
             actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
-            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
                 c.crowd_service.acquire_new_cars()
-                c.crowd_service.append_new_cars((actor.id, path.route_points[0], get_steer_angle_range(actor)))
+                c.crowd_service.append_new_cars((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    get_steer_angle_range(actor)))
                 c.crowd_service.release_new_cars()
 
 
@@ -567,13 +593,15 @@ def do_birth(c):
             trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
             actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
-            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
                 c.crowd_service.acquire_new_bikes()
-                c.crowd_service.append_new_bikes((actor.id, path.route_points[0], get_steer_angle_range(actor)))
+                c.crowd_service.append_new_bikes((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    get_steer_angle_range(actor)))
                 c.crowd_service.release_new_bikes()
 
 
@@ -591,23 +619,41 @@ def do_birth(c):
             trans.location.z = 0.5
             trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
             actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
-            c.world.wait_for_tick(1.0) # Without this, the actor list gets messed up in CARLA, leading to random actors spawning.
             if actor:
                 actor.set_collision_enabled(c.args.collision)
                 c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
                 aabb_map.insert(get_aabb(actor))
                 c.crowd_service.acquire_new_pedestrians()
-                c.crowd_service.append_new_pedestrians((actor.id, path.route_points[0]))
+                c.crowd_service.append_new_pedestrians((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    path.route_orientations))
                 c.crowd_service.release_new_pedestrians()
 
 
+def do_destroy(c):
+    
+    c.crowd_service.acquire_destroy_list()
+    destroy_list = c.crowd_service.destroy_list
+    c.crowd_service.destroy_list = []
+    c.crowd_service.release_destroy_list()
+
+    commands = [carla.command.DestroyActor(x) for x in destroy_list]
+
+    c.client.apply_batch_sync(commands)
+    c.world.wait_for_tick(1.0)
+
+
 def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
-        
+    
+    new_car_agents = []
+    new_bike_agents = []
+    new_pedestrian_agents = []
+
     c.crowd_service.acquire_new_cars()
-    for (actor_id, route_point, steer_angle_range) in c.crowd_service.new_cars:
-        path = c.rng.choice(c.sumo_network.get_next_route_paths(route_point, PATH_MIN_POINTS - 1, PATH_INTERVAL))
-        path = SumoNetworkAgentPath(path, PATH_MIN_POINTS, PATH_INTERVAL)
-        car_agents.append(Agent(
+    for (actor_id, route_points, steer_angle_range) in c.crowd_service.new_cars:
+        path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
+        new_car_agents.append(Agent(
             c.world.get_actor(actor_id), 'Car', path, 5.0 + c.rng.uniform(-0.5, 0.5),
             steer_angle_range))
     c.crowd_service.new_cars = []
@@ -615,10 +661,9 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
     c.crowd_service.release_new_cars()
     
     c.crowd_service.acquire_new_bikes()
-    for (actor_id, route_point, steer_angle_range) in c.crowd_service.new_bikes:
-        path = c.rng.choice(c.sumo_network.get_next_route_paths(route_point, PATH_MIN_POINTS - 1, PATH_INTERVAL))
-        path = SumoNetworkAgentPath(path, PATH_MIN_POINTS, PATH_INTERVAL)
-        bike_agents.append(Agent(
+    for (actor_id, route_points, steer_angle_range) in c.crowd_service.new_bikes:
+        path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
+        new_bike_agents.append(Agent(
             c.world.get_actor(actor_id), 'Bicycle', path, 3.0 + c.rng.uniform(-0.5, 0.5),
             steer_angle_range))
     c.crowd_service.new_bikes = []
@@ -626,23 +671,28 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
     c.crowd_service.release_new_bikes()
     
     c.crowd_service.acquire_new_pedestrians()
-    for (actor_id, route_point) in c.crowd_service.new_pedestrians:
-        path = SidewalkAgentPath([route_point], [c.rng.choice([True, False])], PATH_MIN_POINTS, PATH_INTERVAL)
+    for (actor_id, route_points, route_orientations) in c.crowd_service.new_pedestrians:
+        path = SidewalkAgentPath(route_points, route_orientations, PATH_MIN_POINTS, PATH_INTERVAL)
         path.resize(c.sidewalk, c.args.cross_probability)
-        pedestrian_agents.append(Agent(
+        new_pedestrian_agents.append(Agent(
             c.world.get_actor(actor_id), 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5)))
     c.crowd_service.new_pedestrians = []
     c.crowd_service.spawn_pedestrian = len(pedestrian_agents) < c.args.num_pedestrian
     c.crowd_service.release_new_pedestrians()
 
+    return (car_agents + new_car_agents, bike_agents + new_bike_agents, pedestrian_agents + new_pedestrian_agents)
 
-def do_death(c, car_agents, bike_agents, pedestrian_agents):
+
+def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
    
     update_time = time.time()
 
-    commands = []
-    for agents in [car_agents, bike_agents, pedestrian_agents]:
-        next_agents = []
+    next_car_agents = []
+    next_bike_agents = []
+    next_pedestrian_agents = []
+    next_destroy_list = []
+
+    for (agents, next_agents) in zip([car_agents, bike_agents, pedestrian_agents], [next_car_agents, next_bike_agents, next_pedestrian_agents]):
         for agent in agents:
             delete = False
             if not delete and not c.bounds_occupancy.contains(get_position(agent.actor)):
@@ -662,16 +712,14 @@ def do_death(c, car_agents, bike_agents, pedestrian_agents):
                 agent.stuck_time = None
             
             if delete:
-                commands.append(carla.command.DestroyActor(agent.actor.id))
+                next_destroy_list.append(agent.actor.id)
             else:
                 next_agents.append(agent)
-        agents[:] = next_agents
 
-    c.client.apply_batch_sync(commands)
-    c.world.wait_for_tick()
+    return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list)
 
 
-def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
+def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
     agents = car_agents + bike_agents + pedestrian_agents
     agents_lookup = {}
     for agent in agents:
@@ -679,13 +727,15 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
 
     next_agents = []
     next_agent_gamma_ids = []
-    agents_to_destroy = []
+    new_destroy_list = []
     if len(agents) > 0:
         gamma = carla.RVOSimulator()
         
         gamma_id = 0
+
+         # For external agents not tracked.
         for actor in c.world.get_actors():
-            if actor.id not in agents_lookup: # For external agents not tracked.
+            if actor.id not in agents_lookup:
                 if isinstance(actor, carla.Vehicle):
                     if actor.attributes['number_of_wheels'] == 2:
                         type_tag = 'Bicycle'
@@ -705,90 +755,91 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
                 gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
                 gamma.set_agent_pref_velocity(gamma_id, get_velocity(actor))
                 gamma_id += 1
-            else: # For tracked agents.
-                agent = agents_lookup[actor.id]
 
-                # Declare variables.
-                is_valid = True
-                pref_vel = None
-                path_forward = None
-                bounding_box_corners = None
-                lane_constraints = None
+        # For tracked agents.
+        for agent in agents:
+            actor = agent.actor
 
-                # Update path, check validity, process variables.
-                if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
-                    position = get_position(actor)
-                    # Lane change if possible.
-                    if c.rng.uniform(0.0, 1.0) <= c.args.lane_change_probability:
-                        new_path_candidates = c.sumo_network.get_next_route_paths(
-                                c.sumo_network.get_nearest_route_point(position),
-                                agent.path.min_points - 1, agent.path.interval)
-                        if len(new_path_candidates) > 0:
-                            new_path = SumoNetworkAgentPath(c.rng.choice(new_path_candidates)[0:agent.path.min_points], 
-                                    agent.path.min_points, agent.path.interval)
-                            agent.path = new_path
-                    # Cut, resize, check.
+            # Declare variables.
+            is_valid = True
+            pref_vel = None
+            path_forward = None
+            bounding_box_corners = None
+            lane_constraints = None
+
+            # Update path, check validity, process variables.
+            if agent.type_tag == 'Car' or agent.type_tag == 'Bicycle':
+                position = get_position(actor)
+                # Lane change if possible.
+                if c.rng.uniform(0.0, 1.0) <= c.args.lane_change_probability:
+                    new_path_candidates = c.sumo_network.get_next_route_paths(
+                            c.sumo_network.get_nearest_route_point(position),
+                            agent.path.min_points - 1, agent.path.interval)
+                    if len(new_path_candidates) > 0:
+                        new_path = SumoNetworkAgentPath(c.rng.choice(new_path_candidates)[0:agent.path.min_points], 
+                                agent.path.min_points, agent.path.interval)
+                        agent.path = new_path
+                # Cut, resize, check.
+                if not agent.path.resize(c.sumo_network):
+                    is_valid = False
+                else:
+                    agent.path.cut(c.sumo_network, position)
                     if not agent.path.resize(c.sumo_network):
                         is_valid = False
-                    else:
-                        agent.path.cut(c.sumo_network, position)
-                        if not agent.path.resize(c.sumo_network):
-                            is_valid = False
-                    # Calculate variables.
-                    if is_valid:
-                        target_position = agent.path.get_position(c.sumo_network, 5)  ## to check
-                        velocity = (target_position - position).make_unit_vector()
-                        pref_vel = agent.preferred_speed * velocity
-                        path_forward = (agent.path.get_position(c.sumo_network, 1) - 
-                                agent.path.get_position(c.sumo_network, 0)).make_unit_vector()
-                        bounding_box_corners = get_vehicle_bounding_box_corners(actor)
-                        side_constraints = get_lane_constraints(c.sidewalk, position, path_forward)
-                elif agent.type_tag == 'People':
-                    position = get_position(actor)
-                    # Cut, resize, check.
+                # Calculate variables.
+                if is_valid:
+                    target_position = agent.path.get_position(c.sumo_network, 5)  ## to check
+                    velocity = (target_position - position).make_unit_vector()
+                    pref_vel = agent.preferred_speed * velocity
+                    path_forward = (agent.path.get_position(c.sumo_network, 1) - 
+                            agent.path.get_position(c.sumo_network, 0)).make_unit_vector()
+                    bounding_box_corners = get_vehicle_bounding_box_corners(actor)
+                    lane_constraints = get_lane_constraints(c.sidewalk, position, path_forward)
+            elif agent.type_tag == 'People':
+                position = get_position(actor)
+                # Cut, resize, check.
+                if not agent.path.resize(c.sidewalk, c.args.cross_probability):
+                    is_valid = False
+                else:
+                    agent.path.cut(c.sidewalk, position)
                     if not agent.path.resize(c.sidewalk, c.args.cross_probability):
                         is_valid = False
-                    else:
-                        agent.path.cut(c.sidewalk, position)
-                        if not agent.path.resize(c.sidewalk, c.args.cross_probability):
-                            is_valid = False
-                    # Calculate pref_vel.
-                    if is_valid:
-                        target_position = agent.path.get_position(c.sidewalk, 0)
-                        velocity = (target_position - position).make_unit_vector()
-                        pref_vel = agent.preferred_speed * velocity
-                        path_forward = carla.Vector2D(0, 0) # Irrelevant for pedestrian.
-                        bounding_box_corners = get_pedestrian_bounding_box_corners(actor)
-                
-                # Add info to GAMMA.
-                if pref_vel:
-                    gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), gamma_id)
-                    gamma.set_agent_position(gamma_id, get_position(actor))
-                    gamma.set_agent_velocity(gamma_id, get_velocity(actor))
-                    gamma.set_agent_heading(gamma_id, get_forward_direction(actor))
-                    gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
-                    gamma.set_agent_pref_velocity(gamma_id, pref_vel)
-                    gamma.set_agent_path_forward(gamma_id, path_forward)
-                    if lane_constraints is not None:
-                        # Flip LR -> RL since GAMMA uses right-handed instead.
-                        gamma.set_agent_lane_constraints(gamma_id, lane_constraints[1], lane_constraints[0])  
-                    next_agents.append(agent)
-                    next_agent_gamma_ids.append(gamma_id)
-                    gamma_id += 1
-                else:
-                    agents_to_destroy.append(agent)
+                # Calculate pref_vel.
+                if is_valid:
+                    target_position = agent.path.get_position(c.sidewalk, 0)
+                    velocity = (target_position - position).make_unit_vector()
+                    pref_vel = agent.preferred_speed * velocity
+                    path_forward = carla.Vector2D(0, 0) # Irrelevant for pedestrian.
+                    bounding_box_corners = get_pedestrian_bounding_box_corners(actor)
+            
+            # Add info to GAMMA.
+            if pref_vel:
+                gamma.add_agent(carla.AgentParams.get_default(agent.type_tag), gamma_id)
+                gamma.set_agent_position(gamma_id, get_position(actor))
+                gamma.set_agent_velocity(gamma_id, get_velocity(actor))
+                gamma.set_agent_heading(gamma_id, get_forward_direction(actor))
+                gamma.set_agent_bounding_box_corners(gamma_id, bounding_box_corners)
+                gamma.set_agent_pref_velocity(gamma_id, pref_vel)
+                gamma.set_agent_path_forward(gamma_id, path_forward)
+                if lane_constraints is not None:
+                    # Flip LR -> RL since GAMMA uses right-handed instead.
+                    gamma.set_agent_lane_constraints(gamma_id, lane_constraints[1], lane_constraints[0])  
+                next_agents.append(agent)
+                next_agent_gamma_ids.append(gamma_id)
+                gamma_id += 1
+            else:
+                new_destroy_list.append(agent.actor.id)
 
+        start = time.time()        
         gamma.do_step()
 
         for (agent, gamma_id) in zip(next_agents, next_agent_gamma_ids):
             agent.control_velocity = gamma.get_agent_velocity(gamma_id)
 
-    car_agents[:] = [a for a in next_agents if a.type_tag == 'Car']
-    bike_agents[:] = [a for a in next_agents if a.type_tag == 'Bicycle']
-    pedestrian_agents[:] = [a for a in next_agents if a.type_tag == 'People']
-
-    c.client.apply_batch_sync([carla.command.DestroyActor(a.actor_id) for a in agents_to_destroy])
-    c.world.wait_for_tick(1.0)
+    next_car_agents = [a for a in next_agents if a.type_tag == 'Car']
+    next_bike_agents = [a for a in next_agents if a.type_tag == 'Bicycle']
+    next_pedestrian_agents = [a for a in next_agents if a.type_tag == 'People']
+    next_destroy_list = destroy_list + new_destroy_list
 
     c.crowd_service.acquire_control_velocities()
     c.crowd_service.control_velocities = [
@@ -806,6 +857,8 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents):
     c.crowd_service.acquire_local_intentions()
     c.crowd_service.local_intentions = local_intentions
     c.crowd_service.release_local_intentions()
+
+    return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list)
 
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
@@ -886,30 +939,32 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             control = carla.WalkerControl(carla.Vector3D(velocity.x, velocity.y), 1.0, False)
             commands.append(carla.command.ApplyWalkerControl(actor_id, control))
 
-    c.client.apply_batch_sync(commands)
+    c.client.apply_batch(commands)
 
     return cur_time # New pid_last_update_time.
 
 
-def birth_loop(args):
+def spawn_destroy_loop(args):
     try:
         # Wait for crowd service.
-        time.sleep(2)
+        time.sleep(3)
         c = Context(args)
-        print('Birth loop running.')
+        print('Spawn-destroy loop running.')
         
         while True:
             start = time.time()
-            do_birth(c)
-            time.sleep(max(0, 0.05 - (time.time() - start)))
-            #print('Birth rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+            do_spawn(c)
+            do_destroy(c)
+            time.sleep(max(0, 0.2 - (time.time() - start))) # 5 Hz
+            # print('({}) Spawn-destroy rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
+
 
 def control_loop(args):
     try:
         # Wait for crowd service.
-        time.sleep(2)
+        time.sleep(3)
         c = Context(args)
         print('Control loop running.')
                 
@@ -920,8 +975,8 @@ def control_loop(args):
         while True:
             start = time.time()
             pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
-            time.sleep(max(0, 0.05 - (time.time() - start)))
-            #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+            time.sleep(max(0, 0.05 - (time.time() - start))) # 20 Hz
+            # print('({}) Control rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
 
@@ -929,7 +984,7 @@ def control_loop(args):
 def gamma_loop(args):
     try:
         # Wait for crowd service.
-        time.sleep(2)
+        time.sleep(3)
         c = Context(args)
         print('GAMMA loop running.')
         
@@ -938,20 +993,31 @@ def gamma_loop(args):
         pedestrian_agents = []
 
         while True:
+            destroy_list = []
             start = time.time()
-            pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
-            do_gamma(c, car_agents, bike_agents, pedestrian_agents)
-            do_death(c, car_agents, bike_agents, pedestrian_agents)
-            time.sleep(max(0, 0.05 - (time.time() - start)))
-            #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
+
+            (car_agents, bike_agents, pedestrian_agents) = \
+                    pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
+
+            (car_agents, bike_agents, pedestrian_agents, destroy_list) = \
+                    do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list)
+
+            (car_agents, bike_agents, pedestrian_agents, destroy_list) = \
+                    do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list)
+
+            c.crowd_service.acquire_destroy_list()
+            c.crowd_service.extend_destroy_list(destroy_list)
+            c.crowd_service.release_destroy_list()
+            time.sleep(max(0, 0.025 - (time.time() - start))) # 40 Hz
+            # print('({}) GAMMA rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
 
 def main(args):
 
-    birth_process = Process(target=birth_loop, args=(args,))
-    birth_process.daemon = True
-    birth_process.start()
+    spawn_destroy_process = Process(target=spawn_destroy_loop, args=(args,))
+    spawn_destroy_process.daemon = True
+    spawn_destroy_process.start()
 
     control_process = Process(target=control_loop, args=(args,))
     control_process.daemon = True
