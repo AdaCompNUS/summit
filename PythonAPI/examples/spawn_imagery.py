@@ -90,7 +90,21 @@ def spawn_imagery(client, zoom, min_lat, min_lon, max_lat, max_lon, offset):
 
             client.get_world().spawn_dynamic_tile_mesh(bounds_min, bounds_max, data, 9)
 
-def main():
+def main(args):
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(10.0)
+    
+    # Extract (x, y) from SUMO network and convert into LatLon.
+    sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
+    bounds_min = (sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y)
+    bounds_max = (sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y)
+
+    spawn_imagery(client, ZOOM_LEVEL, 
+            sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y,
+            sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y,
+            sumo_network.offset)
+
+if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
@@ -111,18 +125,4 @@ def main():
         help='Name of dataset (default: meskel_square)')
     args = argparser.parse_args()
 
-    client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
-    
-    # Extract (x, y) from SUMO network and convert into LatLon.
-    sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
-    bounds_min = (sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y)
-    bounds_max = (sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y)
-
-    spawn_imagery(client, ZOOM_LEVEL, 
-            sumo_network.original_bounds_min.x, sumo_network.original_bounds_min.y,
-            sumo_network.original_bounds_max.x, sumo_network.original_bounds_max.y,
-            sumo_network.offset)
-
-if __name__ == '__main__':
-    main()
+    main(args)

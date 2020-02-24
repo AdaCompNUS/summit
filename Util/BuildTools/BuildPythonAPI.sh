@@ -2,8 +2,8 @@
 
 source $(dirname "$0")/Environment.sh
 
-export CC=clang-7
-export CXX=clang++-7
+export CC="ccache clang-7"
+export CXX="ccache clang++-7"
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------

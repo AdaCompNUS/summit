@@ -151,6 +151,7 @@ function build_libcarla {
 set -e -x
     cmake \
         -G "Eclipse CDT4 - Ninja" \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE:-$1} \
         -DLIBCARLA_BUILD_DEBUG=${M_DEBUG} \
         -DLIBCARLA_BUILD_RELEASE=${M_RELEASE} \

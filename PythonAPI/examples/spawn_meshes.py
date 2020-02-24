@@ -105,7 +105,14 @@ def spawn_meshes(client, dataset):
 
     client.apply_batch_sync(commands)
 
-def main():
+def main(args):
+
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(10.0)
+
+    spawn_meshes(client, args.dataset)
+
+if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
@@ -126,10 +133,4 @@ def main():
         help='Name of dataset (default: meskel_square)')
     args = argparser.parse_args()
 
-    client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
-
-    spawn_meshes(client, args.dataset)
-
-if __name__ == '__main__':
-    main()
+    main(args)

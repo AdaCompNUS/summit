@@ -59,38 +59,38 @@ Pyro4.util.SerializerBase.register_dict_to_class(
         'carla.Vector2D',
         lambda c, o: carla.Vector2D(o['x'], o['y']))
 Pyro4.util.SerializerBase.register_class_to_dict(
-        carla.SumoNetworkRoutePoint, 	
-        lambda o: { 	
-            '__class__': 'carla.SumoNetworkRoutePoint',	
-            'edge': o.edge,	
-            'lane': o.lane,	
-            'segment': o.segment,	
-            'offset': o.offset	
+        carla.SumoNetworkRoutePoint,    
+        lambda o: {     
+            '__class__': 'carla.SumoNetworkRoutePoint', 
+            'edge': o.edge, 
+            'lane': o.lane, 
+            'segment': o.segment,   
+            'offset': o.offset  
         })
-def dict_to_sumo_network_route_point(c, o):	
-    r = carla.SumoNetworkRoutePoint()	
+def dict_to_sumo_network_route_point(c, o): 
+    r = carla.SumoNetworkRoutePoint()   
     r.edge = str(o['edge']) # In python2, this is a unicode, so use str() to convert.
-    r.lane = o['lane']	
-    r.segment = o['segment']	
-    r.offset = o['offset']	
-    return r	
-Pyro4.util.SerializerBase.register_dict_to_class(	
-        'carla.SumoNetworkRoutePoint', dict_to_sumo_network_route_point)	
-Pyro4.util.SerializerBase.register_class_to_dict(	
-        carla.SidewalkRoutePoint, 	
-        lambda o: { 	
-            '__class__': 'carla.SidewalkRoutePoint',	
-            'polygon_id': o.polygon_id,	
-            'segment_id': o.segment_id,	
-            'offset': o.offset	
-        })	
-def dict_to_sidewalk_route_point(c, o):	
-    r = carla.SidewalkRoutePoint()	
-    r.polygon_id = o['polygon_id']	
-    r.segment_id = o['segment_id']	
+    r.lane = o['lane']  
+    r.segment = o['segment']    
+    r.offset = o['offset']  
+    return r    
+Pyro4.util.SerializerBase.register_dict_to_class(   
+        'carla.SumoNetworkRoutePoint', dict_to_sumo_network_route_point)    
+Pyro4.util.SerializerBase.register_class_to_dict(   
+        carla.SidewalkRoutePoint,   
+        lambda o: {     
+            '__class__': 'carla.SidewalkRoutePoint',    
+            'polygon_id': o.polygon_id, 
+            'segment_id': o.segment_id, 
+            'offset': o.offset  
+        })  
+def dict_to_sidewalk_route_point(c, o): 
+    r = carla.SidewalkRoutePoint()  
+    r.polygon_id = o['polygon_id']  
+    r.segment_id = o['segment_id']  
     r.offset = o['offset']
-    return r	
-Pyro4.util.SerializerBase.register_dict_to_class(	
+    return r    
+Pyro4.util.SerializerBase.register_dict_to_class(   
         'carla.SidewalkRoutePoint', dict_to_sidewalk_route_point)
 
 
@@ -903,7 +903,7 @@ def birth_loop(args):
             do_birth(c)
             time.sleep(max(0, 0.05 - (time.time() - start)))
             #print('Birth rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
-    except Pyro4.errors.PyroError:
+    except Pyro4.errors.ConnectionClosedError:
         pass
 
 def control_loop(args):
@@ -922,7 +922,7 @@ def control_loop(args):
             pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
             time.sleep(max(0, 0.05 - (time.time() - start)))
             #print('Control rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
-    except Pyro4.errors.PyroError:
+    except Pyro4.errors.ConnectionClosedError:
         pass
 
 
@@ -944,10 +944,31 @@ def gamma_loop(args):
             do_death(c, car_agents, bike_agents, pedestrian_agents)
             time.sleep(max(0, 0.05 - (time.time() - start)))
             #print('GAMMA rate: {} Hz'.format(1 / max(time.time() - start, 0.001)))
-    except Pyro4.errors.PyroError:
+    except Pyro4.errors.ConnectionClosedError:
         pass
 
-def main():
+def main(args):
+
+    birth_process = Process(target=birth_loop, args=(args,))
+    birth_process.daemon = True
+    birth_process.start()
+
+    control_process = Process(target=control_loop, args=(args,))
+    control_process.daemon = True
+    control_process.start()
+    
+    gamma_process = Process(target=gamma_loop, args=(args,))
+    gamma_process.daemon = True
+    gamma_process.start()
+    
+    Pyro4.Daemon.serveSimple(
+            {
+                CrowdService: "crowdservice.warehouse"
+            },
+            port=8100,
+            ns=False)
+
+if __name__ == '__main__':
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
@@ -1023,25 +1044,4 @@ def main():
         help='Minimum duration (s) for an agent to be considered stuck (default: 5)',
         type=float)
     args = argparser.parse_args()
-    
-    birth_process = Process(target=birth_loop, args=(args,))
-    birth_process.daemon = True
-    birth_process.start()
-
-    control_process = Process(target=control_loop, args=(args,))
-    control_process.daemon = True
-    control_process.start()
-    
-    gamma_process = Process(target=gamma_loop, args=(args,))
-    gamma_process.daemon = True
-    gamma_process.start()
-    
-    Pyro4.Daemon.serveSimple(
-            {
-                CrowdService: "crowdservice.warehouse"
-            },
-            port=8100,
-            ns=False)
-
-if __name__ == '__main__':
-    main()
+    main(args)
