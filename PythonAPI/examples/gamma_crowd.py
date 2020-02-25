@@ -35,10 +35,10 @@ DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
 
-CAR_SPEED_KP = 1.5
+CAR_SPEED_KP = 1.2 # 1.5
 CAR_SPEED_KI = 0.5
-CAR_SPEED_KD = 0.005
-CAR_STEER_KP = 2.5
+CAR_SPEED_KD = 0.2 # 0.005
+CAR_STEER_KP = 0.8 # 2.5
 
 BIKE_SPEED_KP = 0.8
 BIKE_SPEED_KI = 0.2
