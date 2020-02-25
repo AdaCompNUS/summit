@@ -38,12 +38,15 @@ PATH_INTERVAL = 1.0
 CAR_SPEED_KP = 1.2 * 0.8 # 1.5
 CAR_SPEED_KI = 0.5 * 0.8
 CAR_SPEED_KD = 0.2 * 0.8 # 0.005
-CAR_STEER_KP = 2.5
+CAR_STEER_KP = 1.5 # 2.5
 
-BIKE_SPEED_KP = 0.8
-BIKE_SPEED_KI = 0.2
-BIKE_SPEED_KD = 0.0
-BIKE_STEER_KP = 2.5
+# BIKE_SPEED_KP = 0.8
+# BIKE_SPEED_KI = 0.2
+# BIKE_SPEED_KD = 0.0
+BIKE_SPEED_KP = 1.2 * 0.8 # 1.5
+BIKE_SPEED_KI = 0.5 * 0.8
+BIKE_SPEED_KD = 0.2 * 0.8 # 0.005
+BIKE_STEER_KP = 1.5 # 2.5
 
 Pyro4.config.COMMTIMEOUT = 2.0
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
@@ -491,9 +494,9 @@ class Agent(object):
         self.behavior_type = self.rand_agent_behavior_type(rand)
 
     def rand_agent_behavior_type(self, prob):
-        prob_gamma_agent = 0.0
-        prob_simplified_gamma_agent = 0.0
-        prob_ttc_agent = 1.0
+        prob_gamma_agent = 0.8
+        prob_simplified_gamma_agent = 0.1
+        prob_ttc_agent = 0.1
 
         if prob <= prob_gamma_agent:
             return carla.AgentBehaviorType.Gamma
@@ -847,17 +850,15 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
             else:
                 new_destroy_list.append(agent.actor.id)
 
+            if agent.behavior_type is -1:
+                agent.control_velocity = get_ttc_vel(agent, agents, pref_vel)
+
         start = time.time()        
         gamma.do_step()
 
         for (agent, gamma_id) in zip(next_agents, next_agent_gamma_ids):
-            if agent.behavior_type is not -1:
+            if agent.behavior_type is not -1 or agent.control_velocity is None:
                 agent.control_velocity = gamma.get_agent_velocity(gamma_id)
-            else:
-                agent.control_velocity = get_ttc_vel(gamma_id, agent, agents)
-                if agent.control_velocity is None:
-                    agent.control_velocity = gamma.get_agent_velocity(gamma_id)
-
 
     next_car_agents = [a for a in next_agents if a.type_tag == 'Car']
     next_bike_agents = [a for a in next_agents if a.type_tag == 'Bicycle']
@@ -884,31 +885,33 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
     return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list)
 
 
-def get_ttc_vel(self, i, agent, agents):
-    if agent:
-        vel_to_exe = agent.get_preferred_velocity()
-        if not vel_to_exe: # path is not ready.
-            return None
+def get_ttc_vel(agent, agents, pref_vel):
+    try:
+        if agent:
+            vel_to_exe = pref_vel
+            if not vel_to_exe: # path is not ready.
+                return None
 
-        speed_to_exe = agent.preferred_speed
-        for (j, other_agent) in enumerate(agents):
-            if i != j and other_agent and self.network_occupancy_map.contains(other_agent.get_position()):
-                s_f = other_agent.get_velocity().length()
-                d_f = (other_agent.get_position() - agent.get_position()).length()
-                d_safe = 5.0
-                a_max = 3.0
-                s = max(0, s_f * s_f + 2 * a_max * (d_f - d_safe))**0.5
-                speed_to_exe = min(speed_to_exe, s)
+            speed_to_exe = agent.preferred_speed
+            for other_agent in agents:
+                if other_agent and agent.actor.id != other_agent.actor.id:
+                    s_f = get_velocity(other_agent.actor).length()
+                    d_f = (get_position(other_agent.actor) - get_position(agent.actor)).length()
+                    d_safe = 5.0
+                    a_max = 3.0
+                    s = max(0, s_f * s_f + 2 * a_max * (d_f - d_safe))**0.5
+                    speed_to_exe = min(speed_to_exe, s)
 
-        cur_vel = agent.actor.get_velocity()
-        cur_vel = carla.Vector2D(cur_vel.x, cur_vel.y)
-        angle_diff = get_signed_angle_diff(vel_to_exe, cur_vel)
-        if angle_diff > 30 or angle_diff < -30:
-            vel_to_exe = 0.5 * (vel_to_exe + cur_vel)
+            cur_vel = get_velocity(agent.actor)
+            angle_diff = get_signed_angle_diff(vel_to_exe, cur_vel)
+            if angle_diff > 30 or angle_diff < -30:
+                vel_to_exe = 0.5 * (vel_to_exe + cur_vel)
 
-        vel_to_exe = vel_to_exe.make_unit_vector() * speed_to_exe
+            vel_to_exe = vel_to_exe.make_unit_vector() * speed_to_exe
 
-        return vel_to_exe
+            return vel_to_exe
+    except Exception as e:
+        print(e)
 
     return None
 
