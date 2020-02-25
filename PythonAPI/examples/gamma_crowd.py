@@ -531,7 +531,7 @@ class Context(object):
         self.client = carla.Client(args.host, args.port)
         self.client.set_timeout(10.0)
         self.world = self.client.get_world()
-        self.crowd_service = Pyro4.Proxy('PYRO:crowdservice.warehouse@localhost:8100')
+        self.crowd_service = Pyro4.Proxy('PYRO:crowdservice.warehouse@localhost:{}'.format(args.pyroport))
     
         self.pedestrian_blueprints = self.world.get_blueprint_library().filter('walker.pedestrian.*')
         self.vehicle_blueprints = self.world.get_blueprint_library().filter('vehicle.*')
@@ -1101,7 +1101,7 @@ def main(args):
             {
                 CrowdService: "crowdservice.warehouse"
             },
-            port=8100,
+            port=args.pyroport,
             ns=False)
 
 if __name__ == '__main__':
@@ -1116,6 +1116,11 @@ if __name__ == '__main__':
         default=2000,
         type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-pyp', '--pyroport',
+        default=8100,
+        type=int,
+        help='TCP port for pyro4 to listen to (default: 8100)')
     argparser.add_argument(
         '-d', '--dataset',
         default='meskel_square',
