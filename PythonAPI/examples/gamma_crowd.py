@@ -853,12 +853,26 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
             if agent.behavior_type is -1:
                 agent.control_velocity = get_ttc_vel(agent, agents, pref_vel)
 
+            if False:
+                cur_pos = agent.actor.get_location() 
+                pref_next_pos = carla.Location(cur_pos.x + pref_vel.x, cur_pos.y + pref_vel.y, 0.0)
+                c.world.debug.draw_line(cur_pos, pref_next_pos, life_time=0.05,
+                                                   color=carla.Color(0, 255, 0, 0))
+                               
+
         start = time.time()        
         gamma.do_step()
 
         for (agent, gamma_id) in zip(next_agents, next_agent_gamma_ids):
             if agent.behavior_type is not -1 or agent.control_velocity is None:
                 agent.control_velocity = gamma.get_agent_velocity(gamma_id)
+                if False:
+                    target_vel = agent.control_velocity
+                    cur_pos = agent.actor.get_location() 
+                    next_pos = carla.Location(cur_pos.x + target_vel.x, cur_pos.y + target_vel.y, 0.0)
+                    c.world.debug.draw_line(cur_pos, next_pos, life_time=0.05,
+                                                   color=carla.Color(255, 0, 0, 0))
+                    
 
     next_car_agents = [a for a in next_agents if a.type_tag == 'Car']
     next_bike_agents = [a for a in next_agents if a.type_tag == 'Bicycle']
