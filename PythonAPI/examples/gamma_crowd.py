@@ -480,7 +480,7 @@ class SidewalkAgentPath:
         return np.rad2deg(math.atan2(next_pos.y - pos.y, next_pos.x - pos.x))
 
 class Agent(object):
-    def __init__(self, actor, type_tag, path, preferred_speed, steer_angle_range=0.0):
+    def __init__(self, actor, type_tag, path, preferred_speed, steer_angle_range=0.0, rand=0):
         self.actor = actor
         self.type_tag = type_tag
         self.path = path
@@ -488,6 +488,20 @@ class Agent(object):
         self.stuck_time = None
         self.control_velocity = carla.Vector2D(0, 0)
         self.steer_angle_range = steer_angle_range
+        self.behavior_type = self.rand_agent_behavior_type(rand)
+
+    def rand_agent_behavior_type(self, prob):
+        prob_gamma_agent = 0.0
+        prob_simplified_gamma_agent = 0.0
+        prob_ttc_agent = 1.0
+
+        if prob <= prob_gamma_agent:
+            return carla.AgentBehaviorType.Gamma
+        elif prob <= prob_gamma_agent + prob_simplified_gamma_agent:
+            return carla.AgentBehaviorType.SimplifiedGamma
+        else:
+            return -1
+
 
 class Context(object):
     def __init__(self, args):
@@ -655,7 +669,7 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
         path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
         new_car_agents.append(Agent(
             c.world.get_actor(actor_id), 'Car', path, 5.0 + c.rng.uniform(-0.5, 0.5),
-            steer_angle_range))
+            steer_angle_range, rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_cars = []
     c.crowd_service.spawn_car = len(car_agents) < c.args.num_car
     c.crowd_service.release_new_cars()
@@ -665,7 +679,7 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
         path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
         new_bike_agents.append(Agent(
             c.world.get_actor(actor_id), 'Bicycle', path, 3.0 + c.rng.uniform(-0.5, 0.5),
-            steer_angle_range))
+            steer_angle_range, rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_bikes = []
     c.crowd_service.spawn_bike = len(bike_agents) < c.args.num_bike
     c.crowd_service.release_new_bikes()
@@ -675,7 +689,8 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
         path = SidewalkAgentPath(route_points, route_orientations, PATH_MIN_POINTS, PATH_INTERVAL)
         path.resize(c.sidewalk, c.args.cross_probability)
         new_pedestrian_agents.append(Agent(
-            c.world.get_actor(actor_id), 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5)))
+            c.world.get_actor(actor_id), 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5),
+            rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_pedestrians = []
     c.crowd_service.spawn_pedestrian = len(pedestrian_agents) < c.args.num_pedestrian
     c.crowd_service.release_new_pedestrians()
@@ -824,6 +839,8 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
                 if lane_constraints is not None:
                     # Flip LR -> RL since GAMMA uses right-handed instead.
                     gamma.set_agent_lane_constraints(gamma_id, lane_constraints[1], lane_constraints[0])  
+                if agent.behavior_type is not -1:
+                    gamma.set_agent_behavior_type(gamma_id, agent.behavior_type)
                 next_agents.append(agent)
                 next_agent_gamma_ids.append(gamma_id)
                 gamma_id += 1
@@ -834,7 +851,13 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
         gamma.do_step()
 
         for (agent, gamma_id) in zip(next_agents, next_agent_gamma_ids):
-            agent.control_velocity = gamma.get_agent_velocity(gamma_id)
+            if agent.behavior_type is not -1:
+                agent.control_velocity = gamma.get_agent_velocity(gamma_id)
+            else:
+                agent.control_velocity = get_ttc_vel(gamma_id, agent, agents)
+                if agent.control_velocity is None:
+                    agent.control_velocity = gamma.get_agent_velocity(gamma_id)
+
 
     next_car_agents = [a for a in next_agents if a.type_tag == 'Car']
     next_bike_agents = [a for a in next_agents if a.type_tag == 'Bicycle']
@@ -859,6 +882,36 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
     c.crowd_service.release_local_intentions()
 
     return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list)
+
+
+def get_ttc_vel(self, i, agent, agents):
+    if agent:
+        vel_to_exe = agent.get_preferred_velocity()
+        if not vel_to_exe: # path is not ready.
+            return None
+
+        speed_to_exe = agent.preferred_speed
+        for (j, other_agent) in enumerate(agents):
+            if i != j and other_agent and self.network_occupancy_map.contains(other_agent.get_position()):
+                s_f = other_agent.get_velocity().length()
+                d_f = (other_agent.get_position() - agent.get_position()).length()
+                d_safe = 5.0
+                a_max = 3.0
+                s = max(0, s_f * s_f + 2 * a_max * (d_f - d_safe))**0.5
+                speed_to_exe = min(speed_to_exe, s)
+
+        cur_vel = agent.actor.get_velocity()
+        cur_vel = carla.Vector2D(cur_vel.x, cur_vel.y)
+        angle_diff = get_signed_angle_diff(vel_to_exe, cur_vel)
+        if angle_diff > 30 or angle_diff < -30:
+            vel_to_exe = 0.5 * (vel_to_exe + cur_vel)
+
+        vel_to_exe = vel_to_exe.make_unit_vector() * speed_to_exe
+
+        return vel_to_exe
+
+    return None
+
 
 
 def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
