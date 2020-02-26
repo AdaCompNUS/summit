@@ -131,8 +131,10 @@ class CrowdService():
     @property
     def simulation_bounds(self):
         self._simulation_bounds_lock.acquire()
-        simulation_bounds_min = carla.Vector2D(self._simulation_bounds_min.x, self._simulation_bounds_min.y)
-        simulation_bounds_max = carla.Vector2D(self._simulation_bounds_max.x, self._simulation_bounds_max.y)
+        simulation_bounds_min = None if self._simulation_bounds_min is None else \
+                carla.Vector2D(self._simulation_bounds_min.x, self._simulation_bounds_min.y)
+        simulation_bounds_max = None if self._simulation_bounds_max is None else \
+                carla.Vector2D(self._simulation_bounds_max.x, self._simulation_bounds_max.y)
         self._simulation_bounds_lock.release()
         return (simulation_bounds_min, simulation_bounds_max)
 
@@ -529,18 +531,22 @@ class Context(object):
         self.args = args
         self.rng = random.Random(args.seed)
 
+        with (DATA_PATH/'{}.sim_bounds'.format(args.dataset)).open('r') as f:
+            self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_max = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
+            self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
+
         self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
         self.sumo_network_segments = self.sumo_network.create_segment_map()
+        self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
+        self.sumo_network_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sumo_network_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.network.wkt'.format(args.dataset)))
 
         self.sidewalk = self.sumo_network_occupancy.create_sidewalk(1.5)
         self.sidewalk_segments = self.sidewalk.create_segment_map()
+        self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
+        self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
         self.sidewalk_occupancy = carla.OccupancyMap.load(str(DATA_PATH/'{}.sidewalk.wkt'.format(args.dataset)))
-
-        with (DATA_PATH/'{}.sim_bounds'.format(args.dataset)).open('r') as f:
-            self.update_bounds(
-                    carla.Vector2D(*[float(v) for v in f.readline().split(',')]),
-                    carla.Vector2D(*[float(v) for v in f.readline().split(',')]))
 
         self.client = carla.Client(args.host, args.port)
         self.client.set_timeout(10.0)
@@ -552,15 +558,6 @@ class Context(object):
         self.car_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 4]
         self.car_blueprints = [x for x in self.car_blueprints if x.id not in ['vehicle.bmw.isetta']] # This dude moves too slow.
         self.bike_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 2]
-
-    def update_bounds(self, bounds_min, bounds_max):
-        self.bounds_min = bounds_min
-        self.bounds_max = bounds_max
-        self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
-        self.sumo_network_spawn_segments = self.sumo_network_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
-        self.sumo_network_spawn_segments.seed_rand(self.rng.getrandbits(32))
-        self.sidewalk_spawn_segments = self.sidewalk_segments.intersection(carla.OccupancyMap(self.bounds_min, self.bounds_max))
-        self.sidewalk_spawn_segments.seed_rand(self.rng.getrandbits(32))
 
 
 ''' ========== MAIN LOGIC FUNCTIONS ========== '''
@@ -1041,12 +1038,30 @@ def spawn_destroy_loop(args):
         # Wait for crowd service.
         time.sleep(3)
         c = Context(args)
+
+        # Upload bounds.
         c.crowd_service.simulation_bounds = (c.bounds_min, c.bounds_max)
+
+        last_bounds_update = None
+        
         print('Spawn-destroy loop running.')
         
         while True:
             start = time.time()
-            c.update_bounds(*c.crowd_service.simulation_bounds)
+
+            # Download bounds
+            if last_bounds_update is None or start - last_bounds_update > 1.0:
+                new_bounds = c.crowd_service.simulation_bounds
+                if new_bounds[0] != c.bounds_min or new_bounds[1] != c.bounds_max:
+                    c.bounds_min = new_bounds[0]
+                    c.bounds_max = new_bounds[1]
+                    c.bounds_occupancy = carla.OccupancyMap(c.bounds_min, c.bounds_max)
+                    c.sumo_network_spawn_segments = c.sumo_network_segments.intersection(carla.OccupancyMap(c.bounds_min, c.bounds_max))
+                    c.sumo_network_spawn_segments.seed_rand(c.rng.getrandbits(32))
+                    c.sidewalk_spawn_segments = c.sidewalk_segments.intersection(carla.OccupancyMap(c.bounds_min, c.bounds_max))
+                    c.sidewalk_spawn_segments.seed_rand(c.rng.getrandbits(32))
+                last_bounds_update = time.time()
+
             do_spawn(c)
             do_destroy(c)
             time.sleep(max(0, 0.2 - (time.time() - start))) # 5 Hz
@@ -1086,9 +1101,22 @@ def gamma_loop(args):
         bike_agents = []
         pedestrian_agents = []
 
+        last_bounds_update = None
+
         while True:
             destroy_list = []
             start = time.time()
+            
+            # Download bounds.
+            # Required for death process.
+            if last_bounds_update is None or start - last_bounds_update > 1.0:
+                new_bounds = c.crowd_service.simulation_bounds
+                if (new_bounds[0] is not None and new_bounds[0] != c.bounds_min) or \
+                        (new_bounds[1] is not None and new_bounds[1] != c.bounds_max):
+                    c.bounds_min = new_bounds[0]
+                    c.bounds_max = new_bounds[1]
+                    c.bounds_occupancy = carla.OccupancyMap(c.bounds_min, c.bounds_max)
+                last_bounds_update = time.time()
 
             (car_agents, bike_agents, pedestrian_agents) = \
                     pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
