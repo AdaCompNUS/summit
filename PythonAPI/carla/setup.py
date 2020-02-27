@@ -57,7 +57,7 @@ def get_libcarla_extensions():
                 '-lbz2', '-lexpat']
 
             extra_compile_args = [
-                '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
+                '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14', '-O3',
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
                 '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
