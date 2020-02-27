@@ -1054,7 +1054,8 @@ def spawn_destroy_loop(args):
             # Download bounds
             if last_bounds_update is None or start - last_bounds_update > 1.0:
                 new_bounds = c.crowd_service.simulation_bounds
-                if new_bounds[0] != c.bounds_min or new_bounds[1] != c.bounds_max:
+                if (new_bounds[0] is not None and new_bounds[0] != c.bounds_min) or \
+                        (new_bounds[1] is not None and new_bounds[1] != c.bounds_max):
                     c.bounds_min = new_bounds[0]
                     c.bounds_max = new_bounds[1]
                     c.bounds_occupancy = carla.OccupancyMap(c.bounds_min, c.bounds_max)
