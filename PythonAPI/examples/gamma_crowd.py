@@ -13,6 +13,9 @@ try:
 except IndexError:
     pass
 
+os.environ["PYRO_LOGFILE"] = "pyro.log"
+os.environ["PYRO_LOGLEVEL"] = "DEBUG"
+
 from collections import defaultdict
 from multiprocessing import Process
 from threading import RLock
