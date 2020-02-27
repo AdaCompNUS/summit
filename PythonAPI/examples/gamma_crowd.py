@@ -51,7 +51,6 @@ BIKE_SPEED_KI = 0.5 * 0.8
 BIKE_SPEED_KD = 0.2 * 0.8 # 0.005
 BIKE_STEER_KP = 1.5 # 2.5
 
-Pyro4.config.COMMTIMEOUT = 2.0
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
 Pyro4.config.SERIALIZER = 'serpent'
 Pyro4.util.SerializerBase.register_class_to_dict(
