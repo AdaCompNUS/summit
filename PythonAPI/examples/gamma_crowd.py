@@ -38,6 +38,10 @@ DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
 
+SPAWN_DESTROY_MAX_RATE = 10.0
+GAMMA_MAX_RATE = 40.0
+CONTROL_MAX_RATE = 20.0
+
 CAR_SPEED_KP = 1.2 * 0.8 # 1.5
 CAR_SPEED_KI = 0.5 * 0.8
 CAR_SPEED_KD = 0.2 * 0.8 # 0.005
@@ -582,94 +586,99 @@ def do_spawn(c):
 
     if not spawn_car and not spawn_bike and not spawn_pedestrian:
         return
-    
-    # Get AABB.
-    aabbs = []
-    for actor in c.world.get_actors():
-        if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
-            aabbs.append(get_aabb(actor))
-    aabb_map = carla.AABBMap(aabbs)
 
     # Find car spawn point.
     if spawn_car:
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
-        position = path.get_position(c.sumo_network, 0)
-        if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(position.x - c.args.clearance_car,
-                               position.y - c.args.clearance_car),
-                carla.Vector2D(position.x + c.args.clearance_car,
-                               position.y + c.args.clearance_car))):
-            trans = carla.Transform()
-            trans.location.x = position.x
-            trans.location.y = position.y
-            trans.location.z = 0.2
-            trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+        aabb_occupancy = carla.OccupancyMap()
+        for actor in c.world.get_actors():
+            if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_car, aabb.bounds_min.y - c.args.clearance_car), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_car, aabb.bounds_max.y + c.args.clearance_car)))
+        spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+        spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-            actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
-            if actor:
-                actor.set_collision_enabled(c.args.collision)
-                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-                aabb_map.insert(get_aabb(actor))
-                c.crowd_service.acquire_new_cars()
-                c.crowd_service.append_new_cars((
-                    actor.id, 
-                    [p for p in path.route_points], # Convert to python list.
-                    get_steer_angle_range(actor)))
-                c.crowd_service.release_new_cars()
+        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
+        position = path.get_position(c.sumo_network, 0)
+        trans = carla.Transform()
+        trans.location.x = position.x
+        trans.location.y = position.y
+        trans.location.z = 0.2
+        trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+
+        actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
+        if actor:
+            actor.set_collision_enabled(c.args.collision)
+            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+            c.crowd_service.acquire_new_cars()
+            c.crowd_service.append_new_cars((
+                actor.id, 
+                [p for p in path.route_points], # Convert to python list.
+                get_steer_angle_range(actor)))
+            c.crowd_service.release_new_cars()
 
 
     # Find bike spawn point.
     if spawn_bike:
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, c.sumo_network_spawn_segments, rng=c.rng)
-        position = path.get_position(c.sumo_network, 0)
-        if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(position.x - c.args.clearance_bike,
-                               position.y - c.args.clearance_bike),
-                carla.Vector2D(position.x + c.args.clearance_bike,
-                               position.y + c.args.clearance_bike))):
-            trans = carla.Transform()
-            trans.location.x = position.x
-            trans.location.y = position.y
-            trans.location.z = 0.2
-            trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+        aabb_occupancy = carla.OccupancyMap()
+        for actor in c.world.get_actors():
+            if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_bike, aabb.bounds_min.y - c.args.clearance_bike), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_bike, aabb.bounds_max.y + c.args.clearance_bike)))
+        spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+        spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-            actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
-            if actor:
-                actor.set_collision_enabled(c.args.collision)
-                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-                aabb_map.insert(get_aabb(actor))
-                c.crowd_service.acquire_new_bikes()
-                c.crowd_service.append_new_bikes((
-                    actor.id, 
-                    [p for p in path.route_points], # Convert to python list.
-                    get_steer_angle_range(actor)))
-                c.crowd_service.release_new_bikes()
+        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
+        position = path.get_position(c.sumo_network, 0)
+        trans = carla.Transform()
+        trans.location.x = position.x
+        trans.location.y = position.y
+        trans.location.z = 0.2
+        trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+
+        actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
+        if actor:
+            actor.set_collision_enabled(c.args.collision)
+            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+            c.crowd_service.acquire_new_bikes()
+            c.crowd_service.append_new_bikes((
+                actor.id, 
+                [p for p in path.route_points], # Convert to python list.
+                get_steer_angle_range(actor)))
+            c.crowd_service.release_new_bikes()
 
 
     if spawn_pedestrian:
+        aabb_occupancy = carla.OccupancyMap()
+        for actor in c.world.get_actors():
+            if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_pedestrian, aabb.bounds_min.y - c.args.clearance_pedestrian), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_pedestrian, aabb.bounds_max.y + c.args.clearance_pedestrian)))
+        spawn_segments = c.sidewalk_spawn_segments.difference(aabb_occupancy)
+        spawn_segments.seed_rand(c.rng.getrandbits(32))
+
         path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)
         position = path.get_position(c.sidewalk, 0)
-        if not aabb_map.intersects(carla.AABB2D(
-                carla.Vector2D(position.x - c.args.clearance_pedestrian,
-                               position.y - c.args.clearance_pedestrian),
-                carla.Vector2D(position.x + c.args.clearance_pedestrian,
-                               position.y + c.args.clearance_pedestrian))):
-            trans = carla.Transform()
-            trans.location.x = position.x
-            trans.location.y = position.y
-            trans.location.z = 0.5
-            trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
-            actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
-            if actor:
-                actor.set_collision_enabled(c.args.collision)
-                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-                aabb_map.insert(get_aabb(actor))
-                c.crowd_service.acquire_new_pedestrians()
-                c.crowd_service.append_new_pedestrians((
-                    actor.id, 
-                    [p for p in path.route_points], # Convert to python list.
-                    path.route_orientations))
-                c.crowd_service.release_new_pedestrians()
+        trans = carla.Transform()
+        trans.location.x = position.x
+        trans.location.y = position.y
+        trans.location.z = 0.5
+        trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
+        actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
+        if actor:
+            actor.set_collision_enabled(c.args.collision)
+            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+            c.crowd_service.acquire_new_pedestrians()
+            c.crowd_service.append_new_pedestrians((
+                actor.id, 
+                [p for p in path.route_points], # Convert to python list.
+                path.route_orientations))
+            c.crowd_service.release_new_pedestrians()
 
 
 def do_destroy(c):
@@ -1070,7 +1079,7 @@ def spawn_destroy_loop(args):
 
             do_spawn(c)
             do_destroy(c)
-            time.sleep(max(0, 0.2 - (time.time() - start))) # 5 Hz
+            time.sleep(max(0, 1 / SPAWN_DESTROY_MAX_RATE - (time.time() - start)))
             # print('({}) Spawn-destroy rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
@@ -1090,7 +1099,7 @@ def control_loop(args):
         while True:
             start = time.time()
             pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
-            time.sleep(max(0, 0.05 - (time.time() - start))) # 20 Hz
+            time.sleep(max(0, 1 / CONTROL_MAX_RATE - (time.time() - start))) # 20 Hz
             # print('({}) Control rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
@@ -1136,7 +1145,7 @@ def gamma_loop(args):
             c.crowd_service.acquire_destroy_list()
             c.crowd_service.extend_destroy_list(destroy_list)
             c.crowd_service.release_destroy_list()
-            time.sleep(max(0, 0.025 - (time.time() - start))) # 40 Hz
+            time.sleep(max(0, 1 / GAMMA_MAX_RATE - (time.time() - start))) # 40 Hz
             # print('({}) GAMMA rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
