@@ -237,8 +237,11 @@ class CrowdService():
         self._control_velocities_lock.acquire()
 
     def release_control_velocities(self):
-        self._control_velocities_lock.release()
-
+        try:
+            self._control_velocities_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
 
     @property
     def local_intentions(self):
