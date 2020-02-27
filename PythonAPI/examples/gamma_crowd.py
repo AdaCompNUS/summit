@@ -174,7 +174,11 @@ class CrowdService():
         self._new_cars_lock.acquire()
 
     def release_new_cars(self):
-        self._new_cars_lock.release()
+        try:
+            self._new_cars_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
    
 
     @property
@@ -200,7 +204,11 @@ class CrowdService():
         self._new_bikes_lock.acquire()
 
     def release_new_bikes(self):
-        self._new_bikes_lock.release()
+        try:
+            self._new_bikes_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
     
     
     @property
@@ -226,7 +234,11 @@ class CrowdService():
         self._new_pedestrians_lock.acquire()
 
     def release_new_pedestrians(self):
-        self._new_pedestrians_lock.release()
+        try:
+            self._new_pedestrians_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
 
 
     @property
@@ -259,7 +271,11 @@ class CrowdService():
         self._local_intentions_lock.acquire()
 
     def release_local_intentions(self):
-        self._local_intentions_lock.release()
+        try:
+            self._local_intentions_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
    
 
     @property
@@ -280,7 +296,11 @@ class CrowdService():
         self._destroy_list_lock.acquire()
 
     def release_destroy_list(self):
-        self._destroy_list_lock.release()
+        try:
+            self._destroy_list_lock.release()
+        except Exception as e:
+            print(e)
+            sys.stdout.flush()
 
 
 
