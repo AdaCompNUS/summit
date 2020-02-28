@@ -41,15 +41,13 @@ PATH_INTERVAL = 1.0
 SPAWN_DESTROY_MAX_RATE = 10.0
 GAMMA_MAX_RATE = 40.0
 CONTROL_MAX_RATE = 20.0
+COLLISION_STATISTICS_MAX_RATE = 5.0
 
 CAR_SPEED_KP = 1.2 * 0.8 # 1.5
 CAR_SPEED_KI = 0.5 * 0.8
 CAR_SPEED_KD = 0.2 * 0.8 # 0.005
 CAR_STEER_KP = 1.5 # 2.5
 
-# BIKE_SPEED_KP = 0.8
-# BIKE_SPEED_KI = 0.2
-# BIKE_SPEED_KD = 0.0
 BIKE_SPEED_KP = 1.2 * 0.8 # 1.5
 BIKE_SPEED_KI = 0.5 * 0.8
 BIKE_SPEED_KD = 0.2 * 0.8 # 0.005
@@ -353,6 +351,19 @@ def get_velocity(actor):
     v = actor.get_velocity()
     return carla.Vector2D(v.x, v.y)
     
+def get_bounding_box_corners(actor):
+    bbox = actor.bounding_box
+    loc = carla.Vector2D(bbox.location.x, bbox.location.y) + get_position(actor)
+    forward_vec = get_forward_direction(actor).make_unit_vector()
+    sideward_vec = forward_vec.rotate(np.deg2rad(90))
+    half_y_len = bbox.extent.y
+    half_x_len = bbox.extent.x
+    corners = [loc - half_x_len * forward_vec + half_y_len * sideward_vec,
+               loc + half_x_len * forward_vec + half_y_len * sideward_vec,
+               loc + half_x_len * forward_vec - half_y_len * sideward_vec,
+               loc - half_x_len * forward_vec - half_y_len * sideward_vec]
+    return corners
+
 def get_vehicle_bounding_box_corners(actor):
     bbox = actor.bounding_box
     loc = carla.Vector2D(bbox.location.x, bbox.location.y) + get_position(actor)
@@ -389,10 +400,10 @@ def get_lane_constraints(sidewalk, position, forward_vec):
     return left_lane_constrained_by_sidewalk, right_lane_constrained_by_sidewalk
 
 def is_car(actor):
-    return isinstance(actor, carla.Vehicle) and actor.attributes['number_of_wheels'] > 2
+    return isinstance(actor, carla.Vehicle) and int(actor.attributes['number_of_wheels']) > 2
 
 def is_bike(actor):
-    return isinstance(actor, carla.Vehicle) and actor.attributes['number_of_wheels'] == 2
+    return isinstance(actor, carla.Vehicle) and int(actor.attributes['number_of_wheels']) == 2
 
 def is_pedestrian(actor):
     return isinstance(actor, carla.Walker)
@@ -543,9 +554,9 @@ class Agent(object):
         self.behavior_type = self.rand_agent_behavior_type(rand)
 
     def rand_agent_behavior_type(self, prob):
-        prob_gamma_agent = 0.8
-        prob_simplified_gamma_agent = 0.1
-        prob_ttc_agent = 0.1
+        prob_gamma_agent = 1.0
+        prob_simplified_gamma_agent = 0.0
+        prob_ttc_agent = 0.0
 
         if prob <= prob_gamma_agent:
             return carla.AgentBehaviorType.Gamma
@@ -587,6 +598,39 @@ class Context(object):
         self.car_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 4]
         self.car_blueprints = [x for x in self.car_blueprints if x.id not in ['vehicle.bmw.isetta']] # This dude moves too slow.
         self.bike_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 2]
+
+class Statistics(object):
+    def __init__(self, log_file):
+        self.start_time = None
+
+        self.total_num_cars = 0
+        self.total_num_bikes = 0
+        self.total_num_pedestrians = 0
+
+        self.stuck_num_cars = 0
+        self.stuck_num_bikes = 0
+        self.stuck_num_pedestrians = 0
+
+        self.avg_speed_cars = 0
+        self.avg_speed_bikes = 0
+        self.avg_speed_pedestrians = 0
+
+        self.log_file = log_file
+
+    def write(self):
+        self.log_file.write('{} {} {} {} {} {} {} {} {} {}\n'.format(
+            time.time() - self.start_time,
+            self.total_num_cars, 
+            self.total_num_bikes, 
+            self.total_num_pedestrians,
+            self.stuck_num_cars, 
+            self.stuck_num_bikes, 
+            self.stuck_num_pedestrians,
+            self.avg_speed_cars,
+            self.avg_speed_bikes,
+            self.avg_speed_pedestrians))
+        self.log_file.flush()
+        os.fsync(self.log_file)
 
 
 ''' ========== MAIN LOGIC FUNCTIONS ========== '''
@@ -714,7 +758,7 @@ def do_destroy(c):
     c.world.wait_for_tick(1.0)
 
 
-def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
+def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents, statistics):
     
     new_car_agents = []
     new_bike_agents = []
@@ -751,10 +795,14 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents):
     c.crowd_service.spawn_pedestrian = len(pedestrian_agents) < c.args.num_pedestrian
     c.crowd_service.release_new_pedestrians()
 
-    return (car_agents + new_car_agents, bike_agents + new_bike_agents, pedestrian_agents + new_pedestrian_agents)
+    statistics.total_num_cars += len(new_car_agents)
+    statistics.total_num_bikes += len(new_bike_agents)
+    statistics.total_num_pedestrians += len(new_pedestrian_agents)
+
+    return (car_agents + new_car_agents, bike_agents + new_bike_agents, pedestrian_agents + new_pedestrian_agents, statistics)
 
 
-def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
+def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list, statistics):
    
     update_time = time.time()
 
@@ -776,6 +824,12 @@ def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
             if get_velocity(agent.actor).length() < c.args.stuck_speed:
                 if agent.stuck_time is not None:
                     if update_time - agent.stuck_time >= c.args.stuck_duration:
+                        if agent == car_agents:
+                            statistics.stuck_num_car += 1
+                        elif agent == bike_agents:
+                            statistics.stuck_num_bike += 1
+                        elif agent == pedestrian_agents:
+                            statistics.stuck_num_pedestrians += 1
                         delete = True
                 else:
                     agent.stuck_time = update_time
@@ -787,7 +841,56 @@ def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
             else:
                 next_agents.append(agent)
 
-    return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list)
+    return (next_car_agents, next_bike_agents, next_pedestrian_agents, next_destroy_list, statistics)
+
+
+def do_speed_statistics(c, car_agents, bike_agents, pedestrian_agents, statistics):
+    avg_speed_cars = 0.0
+    avg_speed_bikes = 0.0
+    avg_speed_pedestrians = 0.0
+
+    for agent in car_agents:
+        avg_speed_cars += get_velocity(agent.actor).length()
+
+    for agent in bike_agents:
+        avg_speed_bikes += get_velocity(agent.actor).length()
+
+    for agent in pedestrian_agents:
+        avg_speed_pedestrians += get_velocity(agent.actor).length()
+
+    if len(car_agents) > 0:
+        avg_speed_cars /= len(car_agents)
+
+    if len(bike_agents) > 0:
+        avg_speed_bikes /= len(bike_agents)
+        
+    if len(pedestrian_agents) > 0:
+        avg_speed_pedestrians /= len(pedestrian_agents)
+
+    statistics.avg_speed_cars = avg_speed_cars
+    statistics.avg_speed_bikes = avg_speed_bikes
+    statistics.avg_speed_pedestrians = avg_speed_pedestrians
+
+    return statistics
+
+
+def do_collision_statistics(c, timestamp, log_file):
+    actors = c.world.get_actors()
+    actors = [a for a in actors if is_car(a) or is_bike(a) or is_pedestrian(a)]
+    bounding_boxes = [carla.OccupancyMap(get_bounding_box_corners(actor)) for actor in actors]
+    collisions = [0 for _ in range(len(actors))]
+
+    for i in range(len(actors) - 1):
+        if collisions[i] == 1:
+            continue
+        for j in range(i + 1, len(actors)):
+            if bounding_boxes[i].intersects(bounding_boxes[j]):
+                collisions[i] = 1
+                collisions[j] = 1
+
+    log_file.write('{} {}\n'.format(timestamp, 0.0 if len(collisions) == 0 else float(sum(collisions)) / len(collisions)))
+    log_file.flush()
+    os.fsync(log_file)
 
 
 def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
@@ -808,7 +911,7 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
         for actor in c.world.get_actors():
             if actor.id not in agents_lookup:
                 if isinstance(actor, carla.Vehicle):
-                    if actor.attributes['number_of_wheels'] == 2:
+                    if is_bike(actor):
                         type_tag = 'Bicycle'
                     else:
                         type_tag = 'Car'
@@ -912,7 +1015,6 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
                 c.world.debug.draw_line(cur_pos, pref_next_pos, life_time=0.05,
                                                    color=carla.Color(0, 255, 0, 0))
                                
-
         start = time.time()        
         gamma.do_step()
 
@@ -925,7 +1027,6 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
                     next_pos = carla.Location(cur_pos.x + target_vel.x, cur_pos.y + target_vel.y, 0.0)
                     c.world.debug.draw_line(cur_pos, next_pos, life_time=0.05,
                                                    color=carla.Color(255, 0, 0, 0))
-                    
 
     next_car_agents = [a for a in next_agents if a.type_tag == 'Car']
     next_bike_agents = [a for a in next_agents if a.type_tag == 'Bicycle']
@@ -1135,6 +1236,9 @@ def gamma_loop(args):
         car_agents = []
         bike_agents = []
         pedestrian_agents = []
+        statistics_file = open('statistics.log', 'w')
+        statistics = Statistics(statistics_file)
+        statistics.start_time = time.time()
 
         last_bounds_update = None
 
@@ -1153,20 +1257,47 @@ def gamma_loop(args):
                     c.bounds_occupancy = carla.OccupancyMap(c.bounds_min, c.bounds_max)
                 last_bounds_update = time.time()
 
-            (car_agents, bike_agents, pedestrian_agents) = \
-                    pull_new_agents(c, car_agents, bike_agents, pedestrian_agents)
+            # TODO: Maybe an functional-immutable interface wasn't the best idea...
+
+            # Do this first if not new agents from pull_new_agents will affect avg. speed.
+            (statistics) = \
+                    do_speed_statistics(c, car_agents, bike_agents, pedestrian_agents, statistics)
+
+            (car_agents, bike_agents, pedestrian_agents, statistics) = \
+                    pull_new_agents(c, car_agents, bike_agents, pedestrian_agents, statistics)
 
             (car_agents, bike_agents, pedestrian_agents, destroy_list) = \
                     do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list)
 
-            (car_agents, bike_agents, pedestrian_agents, destroy_list) = \
-                    do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list)
+            (car_agents, bike_agents, pedestrian_agents, destroy_list, statistics) = \
+                    do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list, statistics)
+
+            statistics.write()
 
             c.crowd_service.acquire_destroy_list()
             c.crowd_service.extend_destroy_list(destroy_list)
             c.crowd_service.release_destroy_list()
             time.sleep(max(0, 1 / GAMMA_MAX_RATE - (time.time() - start))) # 40 Hz
             # print('({}) GAMMA rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
+    except Pyro4.errors.ConnectionClosedError:
+        pass
+
+
+def collision_statistics_loop(args):
+    try:
+        # Wait for crowd service.
+        time.sleep(3)
+        c = Context(args)
+        print('Collision statistics loop running.')
+        
+        statistics_file = open('statistics_collision.log', 'w')
+        sim_start_time = time.time()
+
+        while True:
+            start = time.time()
+            do_collision_statistics(c, time.time() - sim_start_time, statistics_file)
+            time.sleep(max(0, 1 / COLLISION_STATISTICS_MAX_RATE - (time.time() - start))) # 40 Hz
+            # print('({}) Collision statistics rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
         pass
 
@@ -1183,6 +1314,10 @@ def main(args):
     gamma_process = Process(target=gamma_loop, args=(args,))
     gamma_process.daemon = True
     gamma_process.start()
+    
+    collision_statistics_process = Process(target=collision_statistics_loop, args=(args,))
+    collision_statistics_process.daemon = True
+    collision_statistics_process.start()
     
     Pyro4.Daemon.serveSimple(
             {
@@ -1263,8 +1398,8 @@ if __name__ == '__main__':
         type=float)
     argparser.add_argument(
         '--stuck-speed',
-        default='0.2',
-        help='Maximum speed (m/s) for an agent to be considered stuck (default: 0.2)',
+        default='0.5',
+        help='Maximum speed (m/s) for an agent to be considered stuck (default: 0.5)',
         type=float)
     argparser.add_argument(
         '--stuck-duration',
