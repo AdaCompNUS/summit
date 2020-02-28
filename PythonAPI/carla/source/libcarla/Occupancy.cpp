@@ -35,6 +35,7 @@ void export_occupancy() {
     .def("difference", &OccupancyMap::Difference)
     .def("intersection", &OccupancyMap::Intersection)
     .def("buffer", &OccupancyMap::Buffer)
+    .def("intersects", &OccupancyMap::Intersects)
     .def("contains", &OccupancyMap::Contains)
     .def("create_sidewalk", &OccupancyMap::CreateSidewalk)
     .def("get_polygons", &OccupancyMap::GetPolygons)

@@ -252,6 +252,10 @@ bool OccupancyMap::Contains(const geom::Vector2D& point) const {
   return boost::geometry::covered_by(b_point_t(point.x, point.y), _multi_polygon);
 }
 
+bool OccupancyMap::Intersects(const OccupancyMap& occupancy_map) const {
+  return boost::geometry::intersects(_multi_polygon, occupancy_map._multi_polygon);
+}
+
 sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
   std::vector<std::vector<geom::Vector2D>> polygons;
 

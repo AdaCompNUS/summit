@@ -44,7 +44,9 @@ public:
   OccupancyMap Difference(const OccupancyMap& occupancy_map) const;
   OccupancyMap Intersection(const OccupancyMap& occupancy_map) const;
   OccupancyMap Buffer(float width) const;
+
   bool Contains(const geom::Vector2D& point) const;
+  bool Intersects(const OccupancyMap& occupancy_map) const;
 
   sidewalk::Sidewalk CreateSidewalk(float distance) const;
   std::vector<std::vector<std::vector<geom::Vector2D>>> GetPolygons() const;

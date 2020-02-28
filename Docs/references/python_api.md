@@ -134,6 +134,12 @@ Returns the area formed by buffering the outlines of this instance's area by som
     - **Return:** _[carla.OccupancyMap](#carla.OccupancyMap)_
     - **Note:** <font color="#8E8E8E">_The buffered lines have a width of `width`. Ends are also approximately buffered round with a diameter of `width`._</font>
 
+- <a name="carla.OccupancyMap.intersects"></a>**<font color="#7fb800">intersects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
+Checks if this instance's area intersects that of another instance.
+    - **Parameters:**
+        - `other` (_[carla.OccupancyMap](#carla.OccupancyMap)_)
+    - **Return:** _bool_
+
 - <a name="carla.OccupancyMap.contains"></a>**<font color="#7fb800">contains</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**point**</font>)  
 Checks if a point is contained in this instance's area.
     - **Parameters:**
