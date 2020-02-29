@@ -38,10 +38,11 @@ DATA_PATH = Path(os.path.realpath(__file__)).parent.parent.parent/'Data'
 PATH_MIN_POINTS = 20
 PATH_INTERVAL = 1.0
 
-SPAWN_DESTROY_MAX_RATE = 10.0
+SPAWN_DESTROY_MAX_RATE = 15.0
 GAMMA_MAX_RATE = 40.0
 CONTROL_MAX_RATE = 20.0
 COLLISION_STATISTICS_MAX_RATE = 5.0
+SPAWN_DESTROY_REPETITIONS = 3
 
 CAR_SPEED_KP = 1.2 * 0.8 # 1.5
 CAR_SPEED_KI = 0.5 * 0.8
@@ -111,6 +112,10 @@ class CrowdService():
         self._simulation_bounds_max = None
         self._simulation_bounds_lock = RLock()
 
+        self._forbidden_bounds_min = None
+        self._forbidden_bounds_max = None
+        self._forbidden_bounds_lock = RLock()
+
         self._spawn_car = False
         self._new_cars = []
         self._new_cars_lock = RLock()
@@ -148,6 +153,25 @@ class CrowdService():
         self._simulation_bounds_min = bounds[0]
         self._simulation_bounds_max = bounds[1]
         self._simulation_bounds_lock.release() 
+   
+
+    @property
+    def forbidden_bounds(self):
+        self._forbidden_bounds_lock.acquire()
+        forbidden_bounds_min = None if self._forbidden_bounds_min is None else \
+                carla.Vector2D(self._forbidden_bounds_min.x, self._forbidden_bounds_min.y)
+        forbidden_bounds_max = None if self._forbidden_bounds_max is None else \
+                carla.Vector2D(self._forbidden_bounds_max.x, self._forbidden_bounds_max.y)
+        self._forbidden_bounds_lock.release()
+        return (forbidden_bounds_min, forbidden_bounds_max)
+
+    @forbidden_bounds.setter
+    def forbidden_bounds(self, bounds):
+        self._forbidden_bounds_lock.acquire()
+        self._forbidden_bounds_min = bounds[0]
+        self._forbidden_bounds_max = bounds[1]
+        self._forbidden_bounds_lock.release() 
+
 
     @property
     def spawn_car(self):
@@ -575,6 +599,10 @@ class Context(object):
             self.bounds_min = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
             self.bounds_max = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
             self.bounds_occupancy = carla.OccupancyMap(self.bounds_min, self.bounds_max)
+        
+        self.forbidden_bounds_min = None
+        self.forbidden_bounds_max = None
+        self.forbidden_bounds_occupancy = None
 
         self.sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
         self.sumo_network_segments = self.sumo_network.create_segment_map()
@@ -653,96 +681,114 @@ def do_spawn(c):
 
     # Find car spawn point.
     if spawn_car:
-        aabb_occupancy = carla.OccupancyMap()
+        aabb_occupancy = carla.OccupancyMap() if c.forbidden_bounds_occupancy is None else c.forbidden_bounds_occupancy
         for actor in c.world.get_actors():
             if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
                 aabb = get_aabb(actor)
                 aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
                     carla.Vector2D(aabb.bounds_min.x - c.args.clearance_car, aabb.bounds_min.y - c.args.clearance_car), 
                     carla.Vector2D(aabb.bounds_max.x + c.args.clearance_car, aabb.bounds_max.y + c.args.clearance_car)))
-        spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
-        spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
-        position = path.get_position(c.sumo_network, 0)
-        trans = carla.Transform()
-        trans.location.x = position.x
-        trans.location.y = position.y
-        trans.location.z = 0.2
-        trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+        for _ in range(SPAWN_DESTROY_REPETITIONS):
+            spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+            spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-        actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
-        if actor:
-            actor.set_collision_enabled(c.args.collision)
-            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-            c.crowd_service.acquire_new_cars()
-            c.crowd_service.append_new_cars((
-                actor.id, 
-                [p for p in path.route_points], # Convert to python list.
-                get_steer_angle_range(actor)))
-            c.crowd_service.release_new_cars()
+            path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
+            position = path.get_position(c.sumo_network, 0)
+            trans = carla.Transform()
+            trans.location.x = position.x
+            trans.location.y = position.y
+            trans.location.z = 0.2
+            trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+
+            actor = c.world.try_spawn_actor(c.rng.choice(c.car_blueprints), trans)
+            if actor:
+                actor.set_collision_enabled(c.args.collision)
+                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+                c.crowd_service.acquire_new_cars()
+                c.crowd_service.append_new_cars((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    get_steer_angle_range(actor)))
+                c.crowd_service.release_new_cars()
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_car, aabb.bounds_min.y - c.args.clearance_car), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_car, aabb.bounds_max.y + c.args.clearance_car)))
 
 
     # Find bike spawn point.
     if spawn_bike:
-        aabb_occupancy = carla.OccupancyMap()
+        aabb_occupancy = carla.OccupancyMap() if c.forbidden_bounds_occupancy is None else c.forbidden_bounds_occupancy
         for actor in c.world.get_actors():
             if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
                 aabb = get_aabb(actor)
                 aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
                     carla.Vector2D(aabb.bounds_min.x - c.args.clearance_bike, aabb.bounds_min.y - c.args.clearance_bike), 
                     carla.Vector2D(aabb.bounds_max.x + c.args.clearance_bike, aabb.bounds_max.y + c.args.clearance_bike)))
-        spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
-        spawn_segments.seed_rand(c.rng.getrandbits(32))
+        
+        for _ in range(SPAWN_DESTROY_REPETITIONS):
+            spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+            spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-        path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
-        position = path.get_position(c.sumo_network, 0)
-        trans = carla.Transform()
-        trans.location.x = position.x
-        trans.location.y = position.y
-        trans.location.z = 0.2
-        trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
+            path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
+            position = path.get_position(c.sumo_network, 0)
+            trans = carla.Transform()
+            trans.location.x = position.x
+            trans.location.y = position.y
+            trans.location.z = 0.2
+            trans.rotation.yaw = path.get_yaw(c.sumo_network, 0)
 
-        actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
-        if actor:
-            actor.set_collision_enabled(c.args.collision)
-            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-            c.crowd_service.acquire_new_bikes()
-            c.crowd_service.append_new_bikes((
-                actor.id, 
-                [p for p in path.route_points], # Convert to python list.
-                get_steer_angle_range(actor)))
-            c.crowd_service.release_new_bikes()
+            actor = c.world.try_spawn_actor(c.rng.choice(c.bike_blueprints), trans)
+            if actor:
+                actor.set_collision_enabled(c.args.collision)
+                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+                c.crowd_service.acquire_new_bikes()
+                c.crowd_service.append_new_bikes((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    get_steer_angle_range(actor)))
+                c.crowd_service.release_new_bikes()
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_bike, aabb.bounds_min.y - c.args.clearance_bike), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_bike, aabb.bounds_max.y + c.args.clearance_bike)))
 
 
     if spawn_pedestrian:
-        aabb_occupancy = carla.OccupancyMap()
+        aabb_occupancy = carla.OccupancyMap() if c.forbidden_bounds_occupancy is None else c.forbidden_bounds_occupancy
         for actor in c.world.get_actors():
             if isinstance(actor, carla.Vehicle) or isinstance(actor, carla.Walker):
                 aabb = get_aabb(actor)
                 aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
                     carla.Vector2D(aabb.bounds_min.x - c.args.clearance_pedestrian, aabb.bounds_min.y - c.args.clearance_pedestrian), 
                     carla.Vector2D(aabb.bounds_max.x + c.args.clearance_pedestrian, aabb.bounds_max.y + c.args.clearance_pedestrian)))
-        spawn_segments = c.sidewalk_spawn_segments.difference(aabb_occupancy)
-        spawn_segments.seed_rand(c.rng.getrandbits(32))
+        
+        for _ in range(SPAWN_DESTROY_REPETITIONS):
+            spawn_segments = c.sidewalk_spawn_segments.difference(aabb_occupancy)
+            spawn_segments.seed_rand(c.rng.getrandbits(32))
 
-        path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)
-        position = path.get_position(c.sidewalk, 0)
-        trans = carla.Transform()
-        trans.location.x = position.x
-        trans.location.y = position.y
-        trans.location.z = 0.5
-        trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
-        actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
-        if actor:
-            actor.set_collision_enabled(c.args.collision)
-            c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
-            c.crowd_service.acquire_new_pedestrians()
-            c.crowd_service.append_new_pedestrians((
-                actor.id, 
-                [p for p in path.route_points], # Convert to python list.
-                path.route_orientations))
-            c.crowd_service.release_new_pedestrians()
+            path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)
+            position = path.get_position(c.sidewalk, 0)
+            trans = carla.Transform()
+            trans.location.x = position.x
+            trans.location.y = position.y
+            trans.location.z = 0.5
+            trans.rotation.yaw = path.get_yaw(c.sidewalk, 0)
+            actor = c.world.try_spawn_actor(c.rng.choice(c.pedestrian_blueprints), trans)
+            if actor:
+                actor.set_collision_enabled(c.args.collision)
+                c.world.wait_for_tick(1.0)  # For actor to update pos and bounds, and for collision to apply.
+                c.crowd_service.acquire_new_pedestrians()
+                c.crowd_service.append_new_pedestrians((
+                    actor.id, 
+                    [p for p in path.route_points], # Convert to python list.
+                    path.route_orientations))
+                c.crowd_service.release_new_pedestrians()
+                aabb = get_aabb(actor)
+                aabb_occupancy = aabb_occupancy.union(carla.OccupancyMap(
+                    carla.Vector2D(aabb.bounds_min.x - c.args.clearance_pedestrian, aabb.bounds_min.y - c.args.clearance_pedestrian), 
+                    carla.Vector2D(aabb.bounds_max.x + c.args.clearance_pedestrian, aabb.bounds_max.y + c.args.clearance_pedestrian)))
 
 
 def do_destroy(c):
@@ -824,11 +870,11 @@ def do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list, statis
             if get_velocity(agent.actor).length() < c.args.stuck_speed:
                 if agent.stuck_time is not None:
                     if update_time - agent.stuck_time >= c.args.stuck_duration:
-                        if agent == car_agents:
-                            statistics.stuck_num_car += 1
-                        elif agent == bike_agents:
-                            statistics.stuck_num_bike += 1
-                        elif agent == pedestrian_agents:
+                        if agents == car_agents:
+                            statistics.stuck_num_cars += 1
+                        elif agents == bike_agents:
+                            statistics.stuck_num_bikes += 1
+                        elif agents == pedestrian_agents:
                             statistics.stuck_num_pedestrians += 1
                         delete = True
                 else:
@@ -1242,6 +1288,10 @@ def gamma_loop(args):
 
         last_bounds_update = None
 
+        rate_statistics_start = None
+        rate_statistics_count = 0
+        rate_statistics_done = False
+
         while True:
             destroy_list = []
             start = time.time()
@@ -1249,12 +1299,21 @@ def gamma_loop(args):
             # Download bounds.
             # Required for death process.
             if last_bounds_update is None or start - last_bounds_update > 1.0:
+
                 new_bounds = c.crowd_service.simulation_bounds
                 if (new_bounds[0] is not None and new_bounds[0] != c.bounds_min) or \
                         (new_bounds[1] is not None and new_bounds[1] != c.bounds_max):
                     c.bounds_min = new_bounds[0]
                     c.bounds_max = new_bounds[1]
                     c.bounds_occupancy = carla.OccupancyMap(c.bounds_min, c.bounds_max)
+                
+                new_forbidden_bounds = c.crowd_service.forbidden_bounds
+                if (new_forbidden_bounds[0] is not None and new_forbidden_bounds[0] != c.forbidden_bounds_min) or \
+                        (new_forbidden_bounds[1] is not None and new_forbidden_bounds[1] != c.forbidden_bounds_max):
+                    c.forbidden_bounds_min = new_forbidden_bounds[0]
+                    c.forbidden_bounds_max = new_forbidden_bounds[1]
+                    c.forbidden_bounds_occupancy = carla.OccupancyMap(c.forbidden_bounds_min, c.forbidden_bounds_max)
+
                 last_bounds_update = time.time()
 
             # TODO: Maybe an functional-immutable interface wasn't the best idea...
@@ -1279,6 +1338,17 @@ def gamma_loop(args):
             c.crowd_service.release_destroy_list()
             time.sleep(max(0, 1 / GAMMA_MAX_RATE - (time.time() - start))) # 40 Hz
             # print('({}) GAMMA rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
+
+            if not rate_statistics_done:
+                print(len(car_agents), len(bike_agents), len(pedestrian_agents), time.time() - statistics.start_time)
+                if rate_statistics_start is None:
+                    if time.time() - statistics.start_time > 180:
+                        rate_statistics_start = time.time()
+                else:
+                    rate_statistics_count += 1
+                    if time.time() - rate_statistics_start > 300:
+                        print('Rate statistics = {:2f} Hz'.format(float(rate_statistics_count) / (time.time() - rate_statistics_start)))
+                        rate_statistics_done = True
     except Pyro4.errors.ConnectionClosedError:
         pass
 
@@ -1314,10 +1384,12 @@ def main(args):
     gamma_process = Process(target=gamma_loop, args=(args,))
     gamma_process.daemon = True
     gamma_process.start()
-    
+
+    '''
     collision_statistics_process = Process(target=collision_statistics_loop, args=(args,))
     collision_statistics_process.daemon = True
     collision_statistics_process.start()
+    '''
     
     Pyro4.Daemon.serveSimple(
             {
@@ -1398,8 +1470,8 @@ if __name__ == '__main__':
         type=float)
     argparser.add_argument(
         '--stuck-speed',
-        default='0.5',
-        help='Maximum speed (m/s) for an agent to be considered stuck (default: 0.5)',
+        default='0.2',
+        help='Maximum speed (m/s) for an agent to be considered stuck (default: 0.2)',
         type=float)
     argparser.add_argument(
         '--stuck-duration',
