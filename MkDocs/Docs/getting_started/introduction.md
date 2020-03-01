@@ -1,3 +1,5 @@
+![summit](/img/cover.png)
+
 # SUMMIT
 SUMMIT (**S**imulator for **U**rban Driving **i**n **M**assive **Mi**xed **T**raffic) is an open-source simulator with a focus on generating high-fidelity, interactive data for unregulated, dense urban traffic on complex real-world maps. It works with map data in the form of [OSM files](https://wiki.openstreetmap.org/wiki/OSM_file_formats) and [SUMO networks](https://sumo.dlr.de/docs/Networks/SUMO_Road_Networks.html) to generate crowds of heterogeneous traffic agents with sophisticated and realistic unregulated behaviors. SUMMIT can work with map data fetched from online sources, providing a virtually unlimited source of complex environments.
 

@@ -1,3 +1,6 @@
+!!! important
+    Building SUMMIT is only necessary if you wish to edit SUMMIT. If you only wish to use the simulator, the [setup steps](/getting_started/setting_up) are sufficient.
+
 <h1>Building SUMMIT</h1>
 
 The build instructions for SUMMIT are exactly the same as those in CARLA. 
