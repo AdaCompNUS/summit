@@ -7,13 +7,6 @@ SUMMIT additionally exposes interfaces to interact with the contextual informati
 
 SUMMIT was built upon the very successful CARLA. Updates to CARLA are constantly merged into SUMMIT to ensure that users of SUMMIT have access to the high quality of work endowed by CARLA, such as its high-fidelity physics, rendering and sensors; however, it should be noted that not all components of SUMMIT work with those from CARLA, as they were designed for a different use case.
 
-
-[![CARLA Video](Docs/img/video_thumbnail.png)](https://www.youtube.com/watch?v=TOojcifcRBA)
-
-[**Get CARLA overnight build**](http://carla-assets-internal.s3.amazonaws.com/Releases/Linux/Dev/CARLA_Latest.tar.gz)
-
-**Like what you see? Star us on GitHub to support the project!**
-
 Paper
 -----
 
@@ -33,8 +26,14 @@ Yuanfu Luo, David Hsu; To appear at ICRA 2020
 }
 ```
 
-Building CARLA
+Using SUMMIT
 --------------
+
+If you are simply looking to use SUMMIT, follow the set up instructions [here](https://adacompnus.github.io/summit/getting_started/setting_up/).
+
+If you are a developer looking to modify SUMMIT, follow the build instructions [here](https://adacompnus.github.io/summit/getting_started/building/) instead.
+
+All tutorials and references are available at our [main documentation website](https://adacompnus.github.io/summit).
 
 License
 -------
