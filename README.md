@@ -1,11 +1,15 @@
-CARLA Simulator
+SUMMIT Simulator
 ===============
+
+![summit](docs/img/cover.png)
 
 SUMMIT (Simulator for Urban Driving in Massive Mixed Traffic) is an open-source simulator with a focus on generating high-fidelity, interactive data for unregulated, dense urban traffic on complex real-world maps. It works with map data in the form of OSM files and SUMO networks to generate crowds of heterogeneous traffic agents with sophisticated and realistic unregulated behaviors. SUMMIT can work with map data fetched from online sources, providing a virtually unlimited source of complex environments.
 
 SUMMIT additionally exposes interfaces to interact with the contextual information provided by the map data. It also provides a robust suite of geometric utilities for use by external programs. Through these, SUMMIT aims to enablie applications in a wide range of fields such as perception, vehicle control and planning, end-to-end learning, etc.
 
 SUMMIT was built upon the very successful CARLA. Updates to CARLA are constantly merged into SUMMIT to ensure that users of SUMMIT have access to the high quality of work endowed by CARLA, such as its high-fidelity physics, rendering and sensors; however, it should be noted that not all components of SUMMIT work with those from CARLA, as they were designed for a different use case.
+
+Check out our video [here](https://youtu.be/dNiR0z2dROg)!
 
 Paper
 -----
