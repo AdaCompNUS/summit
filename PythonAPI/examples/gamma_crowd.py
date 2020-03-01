@@ -1331,7 +1331,7 @@ def gamma_loop(args):
             (car_agents, bike_agents, pedestrian_agents, destroy_list, statistics) = \
                     do_death(c, car_agents, bike_agents, pedestrian_agents, destroy_list, statistics)
 
-            statistics.write()
+            #statistics.write()
 
             c.crowd_service.acquire_destroy_list()
             c.crowd_service.extend_destroy_list(destroy_list)
@@ -1339,6 +1339,7 @@ def gamma_loop(args):
             time.sleep(max(0, 1 / GAMMA_MAX_RATE - (time.time() - start))) # 40 Hz
             # print('({}) GAMMA rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
 
+            '''
             if not rate_statistics_done:
                 print(len(car_agents), len(bike_agents), len(pedestrian_agents), time.time() - statistics.start_time)
                 if rate_statistics_start is None:
@@ -1349,6 +1350,7 @@ def gamma_loop(args):
                     if time.time() - rate_statistics_start > 300:
                         print('Rate statistics = {:2f} Hz'.format(float(rate_statistics_count) / (time.time() - rate_statistics_start)))
                         rate_statistics_done = True
+            '''
     except Pyro4.errors.ConnectionClosedError:
         pass
 
