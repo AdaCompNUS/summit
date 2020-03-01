@@ -30,13 +30,6 @@ install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include/system)
 file(GLOB boost_libraries "${BOOST_LIB_PATH}/*.*")
 install(FILES ${boost_libraries} DESTINATION lib)
 
-# Install opencv (install in system folder to avoid extra warnings).
-install(DIRECTORY "${OPENCV_INCLUDE_PATH}/opencv2" DESTINATION include/system)
-file(GLOB opencv_libraries "${OPENCV_LIB_PATH}/*.*")
-install(FILES ${opencv_libraries} DESTINATION lib)
-file(GLOB opencv_third_party_libraries "${OPENCV_THIRD_PARTY_LIB_PATH}/*.*")
-install(FILES ${opencv_third_party_libraries} DESTINATION lib)
-
 # Install earcut headers (install in system folder to avoid extra warnings).
 install(DIRECTORY "${EARCUT_INCLUDE_PATH}/mapbox" DESTINATION include/system)
 
@@ -296,7 +289,6 @@ if (LIBCARLA_BUILD_RELEASE)
   target_include_directories(carla_client SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${OPENCV_INCLUDE_PATH}"
       "${EARCUT_INCLUDE_PATH}"
       "${LIBOSMIUM_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")
@@ -336,7 +328,6 @@ if (LIBCARLA_BUILD_DEBUG)
   target_include_directories(carla_client_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${OPENCV_INCLUDE_PATH}"
       "${EARCUT_INCLUDE_PATH}"
       "${LIBOSMIUM_INCLUDE_PATH}"
       "${RECAST_INCLUDE_PATH}")

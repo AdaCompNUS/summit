@@ -1,6 +1,5 @@
 #include "Sidewalk.h"
 #include "carla/geom/Math.h"
-#include <opencv2/opencv.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 

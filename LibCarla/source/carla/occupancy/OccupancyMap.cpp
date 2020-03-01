@@ -1,6 +1,5 @@
 #include "OccupancyMap.h"
 #include <vector>
-#include <opencv2/opencv.hpp>
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/geometries.hpp>

@@ -47,10 +47,9 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib', pylib),
                 os.path.join(pwd, 'dependencies/lib', numpylib)]
             
-            # OpenCV link libraries. @todo Get order from pkg-config or cmake.
+            # Additional link libraries. @todo Get order from pkg-config or cmake.
             extra_link_args += [
-                '-lopencv_imgproc', '-lopencv_core', '-lzlib', '-ldl', '-lm', 
-                '-lpthread', '-lrt']
+                '-ldl', '-lm', '-lpthread', '-lrt']
             
             # LibOsmium link libraries. @todo Get order from pkg-config or cmake.
             extra_link_args += [
@@ -80,8 +79,7 @@ def get_libcarla_extensions():
                 extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
 
-            # Temporarily disabled to prevent errors in OpenCV's headers.
-            # include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
+            include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
             library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
             extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
         else:
@@ -99,8 +97,8 @@ def get_libcarla_extensions():
         required_libs = [
             pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
-            'libpng.lib', 'zlib.lib',
-            'Recast.lib', 'Detour.lib', 'DetourCrowd.lib']
+            'libpng.lib', 'Recast.lib', 
+            'Detour.lib', 'DetourCrowd.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains
         # the names listed in required_libs in it's file name

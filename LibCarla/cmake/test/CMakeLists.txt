@@ -9,9 +9,7 @@ endif ()
 
 link_directories(
     ${RPCLIB_LIB_PATH}
-    ${GTEST_LIB_PATH}
-    ${OPENCV_LIB_PATH}
-    ${OPENCV_THIRD_PARTY_LIB_PATH})
+    ${GTEST_LIB_PATH})
 
 if (CMAKE_BUILD_TYPE STREQUAL "Client")
   file(GLOB libcarla_test_sources
@@ -46,7 +44,6 @@ foreach(target ${build_targets})
   target_include_directories(${target} SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}"
-      "${OPENCV_INCLUDE_PATH}"
       "${GTEST_INCLUDE_PATH}")
 
   target_include_directories(${target} PRIVATE
@@ -73,9 +70,6 @@ if (LIBCARLA_BUILD_DEBUG)
   target_compile_definitions(libcarla_test_${carla_config}_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
       target_link_libraries(libcarla_test_${carla_config}_debug "${BOOST_LIB_PATH}/libboost_filesystem.a")
-      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_imgproc")
-      target_link_libraries(libcarla_test_${carla_config}_debug "-lopencv_core")
-      target_link_libraries(libcarla_test_${carla_config}_debug "-lzlib")
       target_link_libraries(libcarla_test_${carla_config}_debug "-ldl")
       target_link_libraries(libcarla_test_${carla_config}_debug "-lm")
       target_link_libraries(libcarla_test_${carla_config}_debug "-lpthread")
@@ -89,9 +83,6 @@ if (LIBCARLA_BUILD_RELEASE)
   target_link_libraries(libcarla_test_${carla_config}_release "carla_${carla_config}")
   if (CMAKE_BUILD_TYPE STREQUAL "Client")
       target_link_libraries(libcarla_test_${carla_config}_release "${BOOST_LIB_PATH}/libboost_filesystem.a")
-      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_imgproc")
-      target_link_libraries(libcarla_test_${carla_config}_release "-lopencv_core")
-      target_link_libraries(libcarla_test_${carla_config}_release "-lzlib")
       target_link_libraries(libcarla_test_${carla_config}_release "-ldl")
       target_link_libraries(libcarla_test_${carla_config}_release "-lm")
       target_link_libraries(libcarla_test_${carla_config}_release "-lpthread")
