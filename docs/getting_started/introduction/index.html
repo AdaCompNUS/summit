@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Introduction - SUMMIT</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Introduction";
+    var mkdocs_page_input_path = "getting_started/introduction.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SUMMIT</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting started</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Introduction</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#summit">SUMMIT</a></li>
+    
+
+    <li class="toctree-l3"><a href="#the-simulator">The simulator</a></li>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../setting_up/">Setting up SUMMIT</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../building/">Building SUMMIT</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../tutorials/preparing_maps/">Preparing maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/loading_and_spawning_maps/">Loading and spawning maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/using_roads_and_sidewalks/">Using roads and sidewalks</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/simulating_traffic/">Simulating traffic</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">References</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../references/python_api/">Python API reference</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../references/summit_map_library/">SUMMIT map library</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SUMMIT</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Getting started &raquo;</li>
+        
+      
+    
+    <li>Introduction</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="summit">SUMMIT</h1>
+<p>SUMMIT (<strong>S</strong>imulator for <strong>U</strong>rban Driving <strong>i</strong>n <strong>M</strong>assive <strong>Mi</strong>xed <strong>T</strong>raffic) is an open-source simulator with a focus on generating high-fidelity, interactive data for unregulated, dense urban traffic on complex real-world maps. It works with map data in the form of <a href="https://wiki.openstreetmap.org/wiki/OSM_file_formats">OSM files</a> and <a href="https://sumo.dlr.de/docs/Networks/SUMO_Road_Networks.html">SUMO networks</a> to generate crowds of heterogeneous traffic agents with sophisticated and realistic unregulated behaviors. SUMMIT can work with map data fetched from online sources, providing a virtually unlimited source of complex environments.</p>
+<p>SUMMIT additionally exposes interfaces to interact with the contextual information provided by the map data. It also provides a robust suite of geometric utilities for use by external programs. Through these, SUMMIT aims to enablie applications in a wide range of fields such as perception, vehicle control and planning, end-to-end learning, etc. </p>
+<p>SUMMIT was built upon the very successful <a href="http://carla.org/">CARLA</a>. Updates to CARLA are constantly merged into SUMMIT to ensure that users of SUMMIT have access to the high quality of work endowed by CARLA, such as its high-fidelity physics, rendering and sensors; however, it should be noted that not all components of SUMMIT work with those from CARLA, as they were designed for a different use case.</p>
+<h1 id="the-simulator">The simulator</h1>
+<p>SUMMIT adds on top of CARLA a set of capabilities to enable the simulation of sophisticated traffic behaviors on real-world maps:</p>
+<ul>
+<li><strong>Road contexts: </strong> In SUMMIT, the <code>SumoNetwork</code> interface is exposed to allow for easy interaction with roads, which are represented using <a href="https://sumo.dlr.de/docs/Networks/SUMO_Road_Networks.html">SUMO networks</a>. It is optimized for fast spatial and topological queries.</li>
+<li><strong>Sidewalk contexts: </strong> Sidewalks are represented using a collection of oriented polygons with holes. SUMMIT exposes the <code>Sidewalk</code> interface to easily interact with sidewalks. It is optimized for fast spatial and topological queries. Sidewalks are automatically generated as boundaries along roads.</li>
+<li><strong>Geometric utilities: </strong> SUMMIT provides a range of utility classes to help with various geometric operations.<ul>
+<li><code>OccupancyMap</code>: Manipulation for general 2D areas. Useful for exact collision detection. </li>
+<li><code>AABBMap</code>: Manipulation for axis aligned bounding boxes. Useful for fast approximate collision detection. </li>
+<li><code>SegmentsMap</code>: Maipulation for collections of 2D line segments. Primarily used to sample high quality uniformly distributed spawn points on roads and sidewalks.</li>
+</ul>
+</li>
+<li><strong>Procedural simulation:</strong> Spawning a scenario is entirely procedural, and no recompilation the simulator is required for simulation on a new map. Mesh information for map objects such as roads, sidewalks, landmarks, and satellite imagery are sent from the client to the simulation server, where the objects are dynamically spawned.</li>
+<li><strong>Crowd simulator:</strong> SUMMIT provides a client side Python script that simulates unregulated traffic in the simulation. It is capable of generating dense crowds, involving vehicles on the road and pedestrians on the sidewalk, where agents operate interactively with one another. <a href="https://arxiv.org/abs/1906.01566">GAMMA</a>, a state-of-the-art traffic motion prediction model, is used to produce sophisticated and realistic behaviors in the simulated crowd.</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../setting_up/" class="btn btn-neutral float-right" title="Setting up SUMMIT">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../.." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../.." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../setting_up/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

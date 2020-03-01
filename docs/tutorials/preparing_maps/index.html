@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Preparing maps - SUMMIT</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Preparing maps";
+    var mkdocs_page_input_path = "tutorials/preparing_maps.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SUMMIT</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../getting_started/introduction/">Introduction</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/setting_up/">Setting up SUMMIT</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/building/">Building SUMMIT</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Preparing maps</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#map-data-sources">Map data sources</a></li>
+    
+
+    <li class="toctree-l3"><a href="#obtaining-osm-files">Obtaining OSM files</a></li>
+    
+
+    <li class="toctree-l3"><a href="#obtaining-sumo-networks">Obtaining SUMO networks</a></li>
+    
+
+    <li class="toctree-l3"><a href="#optional-specifying-simulation-bounds">(Optional) Specifying simulation bounds</a></li>
+    
+
+    <li class="toctree-l3"><a href="#optional-caching-map-object-meshes">(Optional) Caching map object meshes</a></li>
+    
+
+    <li class="toctree-l3"><a href="#optional-downloading-satellite-imagery">(Optional) Downloading satellite imagery</a></li>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../loading_and_spawning_maps/">Loading and spawning maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../using_roads_and_sidewalks/">Using roads and sidewalks</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../simulating_traffic/">Simulating traffic</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">References</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../references/python_api/">Python API reference</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../references/summit_map_library/">SUMMIT map library</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SUMMIT</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Preparing maps</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>SUMMIT comes with a <a href="/references/summit_map_library">set of maps ready for use</a>. This page is required only if you wish to use additional maps.</p>
+</div>
+<h1 id="map-data-sources">Map data sources</h1>
+<p>For a given map, SUMMIT requires both a corresponding OSM file and SUMO network, which provide the respective information:</p>
+<ul>
+<li>OSM file: Landmark data for spawning landmark objects.</li>
+<li>SUMO network: Road contexts, and geographical bounds for satellite imagery.</li>
+</ul>
+<p>Note that sidewalk information is not required at all, since SUMMIT automatically calculates the sidewalks as boundaries along roads.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When working with real-world maps, the SUMO networks are typically generated from the OSM file. It is thus common that both the OSM file and SUMO network contains the same road information. The road information in the OSM file is simply unused after producing the SUMO network.</p>
+<p>While it is possible to use the road information in the OSM file directly, we choose to use a SUMO network as it provides a much more detailed representation to work with. In addition, SUMO comes with a flexible suite of tools to aid making fine adjustments to the SUMO networks.</p>
+</div>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>SUMMIT uses the convention of storing all map data inside the <code>&lt;summit-root&gt;/Data/</code> folder. All data files pertaining to the same map should be given the same name with different extensions (e.g. <code>meskel_square.osm</code>, <code>meskel_square.net.xml</code>). In addition, underscores should be in the file name to separate words in the map name.</p>
+</div>
+<h1 id="obtaining-osm-files">Obtaining OSM files</h1>
+<p>To obtain high-quality real-world OSM files, we recommend using <a href="https://www.openstreetmap.org/">OpenStreetMap's database</a>. Simply zoom into the are of interest, and export the map to <code>&lt;summit_root&gt;/Data/&lt;map_name&gt;.osm</code>, giving your map a reasonable name.</p>
+<p>You may wish to preprocess the OSM files using <a href="https://josm.openstreetmap.de/">JOSM</a> to remove road information unwanted from the simulation, such as service roads and footbridges.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In SUMMIT, we do not impose any restrictions on the source of OSM files. You are free to use any OSM file, even those produced by yourself.</p>
+</div>
+<h1 id="obtaining-sumo-networks">Obtaining SUMO networks</h1>
+<p>A SUMO network can be automatically obtained from an OSM file by using SUMO's <a href="https://sumo.dlr.de/docs/NETCONVERT.html">NETCONVERT utility</a>. This assumes that you have already setup the SUMO tools, as recommended in the <a href="/getting_started/quick_start/#requirements">requirements section</a>. The SUMO network should then be stored at <code>&lt;summit_root&gt;/Data/&lt;map_name&gt;.net.xml</code>, where <code>&lt;map_name&gt;</code> follows from that of the OSM file.</p>
+<p>We provide an example script at <code>&lt;summit_root&gt;/Scripts/osm2sumo.sh</code> to convert an OSM file into a SUMO network. </p>
+<p>You are recommended to postprocess the SUMO network using <a href="https://sumo.dlr.de/docs/NETEDIT.html">SUMO's NETEDIT</a> after the conversion. The conversion process is not perfect, and we highly recommend postprocessing the SUMO network to eliminate any ambiguities.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Similar to the OSM files, you are free to use any source of SUMO networks, including those produce by yourself. There are some restrictions however:</p>
+<ul>
+<li>All lanes in SUMMIT are assumed to have a fixed width of 4.0 meters.</li>
+<li>Bounds for OSM file and corresponding SUMO network must line up, if not landmarks may spawn incorrectly.</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For SUMMIT's built in maps, we have done some postprocessing after the conversion, so it will be different from what is produced by simply calling the script.</p>
+</div>
+<h1 id="optional-specifying-simulation-bounds">(Optional) Specifying simulation bounds</h1>
+<p>For a given map, SUMMIT's traffic simulation script simulates traffic in a user defined bounds, specified in <code>&lt;summit_root&gt;/Data/&lt;map_name&gt;.sim_bounds</code>. We recommend specifying a suitable bounds if you are using a custom map, in order to use SUMMIT's built in traffic simulation script.</p>
+<p>Bounds in a <code>.sim_bounds</code> file are specified with the <code>min_x,min_y</code> on the first line, and <code>max_x,max_y</code> on the second line. For example, in <code>&lt;summit_root&gt;/Data/meskel_square.sim_bounds</code>:</p>
+<pre><code>350,300
+550,500
+</code></pre>
+<p>These are in terms of CARLA coordinates. To find a suitable bounds for your map, you can use SUMO's NETEDIT tool as follows:</p>
+<ol>
+<li>Open the map's SUMO network in SUMO's NETEDIT tool.</li>
+<li>Find a suitable rectangular bound and note down the corner coordinates given by NETEDIT. These are in SUMO coordinates.</li>
+<li>Convert each SUMO coordinates into CARLA coordinates by swapping the x and y values.</li>
+<li>Take the minimum and maximum of x and y among the converted CARLA coordinates.</li>
+</ol>
+<h1 id="optional-caching-map-object-meshes">(Optional) Caching map object meshes</h1>
+<p>Often in SUMMIT, these mesh of map objects are calculated in order to spawn them dynamically in the simulator. The meshes can be calculated and saved beforehand to speed this process up.</p>
+<p>We provide a utility script at <code>&lt;summit_root&gt;/Scripts/extract_meshes.py</code> that calculates the meshes of various map objects for a given map, assuming that both the OSM file and SUMO network have been prepared. The meshes are stored at <code>&lt;summit_root&gt;/Data/</code> with the respective names.</p>
+<p>As an example, running the following:</p>
+<pre><code class="bash">extract_meshes.py --dataset meskel_square
+</code></pre>
+
+<p>uses <code>meskel_square.osm</code> (OSM file) and <code>meskel_square.net.xml</code> (SUMO network) to produce the following files in <code>&lt;summit_root&gt;/Data/</code>:</p>
+<ul>
+<li><code>meskel_square.network.wkt</code>: Road mesh.</li>
+<li><code>meskel_square.roadmark.wkt</code>: Roadmarks mesh.</li>
+<li><code>meskel_square.sidewalk.wkt</code>: Sidewalk mesh.</li>
+<li><code>meskel_square.landmarks/*.landmark.wkt</code>: Landmarks' meshes.</li>
+</ul>
+<h1 id="optional-downloading-satellite-imagery">(Optional) Downloading satellite imagery</h1>
+<p>To download satellite imagery for your map, ensure that you have your map's SUMO network located at <code>&lt;summit_root&gt;/Data/&lt;map_name&gt;.net.xml</code>, so that SUMMIT can locate the geographic bounds. Then, run the following utility script:</p>
+<pre><code class="bash">&lt;summit_root&gt;/Scripts/download_imagery.py --dataset &lt;map_name&gt;
+</code></pre>
+
+<p>This downloads imagery that stored as tiles in <code>&lt;summit_root/Data/imagery/</code> in <a href="https://wiki.openstreetmap.org/wiki/Slippy_Map">Slippy Map format</a>.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../loading_and_spawning_maps/" class="btn btn-neutral float-right" title="Loading and spawning maps">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../../getting_started/building/" class="btn btn-neutral" title="Building SUMMIT"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../../getting_started/building/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../loading_and_spawning_maps/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

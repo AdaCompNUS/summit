@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Using roads and sidewalks - SUMMIT</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Using roads and sidewalks";
+    var mkdocs_page_input_path = "tutorials/using_roads_and_sidewalks.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SUMMIT</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../getting_started/introduction/">Introduction</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/setting_up/">Setting up SUMMIT</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/building/">Building SUMMIT</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../preparing_maps/">Preparing maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../loading_and_spawning_maps/">Loading and spawning maps</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">Using roads and sidewalks</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#spawning-on-roads">Spawning on roads</a></li>
+    
+
+    <li class="toctree-l3"><a href="#navigation-on-roads">Navigation on roads</a></li>
+    
+
+    <li class="toctree-l3"><a href="#spawning-on-sidewalks">Spawning on sidewalks</a></li>
+    
+
+    <li class="toctree-l3"><a href="#navigating-sidewalks">Navigating sidewalks</a></li>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../simulating_traffic/">Simulating traffic</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">References</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../references/python_api/">Python API reference</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../references/summit_map_library/">SUMMIT map library</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SUMMIT</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Tutorials &raquo;</li>
+        
+      
+    
+    <li>Using roads and sidewalks</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="spawning-on-roads">Spawning on roads</h1>
+<p>On roads, route points, stored as <code>carla.SumoNetworkRoutePoint</code> objects, hold semantic information such the point's road, lane, and offset along lane. The SUMO network, stored as a <code>carla.SumoNetwork</code>, is used to traverse these route points spatially and topologically.</p>
+<p>One way to spawn points is to first lookup the route point on the road nearest to an arbitrary position.</p>
+<pre><code class="python"># Load SUMO network.
+sumo_network = carla.SumoNetwork.load(PATH_TO_SUMO_NETWORK_FILE)
+
+# Get arbitrary position.
+position = carla.Vector(100, 100)
+
+# Get nearest route point on SUMO network.
+route_point = sumo_network.get_nearest_route_point(position)
+</code></pre>
+
+<p>Since the route point holds only semantic information and not the actual position, a translational query is required to determine the actual position to spawn the agent:</p>
+<pre><code class="python"># Get route point position.
+route_point_position = sumo_network.get_route_point_position(route_point)
+
+# Get route point transform
+route_point_transform = carla.Transform()
+route_point_transform.x = route_point_position.x
+route_point_transform.y = route_point_position.y
+route_point_transform.z = 0.5 # Spawn at a height of 0.5 meters.
+
+# Spawn actor. See CARLA's documentation.
+world.spawn_actor(BLUEPRINT, route_point_transform)
+</code></pre>
+
+<p>Alternatively, you can use the <code>carla.SegmentMap</code> class to generate route points uniformly distributed along the lanes of the road. The <code>carla.SegmentMap</code> class is a data structure to work with line segments, optimized for uniform sampling of points over stored line segments. </p>
+<pre><code class="python"># Get segments of SUMO network.
+sumo_network_segments = sumo_network.create_segment_map()
+
+# Randmly pick spawn point. Note that this returns a position directly, not a route point.
+route_point_position = sumo_network_segments.rand_point()
+</code></pre>
+
+<p>It is also possible to bound the spawn segments to a certain region, for example a rectangular bounding box:</p>
+<pre><code class="python"># Get segments of SUMO network.
+sumo_network_segments = sumo_network.create_segment_map()
+
+# Define bounding box.
+bounds_min = carla.Vector2D(-50, -50)
+bounds_max = carla.Vector2D(100, 300)
+bounds_occupancy = carla.OccupancyMap(bounds_min, bounds_max)
+
+# Calculate intersection of line segments with bounding box.
+spawn_segments = sumo_network_segments.intersection(bounds_occupancy)
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In SUMMIT, we strive to a support a wide range of geometric manipulations. As such, you can go all funky and do stuff like:</p>
+<pre><code># Arbitrary polygon.
+polygon = carla.OccupancyMap([carla.Vector2D(-50, -50),
+    carla.Vector2D(-50, 100), carla.Vector2D(30, 200),
+    carla.Vector2D(70, 70), carla.Vector2D(100, -70)])
+# Arbitrary rectangle.
+rectangle1 = carla.OccupancyMap(carla.Vector2D(-30, -30), carla.Vector2D(200, 300))
+# Another arbitrary rectangle.
+rectangle2 = carla.OccupancyMap(carla.Vector2D(-70, 30), carla.Vector2D(100, 200))
+# Some combination of areas.
+spawn_occupancy = polygon.union(rectangle1).difference(rectangle2)
+# Crop line segments.
+spawn_segments = sumo_network_segments.intersection(spawn_occupancy)
+</code></pre>
+</div>
+<h1 id="navigation-on-roads">Navigation on roads</h1>
+<p>On roads, the SUMO network can be used to traverse the route points spatially and topologically.</p>
+<p>The below example fetches the nearest route point given the agent's current position, and randomly selects from topologically possible next route points a set distance ahead.</p>
+<pre><code class="python3"># Get 2D position of actor.
+location = actor.get_location()
+position2d = carla.Vector2D(location.x, location.y)
+
+# Lookup nearest route point.
+route_point = sumo_network.get_nearest_route_point(position2d)
+
+# Get all route points 1 meter ahead.
+next_route_points = sumo_network.get_next_route_points(route_point, 1.0)
+
+# Randomly select next route point.
+next_route_point = random.choice(next_route_points)
+</code></pre>
+
+<p>Since the route point only holds semantic information and not the actual position, a translational query is required to determine the actual position:</p>
+<pre><code class="python"># Get next route point's position.
+position = sumo_network.get_route_point_position(next_route_point)
+</code></pre>
+
+<p>which can then be used for required tasks, such as for feedback to some steering controller for vehicles.</p>
+<h1 id="spawning-on-sidewalks">Spawning on sidewalks</h1>
+<p>On sidewalks, things work very similar to roads. Sidewalks also have route points, stored as <code>carla.SidewalkRoutePoint</code> objects, which hold semantic information such as the point's polygon, segment, and offset along segment.  The sidewalk, stored as a <code>carla.Sidewalk</code>, is used to traverse these route points spatially and topologically.</p>
+<p>One way to spawn points is to first lookup the route point on the road nearest to an arbitrary position.</p>
+<pre><code class="python"># Load SUMO network.
+sumo_network = carla.SumoNetwork.load(PATH_TO_SUMO_NETWORK_FILE)
+
+# Calculate sidewalk 1.5 meters from road's mesh.
+sumo_network_occupancy = sumo_network.create_occupancy_map()
+sidewalk = sumo_network_occupancy.create_sidewalk(1.5)
+
+# Get arbitrary position.
+position = carla.Vector(100, 100)
+
+# Get nearest route point on sidewalk.
+route_point = sidewalk.get_nearest_route_point(position)
+</code></pre>
+
+<p>Since the route point holds only semantic information and not the actual position, a translational query is required to determine the actual position to spawn the agent:</p>
+<pre><code class="python"># Get route point position.
+route_point_position = sidewalk.get_route_point_position(route_point)
+
+# Get route point transform
+route_point_transform = carla.Transform()
+route_point_transform.x = route_point_position.x
+route_point_transform.y = route_point_position.y
+route_point_transform.z = 0.5 # Spawn at a height of 0.5 meters.
+
+# Spawn actor. See CARLA's documentation.
+world.spawn_actor(BLUEPRINT, route_point_transform)
+</code></pre>
+
+<p>Alternatively, you can use the <code>carla.SegmentMap</code> class to generate route points uniformly distributed along the paths of the sidewalk. The <code>carla.SegmentMap</code> class is a data structure to work with line segments, optimized for uniform sampling of points over stored line segments. </p>
+<pre><code class="python"># Get segments of sidewalk.
+sidewalk_segments = sidewalk.create_segment_map()
+
+# Randmly pick spawn point. Note that this returns a position directly, not a route point.
+route_point_position = sidewalk_segments.rand_point()
+</code></pre>
+
+<p>It is also possible to bound the spawn segments to a certain region, for example a rectangular bounding box:</p>
+<pre><code class="python"># Get segments of sidewalk.
+sidewalk_segments = sidewalk.create_segment_map()
+
+# Define bounding box.
+bounds_min = carla.Vector2D(-50, -50)
+bounds_max = carla.Vector2D(100, 300)
+bounds_occupancy = carla.OccupancyMap(bounds_min, bounds_max)
+
+# Calculate intersection of line segments with bounding box.
+spawn_segments = sidewalk_segments.intersection(bounds_occupancy)
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In SUMMIT, we strive to a support a wide range of geometric manipulations. As such, you can go all funky and do stuff like:</p>
+<pre><code># Arbitrary polygon.
+polygon = carla.OccupancyMap([carla.Vector2D(-50, -50),
+    carla.Vector2D(-50, 100), carla.Vector2D(30, 200),
+    carla.Vector2D(70, 70), carla.Vector2D(100, -70)])
+# Arbitrary rectangle.
+rectangle1 = carla.OccupancyMap(carla.Vector2D(-30, -30), carla.Vector2D(200, 300))
+# Another arbitrary rectangle.
+rectangle2 = carla.OccupancyMap(carla.Vector2D(-70, 30), carla.Vector2D(100, 200))
+# Some combination of areas.
+spawn_occupancy = polygon.union(rectangle1).difference(rectangle2)
+# Crop line segments.
+spawn_segments = sidewalk_segments.intersection(spawn_occupancy)
+</code></pre>
+</div>
+<h1 id="navigating-sidewalks">Navigating sidewalks</h1>
+<p>On sidewalks, the sidewalk can be used to traverse the route points spatially and topologically.</p>
+<p>The below example fetches the nearest route point given the agent's current position, and selects the next route point a set distance anticlockwise along the route point's polygon. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Sidewalks are structured using closed polygons, so there will always be exactly one next route point. Additionally, sidewalks in SUMMIT are always oriented anticlockwise, so that the next route point always goes anticlockwise along the current route point's polygon. </p>
+</div>
+<pre><code class="python"># Get 2D position of actor.
+location = actor.get_location()
+position2d = carla.Vector2D(location.x, location.y)
+
+# Lookup nearest route point.
+route_point = sidewalk.get_nearest_route_point(position2d)
+
+# Get route point 1 meter anticlockwise along route point's polygon.
+next_route_point = sidewalk.get_next_route_point(route_point, 1.0)
+</code></pre>
+
+<p>To get the next route point clockwise (instead of anticlockwise) along the current route point's polygon, use the <code>get_previous_route_point</code> method instead:</p>
+<pre><code class="python"># Get route point 1 meter clockwise along route point's polygon.
+next_route_point = sidewalk.get_previous_route_point(route_point, 1.0)
+</code></pre>
+
+<p>You can also fetch the nearest point on an adjacent sidewalk polygon (i.e. on the other side of the road):</p>
+<pre><code class="python"># Get nearest adjacent route point, at most 50 meters away.
+# If such a route point exists, this returns None. a list of exactly one item.
+next_route_point = sidewalk.get_adjacent_route_point(route_point, 50.0)
+</code></pre>
+
+<p>Since the route point only holds semantic information and not the actual position, a translational query is required to determine the actual position:</p>
+<pre><code class="python"># Get next route point's position.
+position = sidewalk.get_route_point_position(next_route_point)
+</code></pre>
+
+<p>which can then be used for required tasks, such as for feedback to some heading controller for pedestrians.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../simulating_traffic/" class="btn btn-neutral float-right" title="Simulating traffic">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../loading_and_spawning_maps/" class="btn btn-neutral" title="Loading and spawning maps"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../loading_and_spawning_maps/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../simulating_traffic/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

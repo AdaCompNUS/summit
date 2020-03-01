@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>Python API reference - SUMMIT</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Python API reference";
+    var mkdocs_page_input_path = "references/python_api.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SUMMIT</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../getting_started/introduction/">Introduction</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/setting_up/">Setting up SUMMIT</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/building/">Building SUMMIT</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../tutorials/preparing_maps/">Preparing maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/loading_and_spawning_maps/">Loading and spawning maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/using_roads_and_sidewalks/">Using roads and sidewalks</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/simulating_traffic/">Simulating traffic</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">References</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="./">Python API reference</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#carlaactor">carla.Actor</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlaaabb2d">carla.AABB2D</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlaaabbmap">carla.AABBMap</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlalandmark">carla.Landmark</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlaoccupancymap">carla.OccupancyMap</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasegment2d">carla.Segment2D</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasegmentmap">carla.SegmentMap</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasidewalk">carla.Sidewalk</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasidewalkroutepoint">carla.SidewalkRoutePoint</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasumonetwork">carla.SumoNetwork</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlasumonetworkroutepoint">carla.SumoNetworkRoutePoint</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlatriangle2d">carla.Triangle2D</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlavector2d">carla.Vector2D</a></li>
+    
+
+    <li class="toctree-l3"><a href="#carlaworld">carla.World</a></li>
+    
+
+    <li class="toctree-l3"><a href="#commandspawndynamicmesh">command.SpawnDynamicMesh</a></li>
+    
+
+    <li class="toctree-l3"><a href="#commanddestroydynamicmesh">command.DestroyDynamicMesh</a></li>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../summit_map_library/">SUMMIT map library</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SUMMIT</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>References &raquo;</li>
+        
+      
+    
+    <li>Python API reference</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>SUMMIT's Python API is an extension of CARLA's <a href="https://carla.readthedocs.io/en/latest/python_api/">Python API</a>. All classes and methods appearing in CARLA's Python API are accessible in SUMMIT. </p>
+<p>However, since some components were designed for different use cases, not all components from CARLA may work with SUMMIT components, and vice versa.</p>
+</div>
+<h2 id="carlaactor">carla.Actor<a name="carla.Actor"></a></h2>
+<p>Only additional features introduced in SUMMIT to <code>carla.Actor</code> are listed here. Please refer to <a href="https://carla.readthedocs.io/en/latest/python_api/#carlaactor">CARLA's implementation</a> for the remaining original features, all of which are also accessible.</p>
+<h3>Methods</h3>
+
+<ul>
+<li><a name="carla.actor.set_collision_enabled"></a><strong><font color="#7fb800">set_collision_enabled</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>enabled</strong></font>) <br />
+Enable or disable collision for this instance.<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>enabled</code>: <em>bool</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlaaabb2d">carla.AABB2D<a name="carla.AABB2D"></a></h2>
+<p>2D axis aligned bounding box helper class.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li>
+<p><a name="carla.AABB2D.bounds_min"></a><strong><font color="#f8805a">bounds_min</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+<li>
+<p><a name="carla.AABB2D.bounds_max"></a><strong><font color="#f8805a">bounds_max</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.AABB2D.__eq__"></a><strong><font color="#7fb800">__eq__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.AABB2D">carla.AABB2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.AABB2D.__ne__"></a><strong><font color="#7fb800">__ne__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.AABB2D">carla.AABB2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlaaabbmap">carla.AABBMap<a name="carla.AABBMap"></a></h2>
+<p>Data structure optimized for efficient collision checking of 2D axis aligned bounding boxes (AABBs).</p>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.AABBMap.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Constructs an empty instance.</p>
+</li>
+<li>
+<p><a name="carla.AABBMap.__len__"></a><strong><font color="#7fb800">__len__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Returns the number of AABBs contained in this instance.</p>
+</li>
+<li>
+<p><a name="carla.AABBMap.insert"></a><strong><font color="#7fb800">insert</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>aabb</strong></font>)<br />
+Inserts an AABB into this instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>aabb</code> (<em><a href="#carla.AABB2D">carla.AABB2D</a></em>) </li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.AABBMap.intersects"></a><strong><font color="#7fb800">intersects</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>aabb</strong></font>)<br />
+Checks if an AABB intersects with any contained in this instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>aabb</code> (<em><a href="#carla.AABB2D">carla.AABB2D</a></em>) </li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>bool</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlalandmark">carla.Landmark<a name="carla.Landmark"></a></h2>
+<p>Helper class to load landmark meshes from OSM files.</p>
+<ul>
+<li><a name="carla.Landmark.load"></a><strong><font color="#7fb800">load</font></strong>(<font color="#00a6ed"><strong>filename</strong></font>, <font color="#00a6ed"><strong>offset</strong>=carla.Vector2D(0, 0)</font>)<br />
+Loads all landmark meshes from an OSM file, applying an optional offset.<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>filename</code> (<em>str</em>) </li>
+<li><code>offset</code> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>list(<a href="#carla.OccupancyMap">carla.OccupancyMap</a>)</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlaoccupancymap">carla.OccupancyMap<a name="carla.OccupancyMap"></a></h2>
+<p>Data structure to manipulate 2D areas of occupancy.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li><a name="carla.OccupancyMap.is_empty"></a><strong><font color="#f8805a">is_empty</font></strong> (<em>bool</em>) <br />
+Returns whether this instance represents an empty area.</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.OccupancyMap.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Constructs an instance representing an empty area.</p>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>line</strong></font>, <font color="#00a6ed"><strong>width</strong></font>)<br />
+Constructs an instance representing a line buffered by some width.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>line</code> (<em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a>)</em>)</li>
+<li><code>width</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The buffered line has a width of <code>width</code>. Its ends are also approximately buffered round with a diameter of <code>width</code>.</em></font> </li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>polygon</strong></font>)<br />
+Constructs an instance representing a closed polygon.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>polygon</code> (<em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a>)</em>)</li>
+</ul>
+</li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>Polygon vertices can be given in any orientation. Additionally, the last vertex <strong>should not</strong> be repeated. An n-gon will require only each of the n vertices.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.save"></a><strong><font color="#7fb800">load</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>filename</strong></font>)<br />
+Saves this instance to a file.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>filename</code> (<em>str</em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.load"></a><strong><font color="#7fb800">load</font></strong>(<font color="#00a6ed"><strong>filename</strong></font>)<br />
+Loads an instance from a file.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>filename</code> (<em>str</em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.union"></a><strong><font color="#7fb800">union</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns the union of this instance's area and that of another instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.difference"></a><strong><font color="#7fb800">difference</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns the difference of this instance's area and that of another instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The difference returned is the area covered by this instance that is not covered by the other instance.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.intersection"></a><strong><font color="#7fb800">intersection</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns the intersection of this instance's area and that of another instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.buffer"></a><strong><font color="#7fb800">buffer</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>width</strong></font>)<br />
+Returns the area formed by buffering the outlines of this instance's area by some width.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>width</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The buffered lines have a width of <code>width</code>. Ends are also approximately buffered round with a diameter of <code>width</code>.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.intersects"></a><strong><font color="#7fb800">intersects</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Checks if this instance's area intersects that of another instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>bool</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.contains"></a><strong><font color="#7fb800">contains</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>point</strong></font>)<br />
+Checks if a point is contained in this instance's area.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>point</code> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>bool</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.create_sidewalk"></a><strong><font color="#7fb800">create_sidewalk</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>distance</strong></font>)<br />
+Creates a sidewalk along the outlines of this instance's area, with some distance away from the outlines.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>distance</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.Sidewalk">carla.Sidewalk</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.get_triangles"></a><strong><font color="#7fb800">get_triangles</font></strong>(<font color="#00a6ed"><strong>self</strong></font>) <br />
+Returns the triangles in the triangulation of this instance's area.</p>
+<ul>
+<li><strong>Return:</strong> <em>list(<a href="#carla.Triangle2D">carla.Triangle2D</a>)</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.get_mesh_triangles"></a><strong><font color="#7fb800">get_mesh_triangles</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>offset</strong>=0.0</font>) <br />
+Returns the triangles, arranged in a list of 3D vertices, in the triangulation of this instance's area with some optional added height offset.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>offset</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a>)</em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>Both upward and downward facing triangles are produced.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.get_wall_mesh_triangles"></a><strong><font color="#7fb800">get_wall_mesh_triangles</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>height</strong>=0.0</font>) <br />
+Returns the triangles, arranged in a list of 3D vertices, in the triangulation of the area formed by sweeping this instance's area vertically by some height.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>height</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a>)</em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>Both inward and outward facing triangles are produced.</em></font></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlasegment2d">carla.Segment2D<a name="carla.Segment2D"></a></h2>
+<p>2D line segment helper class.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li>
+<p><a name="carla.Segment2D.start"></a><strong><font color="#f8805a">start</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+<li>
+<p><a name="carla.Segment2D.end"></a><strong><font color="#f8805a">end</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.Segment2D.__eq__"></a><strong><font color="#7fb800">__eq__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.Segment2D">carla.Segment2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Segment2D.__ne__"></a><strong><font color="#7fb800">__ne__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.Segment2D">carla.Segment2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlasegmentmap">carla.SegmentMap<a name="carla.SegmentMap"></a></h2>
+<p>Represents a collection of line segments. Mainly used for efficiently sampling uniformly from collections of line segments.</p>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.SegmentMap.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>segments</strong></font>)<br />
+Constructs an instance from a collection of line segments.  </p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>segments</code> (<em>list(<a href="#carla.Segment2D">carla.Segment2D</a>)</em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.OccupancyMap.get_segments"></a><strong><font color="#7fb800">get_segments</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Returns a list of all segments stored in this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em>list(<a href="#carla.Segment2D">carla.Segment2D</a>)</em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>This operation can be time-consuming, as each segment is converted from an internal representation into a </em><a href="#carla.Segment2D">carla.Segment2D</a><em>.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SegmentMap.seed_rand"></a><strong><font color="#7fb800">seed_rand</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>seed</strong></font>)<br />
+Resets this instance's internal random number generator with a seed value.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>seed</code> (<em>int</em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SegmentMap.rand_point"></a><strong><font color="#7fb800">rand_point</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Sample a random point uniformly from this instance's segments.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>Firstly, a line segment is sampled with probability proportional to its length. Then, a point is uniformly picked along the selected line segment.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SegmentMap.union"></a><strong><font color="#7fb800">union</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns a union of this instance's segments and that of another instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.SegmentMap">carla.SegmentMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SegmentMap">carla.SegmentMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SegmentMap.difference"></a><strong><font color="#7fb800">difference</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns the difference of this instance's segments and an occupancy map's area.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SegmentMap">carla.SegmentMap</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The difference returned are the segments covered by this instance, cut appropriately, that are not contained in the occupancy maps' area.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SegmentMap.intersection"></a><strong><font color="#7fb800">intersection</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)<br />
+Returns the intersection of this instance's segments and an occupancy map's area.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SegmentMap">carla.SegmentMap</a></em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlasidewalk">carla.Sidewalk<a name="carla.Sidewalk"></a></h2>
+<p>Represents a sidewalk.</p>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.Sidewalk.get_route_point_position"></a><strong><font color="#7fb800">get_route_point_position</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>)<br />
+Converts a sidewalk route point into the corresponding actual position.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.get_nearest_route_point"></a><strong><font color="#7fb800">get_nearest_route_point</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>position</strong></font>)<br />
+Determines the sidewalk route point closest to a position.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>position</code> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.get_next_route_point"></a><strong><font color="#7fb800">get_next_route_point</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>, <font color="#00a6ed"><strong>distance</strong></font>)<br />
+Gets the next route point succeeding some route point by some distance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em>)</li>
+<li><code>distance</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The returned route point is ahead of the given route point anticlockwise along the route point's polygon.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.get_previous_route_point"></a><strong><font color="#7fb800">get_previous_route_point</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>, <font color="#00a6ed"><strong>distance</strong></font>)<br />
+Gets the next route point preceding some route point by some distance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em>)</li>
+<li><code>distance</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SidewalkRoutePoint">carla.SidewalkRoutePoint</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The returned route point is ahead of the given route point clockwise along the route point's polygon.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.create_occupancy_map"></a><strong><font color="#7fb800">create_occupancy_map</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>width</strong></font>)<br />
+Creates an occupancy map by buffering the paths in this instance by some width.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>width</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+<li><strong>Note:</strong> <font color="#8E8E8E"><em>The buffered lines have a width of <code>width</code>. Ends are also approximately buffered round with a diameter of <code>width</code>.</em></font></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.create_segment_map"></a><strong><font color="#7fb800">create_segment_map</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Creates a <code>carla.SegmentMap</code> using the paths found in this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="#carla.SegmentMap">carla.SegmentMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Sidewalk.intersects"></a><strong><font color="#7fb800">intersects</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>segment</strong></font>)<br />
+Checks if a line segment intersects with the paths in this instance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>segment</code> (<em><a href="#carla.Segment2D">carla.Segment2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>bool</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlasidewalkroutepoint">carla.SidewalkRoutePoint<a name="carla.SidewalkRoutePoint"></a></h2>
+<p>Represents a sidewalk route point. </p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li>
+<p><a name="carla.SidewalkRoutePoint.polygon_id"></a><strong><font color="#f8805a">polygon_id</font></strong> (<em>int</em>)</p>
+</li>
+<li>
+<p><a name="carla.SidewalkRoutePoint.segment_id"></a><strong><font color="#f8805a">segment_id</font></strong> (<em>int</em>)</p>
+</li>
+<li>
+<p><a name="carla.SidewalkRoutePoint.offset"></a><strong><font color="#f8805a">offset</font></strong> (<em>float</em>)</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li><a name="carla.SidewalkRoutePoint.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)  </li>
+</ul>
+<hr />
+<h2 id="carlasumonetwork">carla.SumoNetwork<a name="carla.SumoNetwork"></a></h2>
+<p>Represents a SUMO network.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li>
+<p><a name="carla.SumoNetwork.bounds_min"></a><strong><font color="#f8805a">bounds_min</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)  <br />
+Gets the minimum point of this instance's bounds.</p>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.bounds_max"></a><strong><font color="#f8805a">bounds_max</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)  <br />
+Gets the maximum point of this instance's bounds.</p>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.original_bounds_min"></a><strong><font color="#f8805a">original_bounds_min</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)  <br />
+Gets the minimum point (in LatLon) of this instance's geographic bounds.</p>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.original_bounds_max"></a><strong><font color="#f8805a">original_bounds_max</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)  <br />
+Gets the maximum point (in LatLon) of this instance's geographic bounds.</p>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.offset"></a><strong><font color="#f8805a">offset</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)   <br />
+Gets the offset applied to the SUMO network to move it to the origin.</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.SumoNetwork.get_route_point_position"></a><strong><font color="#7fb800">get_route_point_position</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>)<br />
+Converts a SUMO network route point into the corresponding actual position.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.get_nearest_route_point"></a><strong><font color="#7fb800">get_nearest_route_point</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>position</strong></font>)<br />
+Determines the SUMO network route point closest to a position.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>position</code> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.get_next_route_points"></a><strong><font color="#7fb800">get_next_route_points</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>, <font color="#00a6ed"><strong>distance</strong></font>)<br />
+Gets the list of possible next route points succeeding some route point by some distance.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a></em>)</li>
+<li><code>distance</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>list(<a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a>)</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.get_next_route_paths"></a><strong><font color="#7fb800">get_next_route_paths</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>route_point</strong></font>, <font color="#00a6ed"><strong>num_points</strong></font>, <font color="#00a6ed"><strong>interval</strong></font>)<br />
+Gets the list of possible paths succeeding some route point. Each path spans a specified number of points with some given interval.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>route_point</code> (<em><a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a></em>)</li>
+<li><code>num_points</code> (<em>int</em>)</li>
+<li><code>interval</code> (<em>float</em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>list(list(<a href="#carla.SumoNetworkRoutePoint">carla.SumoNetworkRoutePoint</a>))</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.create_occupancy_map"></a><strong><font color="#7fb800">create_occupancy_map</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Creates the occupancy map for this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.create_roadmark_occupancy_map"></a><strong><font color="#7fb800">create_roadmark_occupancy_map</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Creates the occupancy map for this instance's roadmarks.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="#carla.OccupancyMap">carla.OccupancyMap</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.SumoNetwork.create_segment_map"></a><strong><font color="#7fb800">create_segment_map</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)<br />
+Creates a <code>carla.SegmentMap</code> using the lanes found in this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="#carla.SegmentMap">carla.SegmentMap</a></em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlasumonetworkroutepoint">carla.SumoNetworkRoutePoint<a name="carla.SumoNetworkRoutePoint"></a></h2>
+<p>Represents a SUMO network route point. </p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li><a name="carla.SumoNetworkRoutePoint.edge"></a><strong><font color="#f8805a">edge</font></strong> (<em>str</em>)</li>
+<li><a name="carla.SumoNetworkRoutePoint.lane"></a><strong><font color="#f8805a">lane</font></strong> (<em>int</em>)</li>
+<li><a name="carla.SumoNetworkRoutePoint.segment"></a><strong><font color="#f8805a">segment</font></strong> (<em>int</em>)</li>
+<li><a name="carla.SumoNetworkRoutePoint.offset"></a><strong><font color="#f8805a">offset</font></strong> (<em>float</em>)</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li><a name="carla.SumoNetworkRoutePoint.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)  </li>
+</ul>
+<hr />
+<h2 id="carlatriangle2d">carla.Triangle2D<a name="carla.Triangle2D"></a></h2>
+<p>2D triangle helper class.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li>
+<p><a name="carla.Triangle2D.v0"></a><strong><font color="#f8805a">v0</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+<li>
+<p><a name="carla.Triangle2D.v1"></a><strong><font color="#f8805a">v1</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+<li>
+<p><a name="carla.Triangle2D.v2"></a><strong><font color="#f8805a">v2</font></strong> (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</p>
+</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.Triangle2D.__eq__"></a><strong><font color="#7fb800">__eq__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.Triangle2D">carla.Triangle2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Triangle2D.__ne__"></a><strong><font color="#7fb800">__ne__</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>other</strong></font>)</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>other</code> (<em><a href="#carla.Triangle2D">carla.Triangle2D</a></em>)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlavector2d">carla.Vector2D<a name="carla.Vector2D"></a></h2>
+<p>Only additional features introduced in SUMMIT to <code>carla.Vector2D</code> are listed here. Please refer to <a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">CARLA's implementation</a> for the remaining original features, all of which are also accessible.</p>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.Triangle2D.squared_length"></a><strong><font color="#7fb800">squared_length</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)  <br />
+Returns the squared length of this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em>float</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Triangle2D.length"></a><strong><font color="#7fb800">length</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)  <br />
+Returns the length of this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em>float</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Triangle2D.make_unit_vector"></a><strong><font color="#7fb800">make_unit_vector</font></strong>(<font color="#00a6ed"><strong>self</strong></font>)  <br />
+Returns the unit vector of this instance.</p>
+<ul>
+<li><strong>Return:</strong> <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Triangle2D.rotate"></a><strong><font color="#7fb800">rotate</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>angle</strong></font>)  <br />
+Returns the result of rotating this instance by an angle.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>angle</code>: (<em>float</em>) (in radians)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.Triangle2D.dot_product"></a><strong><font color="#7fb800">dot_product</font></strong>(<font color="#00a6ed"><strong>vector1</strong></font>, <font color="#00a6ed"><strong>vector2</strong></font>)  <br />
+Returns the dot product of two vectors.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>vector1</code>: (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+<li><code>vector2</code>: (<em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector2d">carla.Vector2D</a></em>)</li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>float</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="carlaworld">carla.World<a name="carla.World"></a></h2>
+<p>Only additional features introduced in SUMMIT to <code>carla.World</code> are listed here. Please refer to <a href="https://carla.readthedocs.io/en/latest/python_api/#carlaworld">CARLA's implementation</a> for the remaining original features, all of which are also accessible.</p>
+<h3>Methods</h3>
+
+<ul>
+<li>
+<p><a name="carla.world.spawn_dynamic_mesh"></a><strong><font color="#7fb800">spawn_dynamic_mesh</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>triangles</strong></font>, <font color="#00a6ed"><strong>material</strong></font>, <font color="#00a6ed"><strong>segmentation_tag</strong></font>)  <br />
+Spawns a dynamic mesh using mesh triangles, together with a specified material and <a href="https://carla.readthedocs.io/en/latest/cameras_and_sensors/#sensorcamerasemantic_segmentation">segmentation tag</a>. Returns the id of the spawned dynamic mesh (note: these ids are <strong>not</strong> the same as actor ids).</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>triangles</code>: <em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a>)</em></li>
+<li><code>material</code>: <em>str</em> </li>
+<li><code>segmentation_tag</code>: <em>int</em></li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>int</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.world.spawn_dynamic_tile_mesh"></a><strong><font color="#7fb800">spawn_dynamic_tile_mesh</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>bounds_min</strong></font>, <font color="#00a6ed"><strong>bounds_max</strong></font>, <font color="#00a6ed"><strong>data</strong></font>, <font color="#00a6ed"><strong>segmentation_tag</strong></font>)  <br />
+Spawns a rectangular dynamic mesh of a JPEG image <a href="https://carla.readthedocs.io/en/latest/cameras_and_sensors/#sensorcamerasemantic_segmentation">segmentation tag</a>. Returns the id of the spawned dynamic mesh (note: these ids are <strong>not</strong> the same as actor ids).</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>bounds_min</code>: <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a></em></li>
+<li><code>bounds_max</code>: <em><a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a></em></li>
+<li><code>data</code>: <em>list(int)</em> - The JPEG data, as an array of bytes. </li>
+<li><code>segmentation_tag</code>: <em>int</em></li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>int</em></li>
+</ul>
+</li>
+<li>
+<p><a name="carla.world.destroy_dynamic_mesh"></a><strong><font color="#7fb800">destroy_dynamic_mesh</font></strong>(<font color="#00a6ed"><strong>self</strong></font>, <font color="#00a6ed"><strong>id</strong></font>)  <br />
+Destroys a dynamic mesh given its id. Returns whether the operation succeeded.</p>
+<ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>id</code>: <em>int</em></li>
+</ul>
+</li>
+<li><strong>Return:</strong> <em>bool</em></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="commandspawndynamicmesh">command.SpawnDynamicMesh<a name="command.SpawnDynamicMesh"></a></h2>
+<p>Spawns a dynamic mesh out of mesh triangles.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li><a name="command.SpawnDynamicMesh.triangles"></a><strong><font color="#f8805a">triangles</font></strong> (<em>list(<a href="#carla.Triangle2D">carla.Triangle2D</a>)</em>)</li>
+<li><a name="command.SpawnDynamicMesh.material"></a><strong><font color="#f8805a">material</font></strong> (<em>str</em>)</li>
+<li><a name="command.SpawnDynamicMesh.semantic_tag"></a><strong><font color="#f8805a">semantic_tag</font></strong> (<em>int</em>)</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li><a name="command.SpawnDynamicMesh.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>triangles</strong></font>, <font color="#00a6ed"><strong>material</strong></font>, <font color="#00a6ed"><strong>segmentation_tag</strong></font>)    <ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>triangles</code>: <em>list(<a href="https://carla.readthedocs.io/en/latest/python_api/#carlavector3d">carla.Vector3D</a>)</em></li>
+<li><code>material</code>: <em>str</em> </li>
+<li><code>segmentation_tag</code>: <em>int</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="commanddestroydynamicmesh">command.DestroyDynamicMesh<a name="command.DestroyDynamicMesh"></a></h2>
+<p>Destroys a dynamic mesh given its id.</p>
+<h3>Instance Variables</h3>
+
+<ul>
+<li><a name="command.DestroyDynamicMesh.id"></a><strong><font color="#f8805a">id</font></strong> (<em>int</em>)</li>
+</ul>
+<h3>Methods</h3>
+
+<ul>
+<li><a name="command.DestroyDynamicMesh.__init__"></a><strong><font color="#7fb800">__init__</font></strong>(<font color="#00a6ed"><strong>id</strong></font>)    <ul>
+<li><strong>Parameters:</strong><ul>
+<li><code>id</code>: <em>int</em></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../summit_map_library/" class="btn btn-neutral float-right" title="SUMMIT map library">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="../../tutorials/simulating_traffic/" class="btn btn-neutral" title="Simulating traffic"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../../tutorials/simulating_traffic/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="../summit_map_library/" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>

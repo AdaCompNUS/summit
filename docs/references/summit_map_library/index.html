@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../../img/favicon.ico">
+  <title>SUMMIT map library - SUMMIT</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "SUMMIT map library";
+    var mkdocs_page_input_path = "references/summit_map_library.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="../../js/jquery-2.1.1.min.js" defer></script>
+  <script src="../../js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="../.." class="icon icon-home"> SUMMIT</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="../..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Getting started</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../getting_started/introduction/">Introduction</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/setting_up/">Setting up SUMMIT</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../getting_started/building/">Building SUMMIT</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Tutorials</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../../tutorials/preparing_maps/">Preparing maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/loading_and_spawning_maps/">Loading and spawning maps</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/using_roads_and_sidewalks/">Using roads and sidewalks</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="../../tutorials/simulating_traffic/">Simulating traffic</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">References</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="../python_api/">Python API reference</a>
+                </li>
+                <li class=" current">
+                    
+    <a class="current" href="./">SUMMIT map library</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#beijing">beijing</a></li>
+    
+
+    <li class="toctree-l3"><a href="#chandni_chowk">chandni_chowk</a></li>
+    
+
+    <li class="toctree-l3"><a href="#highway">highway</a></li>
+    
+
+    <li class="toctree-l3"><a href="#magic">magic</a></li>
+    
+
+    <li class="toctree-l3"><a href="#meskel_square">meskel_square</a></li>
+    
+
+    <li class="toctree-l3"><a href="#shi_men_er_lu">shi_men_er_lu</a></li>
+    
+
+    <li class="toctree-l3"><a href="#shibuya">shibuya</a></li>
+    
+
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../..">SUMMIT</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../..">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>References &raquo;</li>
+        
+      
+    
+    <li>SUMMIT map library</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1> SUMMIT Map Library </h1>
+
+<p>This page lists all available maps built into SUMMIT that are ready for use. These maps are all extracted from real locations in the world.</p>
+<h2 id="beijing">beijing</h2>
+<p><img alt="beijing" src="/img/beijing.png" /></p>
+<ul>
+<li>Identifier: <code>beijing</code></li>
+<li>Type: Highway</li>
+<li>Location: <a href="https://goo.gl/maps/Jw6SAki32YKBdaTU7">Chao Yang Men Bei Da Jie. Beijing, China</a></li>
+</ul>
+<hr />
+<h2 id="chandni_chowk">chandni_chowk</h2>
+<p><img alt="chandni_chowk" src="/img/chandni_chowk.png" /></p>
+<ul>
+<li>Identifier: <code>chandni_chowk</code></li>
+<li>Description: Roundabout</li>
+<li>Location: <a href="https://goo.gl/maps/2n5J6ntF8KRywyBTA">Bhai Mati Das Chowk. New Delhi, India</a></li>
+</ul>
+<hr />
+<h2 id="highway">highway</h2>
+<p><img alt="highway" src="/img/highway.png" /></p>
+<ul>
+<li>Identifier: <code>highway</code></li>
+<li>Type: Highway</li>
+<li>Location: <a href="https://goo.gl/maps/r98qLgGLQpcQCmHV8">Ayer Rajah Expressway. Singapore</a> </li>
+</ul>
+<hr />
+<h2 id="magic">magic</h2>
+<p><img alt="magic" src="/img/magic.png" /></p>
+<ul>
+<li>Identifier: <code>magic</code></li>
+<li>Type: Roundabout</li>
+<li>Location: <a href="https://goo.gl/maps/2RdfX8vEbxL37gCr9">The Magic Roundabout. Swindon, United Kingdom</a></li>
+</ul>
+<hr />
+<h2 id="meskel_square">meskel_square</h2>
+<p><img alt="meskel_square" src="/img/meskel_square.png" /></p>
+<ul>
+<li>Identifier: <code>meskel_square</code></li>
+<li>Type: Intersection</li>
+<li>Location: <a href="https://goo.gl/maps/FNT2akQUty8CyagD6">Meskel Square. Addis Ababa, Ethiopia</a></li>
+</ul>
+<hr />
+<h2 id="shi_men_er_lu">shi_men_er_lu</h2>
+<p><img alt="shi_men_er_lu" src="/img/shi_men_er_lu.png" /></p>
+<ul>
+<li>Identifier: <code>shi_men_er_lu</code></li>
+<li>Type: Intersection</li>
+<li>Location: <a href="https://goo.gl/maps/JhNsdFanZ84wLa3YA">Shi Men Er Lu. Shanghai, China</a></li>
+</ul>
+<hr />
+<h2 id="shibuya">shibuya</h2>
+<p><img alt="shibuya" src="/img/shibuya.png" /></p>
+<ul>
+<li>Identifier: <code>shibuya</code></li>
+<li>Type: Intersection</li>
+<li>Location: <a href="https://goo.gl/maps/zKUPrzo2mjFiXKxZ9">Shibuya Crossing. Tokyo, Japan</a></li>
+</ul>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../python_api/" class="btn btn-neutral" title="Python API reference"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="../python_api/" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+
+</body>
+</html>
