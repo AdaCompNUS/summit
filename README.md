@@ -33,11 +33,11 @@ Yuanfu Luo, David Hsu; To appear at ICRA 2020
 Using SUMMIT
 --------------
 
-If you are simply looking to use SUMMIT, follow the set up instructions [here](https://adacompnus.github.io/summit/getting_started/setting_up/).
+If you are simply looking to use SUMMIT, follow the set up instructions [here](https://adacompnus.github.io/summit-docs/getting_started/setting_up/).
 
-If you are a developer looking to modify SUMMIT, follow the build instructions [here](https://adacompnus.github.io/summit/getting_started/building/) instead.
+If you are a developer looking to modify SUMMIT, follow the build instructions [here](https://adacompnus.github.io/summit-docs/getting_started/building/) instead.
 
-**All tutorials and references are available at our [main documentation website](https://adacompnus.github.io/summit).**
+**All tutorials and references are available at our [main documentation website](https://adacompnus.github.io/summit-docs).**
 
 License
 -------
