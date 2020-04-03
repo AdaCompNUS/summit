@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,6 +14,8 @@
 #include <memory>
 #include <mutex>
 #include <unordered_map>
+
+#include "carla/StringUtil.h"
 
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
@@ -32,6 +34,10 @@
 #include "carla/trafficmanager/PipelineStage.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/PerformanceDiagnostics.h"
+
+#include "carla/client/detail/ActorVariant.h"
+#include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/Simulator.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -84,8 +90,8 @@ namespace traffic_manager {
     Parameters &parameters;
     /// Reference to Carla's debug helper object.
     cc::DebugHelper &debug_helper;
-    /// Carla world object;
-    cc::World& world;
+    /// Reference to carla client connection object.
+    carla::client::detail::EpisodeProxy episode_proxy_ls;
     /// Structures to hold waypoint buffers for all vehicles.
     /// These are shared with the collisions stage.
     std::shared_ptr<BufferList> buffer_list;
@@ -114,12 +120,14 @@ namespace traffic_manager {
     std::unordered_map<ActorId, Actor> unregistered_actors;
     /// Code snippet execution time profiler.
     SnippetProfiler snippet_profiler;
+    /// Map to keep track of last lane change location.
+    std::unordered_map<ActorId, cg::Location> last_lane_change_location;
 
     /// A simple method used to draw waypoint buffer ahead of a vehicle.
     void DrawBuffer(Buffer &buffer);
 
     /// Method to determine lane change and obtain target lane waypoint.
-    SimpleWaypointPtr AssignLaneChange(Actor vehicle, bool force, bool direction);
+    SimpleWaypointPtr AssignLaneChange(Actor vehicle, const cg::Location &vehicle_location, bool force, bool direction);
 
     // When near an intersection, extends the buffer throughout all the
     // intersection to see if there is space after it
@@ -128,6 +136,7 @@ namespace traffic_manager {
     /// Methods to modify waypoint buffer and track traffic.
     void PushWaypoint(Buffer& buffer, ActorId actor_id, SimpleWaypointPtr& waypoint);
     void PopWaypoint(Buffer& buffer, ActorId actor_id);
+
     /// Method to scan for unregistered actors and update their grid positioning.
     void ScanUnregisteredVehicles();
 
@@ -140,15 +149,15 @@ namespace traffic_manager {
   public:
 
     LocalizationStage(
-        std::string stage_name,
-        std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
-        std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
-        std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
-        AtomicActorSet &registered_actors,
-        InMemoryMap &local_map,
-        Parameters &parameters,
-        cc::DebugHelper &debug_helper,
-        cc::World& world);
+      std::string stage_name,
+      std::shared_ptr<LocalizationToPlannerMessenger> planner_messenger,
+      std::shared_ptr<LocalizationToCollisionMessenger> collision_messenger,
+      std::shared_ptr<LocalizationToTrafficLightMessenger> traffic_light_messenger,
+      AtomicActorSet &registered_actors,
+      InMemoryMap &local_map,
+      Parameters &parameters,
+      carla::client::DebugHelper &debug_helper,
+      carla::client::detail::EpisodeProxy &episodeProxy);
 
     ~LocalizationStage();
 

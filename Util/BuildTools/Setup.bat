@@ -24,7 +24,7 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BOOST_VERSION=1.69.0
+set BOOST_VERSION=1.72.0
 set INSTALLERS_DIR=%ROOT_PATH%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH%Unreal\CarlaUE4\Content\Carla
@@ -185,7 +185,7 @@ rem ============================================================================
 FOR /F "tokens=2" %%i in (%VERSION_FILE%) do (
     set HASH=%%i
 )
-set URL=http://carla-assets-internal.s3.amazonaws.com/Content/%HASH%.tar.gz
+set URL=http://carla-assets.s3.amazonaws.com/%HASH%.tar.gz
 
 FOR /F "tokens=1 delims=:" %%i in (%VERSION_FILE%) do (
     set ASSETS_VERSION=%%i
@@ -208,7 +208,8 @@ set CMAKE_CONFIG_FILE="%INSTALLATION_DIR%CMakeLists.txt.in"
 >>"%CMAKE_CONFIG_FILE%" echo set(CMAKE_CXX_STANDARD 14)
 >>"%CMAKE_CONFIG_FILE%" echo set(CMAKE_CXX_STANDARD_REQUIRED ON)
 >>"%CMAKE_CONFIG_FILE%" echo.
->>"%CMAKE_CONFIG_FILE%" echo add_definitions(-D_WIN32_WINNT=0x0501)
+>>"%CMAKE_CONFIG_FILE%" echo add_definitions(-D_WIN32_WINNT=0x0600)
+>>"%CMAKE_CONFIG_FILE%" echo add_definitions(-DHAVE_SNPRINTF)
 >>"%CMAKE_CONFIG_FILE%" echo STRING (REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
