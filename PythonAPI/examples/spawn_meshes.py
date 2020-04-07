@@ -64,7 +64,7 @@ def spawn_meshes(client, dataset):
         bounds_max = carla.Vector2D(*[float(v) for v in f.readline().split(',')])
 
     commands = []
-    
+
     # Roadmark mesh.
     commands.append(carla.command.SpawnDynamicMesh(
         roadmark_occupancy.get_mesh_triangles(),
@@ -104,6 +104,10 @@ def spawn_meshes(client, dataset):
     client.get_world().debug.draw_box(box, carla.Rotation(), 2, carla.Color(255, 0, 0), -1.0)
 
     client.apply_batch_sync(commands)
+
+    client.get_world().get_spectator().set_transform(carla.Transform(
+        carla.Location((bounds_min.x + bounds_max.x) / 2, (bounds_min.y + bounds_max.y) / 2, 200),
+        carla.Rotation(-90, 0, 0)))
 
 def main(args):
 
