@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     print('Reading from OSM file and SUMO network...')
     sumo_network = carla.SumoNetwork.load(str(DATA_PATH/'{}.net.xml'.format(args.dataset)))
-    landmark_occupancies = carla.Landmark.load(
+    landmark_occupancies = carla.OsmLandmarks.load(
             str(DATA_PATH/'{}.osm'.format(args.dataset)), sumo_network.offset)
    
     print('Creating occupancy data...')

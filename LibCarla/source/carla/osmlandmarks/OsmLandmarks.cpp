@@ -1,4 +1,4 @@
-#include "Landmark.h"
+#include "OsmLandmarks.h"
 
 #include <osmium/geom/mercator_projection.hpp>
 #include <osmium/handler.hpp>
@@ -9,9 +9,9 @@
 #include <osmium/handler/node_locations_for_ways.hpp>
 
 namespace carla {
-namespace landmark {
+namespace osmlandmarks {
 
-std::vector<occupancy::OccupancyMap> Landmark::Load(const std::string& file, const geom::Vector2D& offset) {  
+std::vector<occupancy::OccupancyMap> OsmLandmarks::Load(const std::string& file, const geom::Vector2D& offset) {  
   osmium::io::File input_file{file};
   osmium::io::Reader reader{input_file, osmium::osm_entity_bits::node | osmium::osm_entity_bits::way};
 

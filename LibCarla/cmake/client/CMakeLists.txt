@@ -92,11 +92,11 @@ file(GLOB libcarla_carla_image_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_image_sources}")
 install(FILES ${libcarla_carla_image_sources} DESTINATION include/carla/image)
 
-file(GLOB libcarla_carla_landmark_sources
-    "${libcarla_source_path}/carla/landmark/*.cpp"
-    "${libcarla_source_path}/carla/landmark/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_landmark_sources}")
-install(FILES ${libcarla_carla_landmark_sources} DESTINATION include/carla/landmark)
+file(GLOB libcarla_carla_osmlandmarks_sources
+    "${libcarla_source_path}/carla/osmlandmarks/*.cpp"
+    "${libcarla_source_path}/carla/osmlandmarks/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_osmlandmarks_sources}")
+install(FILES ${libcarla_carla_osmlandmarks_sources} DESTINATION include/carla/osmlandmarks)
 
 file(GLOB libcarla_carla_lanenetwork_sources
     "${libcarla_source_path}/carla/lanenetwork/*.cpp"

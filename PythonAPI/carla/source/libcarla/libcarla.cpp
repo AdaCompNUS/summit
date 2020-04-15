@@ -199,7 +199,7 @@ static auto MakeCallback(boost::python::object callback) {
 #include "Geom.cpp"
 #include "Occupancy.cpp"
 #include "Gamma.cpp"
-#include "Landmark.cpp"
+#include "OsmLandmarks.cpp"
 #include "Segments.cpp"
 #include "AABB.cpp"
 #include "Actor.cpp"
@@ -230,7 +230,7 @@ BOOST_PYTHON_MODULE(libcarla) {
   export_geom();
   export_sumo_network();
   export_occupancy();
-  export_landmark();
+  export_osm_landmark();
   export_control();
   export_gamma();
   export_sidewalk();
