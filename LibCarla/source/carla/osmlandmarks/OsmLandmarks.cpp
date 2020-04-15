@@ -19,6 +19,7 @@ std::vector<occupancy::OccupancyMap> OsmLandmarks::Load(const std::string& file,
   using location_handler_type = osmium::handler::NodeLocationsForWays<index_type>;
   index_type index;
   location_handler_type location_handler{index};
+  location_handler.ignore_errors();
   
   struct CountHandler : public osmium::handler::Handler {
     
