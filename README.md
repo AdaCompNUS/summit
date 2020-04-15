@@ -1,4 +1,4 @@
-SUMMIT Simulator
+SUMMIT Simulator [doc](https://adacompnus.github.io/summit-docs)
 ===============
 
 ![summit](docs/img/cover.png)
