@@ -1107,7 +1107,7 @@ namespace RVO {
 				/* Result does not satisfy constraint of line i. */
 				std::vector<Line> projLines(lines.begin(), lines.begin() + static_cast<ptrdiff_t>(numObstLines));
 
-				for (size_t j = numObstLines; j < i; ++j) {
+				for (size_t j = beginLine; j < i; ++j) {
 					Line line;
 
 					float determinant = det(lines[i].direction, lines[j].direction);
