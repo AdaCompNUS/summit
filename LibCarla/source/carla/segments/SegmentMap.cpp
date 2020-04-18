@@ -32,6 +32,10 @@ void SegmentMap::Build() {
 
   _index_distribution = std::discrete_distribution<size_t>(weights.begin(), weights.end());
 }
+  
+bool SegmentMap::IsEmpty() const {
+  return boost::geometry::is_empty(_multi_linestring);
+}
 
 SegmentMap SegmentMap::Union(const SegmentMap& segment_map) const {
   SegmentMap result;

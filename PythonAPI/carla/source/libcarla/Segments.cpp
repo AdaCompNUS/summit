@@ -17,6 +17,7 @@ void export_segments() {
               stl_input_iterator<carla::geom::Segment2D>()};
             return boost::shared_ptr<SegmentMap>(new SegmentMap(segments));
           }))
+    .add_property("is_empty", make_function(&SegmentMap::IsEmpty)) 
     .def("seed_rand", &SegmentMap::SeedRand)
     .def("union", &SegmentMap::Union)
     .def("difference", &SegmentMap::Difference)

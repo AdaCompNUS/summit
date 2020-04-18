@@ -691,6 +691,8 @@ def do_spawn(c):
 
         for _ in range(SPAWN_DESTROY_REPETITIONS):
             spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+            if spawn_segments.is_empty:
+                continue
             spawn_segments.seed_rand(c.rng.getrandbits(32))
 
             path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
@@ -729,6 +731,8 @@ def do_spawn(c):
         
         for _ in range(SPAWN_DESTROY_REPETITIONS):
             spawn_segments = c.sumo_network_spawn_segments.difference(aabb_occupancy)
+            if spawn_segments.is_empty:
+                continue
             spawn_segments.seed_rand(c.rng.getrandbits(32))
 
             path = SumoNetworkAgentPath.rand_path(c.sumo_network, PATH_MIN_POINTS, PATH_INTERVAL, spawn_segments, rng=c.rng)
@@ -766,6 +770,8 @@ def do_spawn(c):
         
         for _ in range(SPAWN_DESTROY_REPETITIONS):
             spawn_segments = c.sidewalk_spawn_segments.difference(aabb_occupancy)
+            if spawn_segments.is_empty:
+                continue
             spawn_segments.seed_rand(c.rng.getrandbits(32))
 
             path = SidewalkAgentPath.rand_path(c.sidewalk, PATH_MIN_POINTS, PATH_INTERVAL, c.args.cross_probability, c.sidewalk_spawn_segments, c.rng)

@@ -27,6 +27,8 @@ public:
   SegmentMap();
   SegmentMap(const std::vector<geom::Segment2D>& segments);
 
+  bool IsEmpty() const;
+
   SegmentMap Union(const SegmentMap& segment_map) const;
   SegmentMap Difference(const occupancy::OccupancyMap& occupancy_map) const;
   SegmentMap Intersection(const occupancy::OccupancyMap& occupancy_map) const;
