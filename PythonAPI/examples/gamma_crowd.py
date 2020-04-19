@@ -44,15 +44,45 @@ CONTROL_MAX_RATE = 20.0
 COLLISION_STATISTICS_MAX_RATE = 5.0
 SPAWN_DESTROY_REPETITIONS = 3
 
-CAR_SPEED_KP = 1.2 * 0.8 # 1.5
-CAR_SPEED_KI = 0.5 * 0.8
-CAR_SPEED_KD = 0.2 * 0.8 # 0.005
-CAR_STEER_KP = 1.5 # 2.5
+# Ziegler-Nichols tuning params: K_p, T_u
+CAR_SPEED_PID_PROFILES = {
+    'vehicle.volkswagen.t2': [0.5, 25.0 / 25],
+    'vehicle.carlamotors.carlacola': [1.0, 25.0 / 25],
+    'vehicle.jeep.wrangler_rubicon': [0.5, 25.0 / 27],
+    'vehicle.nissan.patrol': [0.5, 25.0 / 24],
+    'vehicle.tesla.cybertruck': [1.0, 25.0 / 28],
+    'default': [0.6, 25.0 / 34]
+}
+BIKE_SPEED_PID_PROFILES = {
+    'vehicle.diamondback.century': [0.5, 20.0 / 23.0],
+    'vehicle.gazelle.omafiets': [0.5, 20.0 / 23.0],
+    'vehicle.harley-davidson.low_rider': [0.5, 20.0 / 23.0],
+    'vehicle.bh.crossbike': [0.5, 20.0 / 23.0],
+    'default': [0.25, 25.0 / 35.0]
+}
 
-BIKE_SPEED_KP = 1.2 * 0.8 # 1.5
-BIKE_SPEED_KI = 0.5 * 0.8
-BIKE_SPEED_KD = 0.2 * 0.8 # 0.005
-BIKE_STEER_KP = 1.5 # 2.5
+# Convert (K_p, T_u) -> (K_p, K_i, K_d)
+for (k, v) in CAR_SPEED_PID_PROFILES.items():
+    CAR_SPEED_PID_PROFILES[k] = [v[0], v[0] * 0.666 / v[1] * 3.0, v[0] / 9.0 * v[1] * 3.0]
+for (k, v) in BIKE_SPEED_PID_PROFILES.items():
+    BIKE_SPEED_PID_PROFILES[k] = [v[0], v[0] * 0.666 / v[1] * 3.0, v[0] / 9.0 * v[1] * 3.0]
+
+def get_car_pid_profile(blueprint_id):
+    result = CAR_SPEED_PID_PROFILES.get(blueprint_id)
+    if result is not None:
+        return result
+    else:
+        return CAR_SPEED_PID_PROFILES['default']
+
+def get_bike_pid_profile(blueprint_id):
+    result = BIKE_SPEED_PID_PROFILES.get(blueprint_id)
+    if result is not None:
+        return result
+    else:
+        return BIKE_SPEED_PID_PROFILES['default']
+
+CAR_STEER_KP = 1.5
+BIKE_STEER_KP = 1.0
 
 Pyro4.config.SERIALIZERS_ACCEPTED.add('serpent')
 Pyro4.config.SERIALIZER = 'serpent'
@@ -1168,9 +1198,7 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             # Add to integral.
             pid_integrals[actor_id] += speed_error * dt
 
-            kp = CAR_SPEED_KP if type_tag == 'Car' else BIKE_SPEED_KP
-            ki = CAR_SPEED_KI if type_tag == 'Car' else BIKE_SPEED_KI
-            kd = CAR_SPEED_KD if type_tag == 'Car' else BIKE_SPEED_KD
+            (kp, ki, kd) = get_car_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_pid_profile(actor.type_id)
             steer_kp = CAR_STEER_KP if type_tag == 'Car' else BIKE_STEER_KP
 
             # Calculate output.
@@ -1444,13 +1472,13 @@ if __name__ == '__main__':
         type=int)
     argparser.add_argument(
         '--clearance-car',
-        default='7.0',
-        help='Minimum clearance (m) when spawning a car (default: 7.0)',
+        default='10.0',
+        help='Minimum clearance (m) when spawning a car (default: 10.0)',
         type=float)
     argparser.add_argument(
         '--clearance-bike',
-        default='7.0',
-        help='Minimum clearance (m) when spawning a bike (default: 7.0)',
+        default='10.0',
+        help='Minimum clearance (m) when spawning a bike (default: 10.0)',
         type=float)
     argparser.add_argument(
         '--clearance-pedestrian',
