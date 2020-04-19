@@ -1191,16 +1191,18 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             speed = get_velocity(actor).length()
             target_speed = control_velocity.length()
             control = actor.get_control()
+            (kp, ki, kd) = get_car_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_pid_profile(actor.type_id)
+            steer_kp = CAR_STEER_KP if type_tag == 'Car' else BIKE_STEER_KP
+
+            # Clip to stabilize PID against sudden changes in GAMMA.
+            target_speed = np.clip(target_speed, speed - 1.0, speed + 1.0) 
 
             # Calculate error.
             speed_error = target_speed - speed
 
-            # Add to integral.
-            pid_integrals[actor_id] += speed_error * dt
-
-            (kp, ki, kd) = get_car_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_pid_profile(actor.type_id)
-            steer_kp = CAR_STEER_KP if type_tag == 'Car' else BIKE_STEER_KP
-
+            # Add to integral. Clip to stablize integral term.
+            pid_integrals[actor_id] += np.clip(speed_error, -0.3 / kp, 0.3 / kp) * dt 
+            
             # Calculate output.
             speed_control = kp * speed_error + ki * pid_integrals[actor_id]
             if pid_last_update_time is not None and actor_id in pid_last_errors:
