@@ -46,26 +46,96 @@ SPAWN_DESTROY_REPETITIONS = 3
 
 # Ziegler-Nichols tuning params: K_p, T_u
 CAR_SPEED_PID_PROFILES = {
-    'vehicle.volkswagen.t2': [0.5, 25.0 / 25],
-    'vehicle.carlamotors.carlacola': [1.0, 25.0 / 25],
-    'vehicle.jeep.wrangler_rubicon': [0.5, 25.0 / 27],
-    'vehicle.nissan.patrol': [0.5, 25.0 / 24],
-    'vehicle.tesla.cybertruck': [1.0, 25.0 / 28],
-    'default': [0.6, 25.0 / 34]
+    'vehicle.volkswagen.t2': [1.5, 25.0 / 25],
+    'vehicle.carlamotors.carlacola': [3.0, 25.0 / 25],
+    'vehicle.jeep.wrangler_rubicon': [1.5, 25.0 / 27],
+    'vehicle.nissan.patrol': [1.5, 25.0 / 24],
+    # 'vehicle.tesla.cybertruck': [3.0, 25.0 / 28],
+    'vehicle.chevrolet.impala': [0.8, 20.0 / 17],
+    'vehicle.audi.tt': [0.8, 20.0 / 15],
+    'vehicle.mustang.mustang': [1.0, 20.0 / 15],
+    'vehicle.citroen.c3': [0.7, 20.0 / 14],
+    'vehicle.toyota.prius': [1.2, 20.0 / 15],
+    'vehicle.dodge_charger.police': [1.0, 20.0 /17],
+    'vehicle.mini.cooperst': [0.8, 20.0 / 14],
+    'vehicle.audi.a2': [0.8, 20.0 / 18],
+    'vehicle.nissan.micra': [0.8, 20.0 / 19],
+    'vehicle.seat.leon': [0.8, 20.0 / 16],
+    'vehicle.tesla.model3': [1.5, 20.0 / 16],
+    'vehicle.mercedes-benz.coupe': [0.8, 20.0 / 15],
+    'vehicle.lincoln.mkz2017': [1.3, 20.0 / 15],
+    'vehicle.bmw.grandtourer': [1.5, 20.0 / 16],
+    'default': [1.6, 25.0 / 34]
 }
+
 BIKE_SPEED_PID_PROFILES = {
-    'vehicle.diamondback.century': [0.5, 20.0 / 23.0],
-    'vehicle.gazelle.omafiets': [0.5, 20.0 / 23.0],
-    'vehicle.harley-davidson.low_rider': [0.5, 20.0 / 23.0],
-    'vehicle.bh.crossbike': [0.5, 20.0 / 23.0],
-    'default': [0.25, 25.0 / 35.0]
+    'vehicle.diamondback.century': [1.5, 20.0 / 23.0],
+    'vehicle.gazelle.omafiets': [1.5, 20.0 / 23.0],
+    'vehicle.bh.crossbike': [1.5, 20.0 / 23.0],
+    'default': [0.75, 25.0 / 35.0]
+}
+
+
+CAR_STEER_PID_PROFILES = {
+    'vehicle.volkswagen.t2': [2.5, 10.0 / 13],
+    'vehicle.carlamotors.carlacola': [2.5, 10.0 / 15],
+    'vehicle.jeep.wrangler_rubicon': [2.8, 10.0 / 17],
+    'vehicle.nissan.patrol': [3.2, 10.0 / 14],
+    # 'vehicle.tesla.cybertruck': [4.0, 10.0 / 16.0],
+    'vehicle.audi.etron': [3.0, 10.0 / 15],
+    'vehicle.chevrolet.impala': [2.5, 10.0 / 19],
+    'vehicle.audi.tt': [2.3, 10.0 / 20],
+    'vehicle.mustang.mustang': [2.8, 10.0/ 19],
+    'vehicle.citroen.c3': [2.0, 10.0 / 17],
+    'vehicle.toyota.prius': [2.1, 10.0 / 18],
+    'vehicle.dodge_charger.police': [2.3, 10.0 / 21],
+    'vehicle.mini.cooperst': [2.0, 10.0 / 16],
+    'vehicle.audi.a2': [2.0, 10.0 / 18],
+    'vehicle.nissan.micra': [3.3, 10.0 / 23],
+    'vehicle.seat.leon': [2.2, 10.0 / 20],
+    'vehicle.tesla.model3': [2.7, 10.0 / 19],
+    'vehicle.mercedes-benz.coupe': [2.7, 10.0 / 20],
+    'vehicle.lincoln.mkz2017': [2.7, 10.0 / 16],
+    'vehicle.bmw.grandtourer': [2.7, 10.0/ 17],
+    'default': [2.8, 10.0 / 15]
+}
+
+BIKE_STEER_PID_PROFILES = {
+    'vehicle.diamondback.century': [1.7, 10.0 / 8],
+    'vehicle.gazelle.omafiets': [1.7, 10.0 / 8],
+    'vehicle.harley-davidson.low_rider': [1.5, 10.0 / 9],
+    'vehicle.bh.crossbike': [2.5, 10.0 / 8.0],
+    'default': [2.0, 10.0 / 9]
 }
 
 # Convert (K_p, T_u) -> (K_p, K_i, K_d)
 for (k, v) in CAR_SPEED_PID_PROFILES.items():
-    CAR_SPEED_PID_PROFILES[k] = [v[0], v[0] * 0.666 / v[1] * 3.0, v[0] / 9.0 * v[1] * 3.0]
+    # CAR_SPEED_PID_PROFILES[k] = [v[0], 0.0, 0.0]
+    CAR_SPEED_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
+    # CAR_SPEED_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshoot
+
 for (k, v) in BIKE_SPEED_PID_PROFILES.items():
-    BIKE_SPEED_PID_PROFILES[k] = [v[0], v[0] * 0.666 / v[1] * 3.0, v[0] / 9.0 * v[1] * 3.0]
+    BIKE_SPEED_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
+    # BIKE_SPEED_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshoot
+
+
+for (k, v) in CAR_STEER_PID_PROFILES.items():
+    # CAR_STEER_PID_PROFILES[k] = [v[0], 0.0, 0.0]
+    # CAR_STEER_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
+    # CAR_STEER_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshhot
+    # CAR_STEER_PID_PROFILES[k] = [0.6 * v[0], 1.2 * v[0] / v[1], 3.0/ 40.0 * v[0] * v[1]] # classic PID
+    # CAR_STEER_PID_PROFILES[k] = [0.8 * v[0], 0.0,  v[0] * v[1] / 10.0 ] # PD
+    CAR_STEER_PID_PROFILES[k] = [0.45 * v[0], 0.54 * v[0] / v[1], 0.0 ] # PI
+
+
+for (k, v) in BIKE_STEER_PID_PROFILES.items():
+    # BIKE_STEER_PID_PROFILES[k] = [v[0], 0.0, 0.0]
+    # BIKE_STEER_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]]
+    # BIKE_STEER_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]]
+    # BIKE_STEER_PID_PROFILES[k] = [0.45 * v[0], 0.54 * v[0] / v[1], 0.0 ] # PI
+    BIKE_STEER_PID_PROFILES[k] = [0.8 * v[0], 0.0,  v[0] * v[1] / 10.0 ] # PD
+
+
 
 def get_car_pid_profile(blueprint_id):
     result = CAR_SPEED_PID_PROFILES.get(blueprint_id)
@@ -80,6 +150,20 @@ def get_bike_pid_profile(blueprint_id):
         return result
     else:
         return BIKE_SPEED_PID_PROFILES['default']
+
+def get_car_spid_profile(blueprint_id):
+    result = CAR_STEER_PID_PROFILES.get(blueprint_id)
+    if result is not None:
+        return result
+    else:
+        return CAR_STEER_PID_PROFILES['default']
+
+def get_bike_spid_profile(blueprint_id):
+    result = BIKE_STEER_PID_PROFILES.get(blueprint_id)
+    if result is not None:
+        return result
+    else:
+        return BIKE_STEER_PID_PROFILES['default']
 
 CAR_STEER_KP = 1.5
 BIKE_STEER_KP = 1.0
@@ -654,7 +738,7 @@ class Context(object):
         self.pedestrian_blueprints = self.world.get_blueprint_library().filter('walker.pedestrian.*')
         self.vehicle_blueprints = self.world.get_blueprint_library().filter('vehicle.*')
         self.car_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 4]
-        self.car_blueprints = [x for x in self.car_blueprints if x.id not in ['vehicle.bmw.isetta']] # This dude moves too slow.
+        self.car_blueprints = [x for x in self.car_blueprints if x.id not in ['vehicle.bmw.isetta', 'vehicle.tesla.cybertruck']] # This dude moves too slow.
         self.bike_blueprints = [x for x in self.vehicle_blueprints if int(x.get_attribute('number_of_wheels')) == 2]
 
 class Statistics(object):
@@ -1157,8 +1241,7 @@ def get_ttc_vel(agent, agents, pref_vel):
     return None
 
 
-
-def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
+def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_integrals, spid_last_errors):
     start = time.time()
 
     c.crowd_service.acquire_control_velocities()
@@ -1173,12 +1256,17 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
         dt = cur_time - pid_last_update_time
 
     for (actor_id, type_tag, control_velocity, preferred_speed, steer_angle_range) in control_velocities:
+
         actor = c.world.get_actor(actor_id)
         if actor is None:
             if actor_id in pid_integrals:
                 del pid_integrals[actor_id]
             if actor_id in pid_last_errors:
                 del pid_last_errors[actor_id]
+            if actor_id in spid_integrals:
+                del spid_integrals[actor_id]
+            if actor_id in spid_last_errors:
+                del spid_last_errors[actor_id]
             continue
 
         cur_vel = get_velocity(actor)
@@ -1192,24 +1280,35 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
             target_speed = control_velocity.length()
             control = actor.get_control()
             (kp, ki, kd) = get_car_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_pid_profile(actor.type_id)
-            steer_kp = CAR_STEER_KP if type_tag == 'Car' else BIKE_STEER_KP
-
+            (skp, ski, skd) = get_car_spid_profile(actor.type_id) if type_tag == 'Car' else get_bike_spid_profile(actor.type_id)
+            
             # Clip to stabilize PID against sudden changes in GAMMA.
             target_speed = np.clip(target_speed, speed - 1.0, speed + 1.0) 
+            heading = math.atan2(cur_vel.y, cur_vel.x)
+            heading_error = np.deg2rad(get_signed_angle_diff(control_velocity, cur_vel))
+            target_heading = heading + heading_error
 
             # Calculate error.
             speed_error = target_speed - speed
+            heading_error = target_heading - heading
+            heading_error = np.clip(heading_error, -1.0, 1.0)
 
             # Add to integral. Clip to stablize integral term.
             pid_integrals[actor_id] += np.clip(speed_error, -0.3 / kp, 0.3 / kp) * dt 
-            
+            if speed > 1.5:
+                spid_integrals[actor_id] += np.clip(heading_error, -0.3 / skp, 0.3 / skp) * dt 
+
             # Calculate output.
             speed_control = kp * speed_error + ki * pid_integrals[actor_id]
+            steer_control = skp * heading_error + ski * spid_integrals[actor_id]
             if pid_last_update_time is not None and actor_id in pid_last_errors:
                 speed_control += kd * (speed_error - pid_last_errors[actor_id]) / dt
-            
+            if pid_last_update_time is not None and actor_id in spid_last_errors:
+                steer_control += skd * (heading_error - spid_last_errors[actor_id]) / dt
+
             # Update history.
             pid_last_errors[actor_id] = speed_error
+            spid_last_errors[actor_id] = heading_error
 
             # Set control.
             if speed_control >= 0:
@@ -1220,11 +1319,8 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time):
                 control.throttle = 0.0
                 control.brake = -speed_control
                 control.hand_brake = False
-            control.steer = np.clip(
-                    np.clip(
-                        steer_kp * get_signed_angle_diff(control_velocity, get_forward_direction(actor)), 
-                        -45.0, 45.0) / steer_angle_range,
-                    -1.0, 1.0)
+
+            control.steer = np.clip( steer_control, -1.0, 1.0)
             control.manual_gear_shift = True # DO NOT REMOVE: Reduces transmission lag.
             control.gear = 1 # DO NOT REMOVE: Reduces transmission lag.
             
@@ -1290,9 +1386,12 @@ def control_loop(args):
         pid_last_errors = defaultdict(float)
         pid_last_update_time = None 
 
+        spid_integrals = defaultdict(float)
+        spid_last_errors = defaultdict(float)
+
         while True:
             start = time.time()
-            pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time)
+            pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_integrals, spid_last_errors)
             time.sleep(max(0, 1 / CONTROL_MAX_RATE - (time.time() - start))) # 20 Hz
             # print('({}) Control rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
