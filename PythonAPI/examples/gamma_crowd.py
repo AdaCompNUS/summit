@@ -137,28 +137,28 @@ for (k, v) in BIKE_STEER_PID_PROFILES.items():
 
 
 
-def get_car_pid_profile(blueprint_id):
+def get_car_speed_pid_profile(blueprint_id):
     result = CAR_SPEED_PID_PROFILES.get(blueprint_id)
     if result is not None:
         return result
     else:
         return CAR_SPEED_PID_PROFILES['default']
 
-def get_bike_pid_profile(blueprint_id):
+def get_bike_speed_pid_profile(blueprint_id):
     result = BIKE_SPEED_PID_PROFILES.get(blueprint_id)
     if result is not None:
         return result
     else:
         return BIKE_SPEED_PID_PROFILES['default']
 
-def get_car_spid_profile(blueprint_id):
+def get_car_steer_pid_profile(blueprint_id):
     result = CAR_STEER_PID_PROFILES.get(blueprint_id)
     if result is not None:
         return result
     else:
         return CAR_STEER_PID_PROFILES['default']
 
-def get_bike_spid_profile(blueprint_id):
+def get_bike_steer_pid_profile(blueprint_id):
     result = BIKE_STEER_PID_PROFILES.get(blueprint_id)
     if result is not None:
         return result
@@ -1241,7 +1241,7 @@ def get_ttc_vel(agent, agents, pref_vel):
     return None
 
 
-def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_integrals, spid_last_errors):
+def do_control(c, speed_pid_integrals, speed_pid_last_errors, steer_pid_integrals, steer_pid_last_errors, pid_last_update_time):
     start = time.time()
 
     c.crowd_service.acquire_control_velocities()
@@ -1259,14 +1259,14 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_int
 
         actor = c.world.get_actor(actor_id)
         if actor is None:
-            if actor_id in pid_integrals:
-                del pid_integrals[actor_id]
-            if actor_id in pid_last_errors:
-                del pid_last_errors[actor_id]
-            if actor_id in spid_integrals:
-                del spid_integrals[actor_id]
-            if actor_id in spid_last_errors:
-                del spid_last_errors[actor_id]
+            if actor_id in speed_pid_integrals:
+                del speed_pid_integrals[actor_id]
+            if actor_id in speed_pid_last_errors:
+                del speed_pid_last_errors[actor_id]
+            if actor_id in steer_pid_integrals:
+                del steer_pid_integrals[actor_id]
+            if actor_id in steer_pid_last_errors:
+                del steer_pid_last_errors[actor_id]
             continue
 
         cur_vel = get_velocity(actor)
@@ -1279,8 +1279,8 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_int
             speed = get_velocity(actor).length()
             target_speed = control_velocity.length()
             control = actor.get_control()
-            (kp, ki, kd) = get_car_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_pid_profile(actor.type_id)
-            (skp, ski, skd) = get_car_spid_profile(actor.type_id) if type_tag == 'Car' else get_bike_spid_profile(actor.type_id)
+            (speed_kp, speed_ki, speed_kd) = get_car_speed_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_speed_pid_profile(actor.type_id)
+            (steer_kp, steer_ki, steer_kd) = get_car_steer_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_steer_pid_profile(actor.type_id)
             
             # Clip to stabilize PID against sudden changes in GAMMA.
             target_speed = np.clip(target_speed, speed - 1.0, speed + 1.0) 
@@ -1294,21 +1294,23 @@ def do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_int
             heading_error = np.clip(heading_error, -1.0, 1.0)
 
             # Add to integral. Clip to stablize integral term.
-            pid_integrals[actor_id] += np.clip(speed_error, -0.3 / kp, 0.3 / kp) * dt 
-            if speed > 1.5:
-                spid_integrals[actor_id] += np.clip(heading_error, -0.3 / skp, 0.3 / skp) * dt 
+            speed_pid_integrals[actor_id] += np.clip(speed_error, -0.3 / speed_kp, 0.3 / speed_kp) * dt 
+            steer_pid_integrals[actor_id] += np.clip(heading_error, -0.3 / steer_kp, 0.3 / steer_kp) * dt 
+
+            # Clip integral to prevent integral windup.
+            steer_pid_integrals[actor_id] = np.clip(steer_pid_integrals[actor_id], -0.01, 0.01)
 
             # Calculate output.
-            speed_control = kp * speed_error + ki * pid_integrals[actor_id]
-            steer_control = skp * heading_error + ski * spid_integrals[actor_id]
-            if pid_last_update_time is not None and actor_id in pid_last_errors:
-                speed_control += kd * (speed_error - pid_last_errors[actor_id]) / dt
-            if pid_last_update_time is not None and actor_id in spid_last_errors:
-                steer_control += skd * (heading_error - spid_last_errors[actor_id]) / dt
+            speed_control = speed_kp * speed_error + speed_ki * speed_pid_integrals[actor_id]
+            steer_control = steer_kp * heading_error + steer_ki * steer_pid_integrals[actor_id]
+            if pid_last_update_time is not None and actor_id in speed_pid_last_errors:
+                speed_control += speed_kd * (speed_error - speed_pid_last_errors[actor_id]) / dt
+            if pid_last_update_time is not None and actor_id in steer_pid_last_errors:
+                steer_control += steer_kd * (heading_error - steer_pid_last_errors[actor_id]) / dt
 
             # Update history.
-            pid_last_errors[actor_id] = speed_error
-            spid_last_errors[actor_id] = heading_error
+            speed_pid_last_errors[actor_id] = speed_error
+            steer_pid_last_errors[actor_id] = heading_error
 
             # Set control.
             if speed_control >= 0:
@@ -1382,16 +1384,17 @@ def control_loop(args):
         c = Context(args)
         print('Control loop running.')
                 
-        pid_integrals = defaultdict(float)
-        pid_last_errors = defaultdict(float)
+        speed_pid_integrals = defaultdict(float)
+        speed_pid_last_errors = defaultdict(float)
         pid_last_update_time = None 
 
-        spid_integrals = defaultdict(float)
-        spid_last_errors = defaultdict(float)
+        steer_pid_integrals = defaultdict(float)
+        steer_pid_last_errors = defaultdict(float)
 
         while True:
             start = time.time()
-            pid_last_update_time = do_control(c, pid_integrals, pid_last_errors, pid_last_update_time, spid_integrals, spid_last_errors)
+            pid_last_update_time = do_control(c, speed_pid_integrals, speed_pid_last_errors, 
+                    steer_pid_integrals, steer_pid_last_errors, pid_last_update_time)
             time.sleep(max(0, 1 / CONTROL_MAX_RATE - (time.time() - start))) # 20 Hz
             # print('({}) Control rate: {} Hz'.format(os.getpid(), 1 / max(time.time() - start, 0.001)))
     except Pyro4.errors.ConnectionClosedError:
