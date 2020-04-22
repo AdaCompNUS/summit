@@ -1298,7 +1298,7 @@ def do_control(c, speed_pid_integrals, speed_pid_last_errors, steer_pid_integral
             steer_pid_integrals[actor_id] += np.clip(heading_error, -0.3 / steer_kp, 0.3 / steer_kp) * dt 
 
             # Clip integral to prevent integral windup.
-            steer_pid_integrals[actor_id] = np.clip(steer_pid_integrals[actor_id], -0.01, 0.01)
+            steer_pid_integrals[actor_id] = np.clip(steer_pid_integrals[actor_id], -0.02, 0.02)
 
             # Calculate output.
             speed_control = speed_kp * speed_error + speed_ki * speed_pid_integrals[actor_id]
