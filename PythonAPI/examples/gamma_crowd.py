@@ -934,7 +934,7 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents, statistics):
     for (actor_id, route_points, steer_angle_range) in c.crowd_service.new_cars:
         path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
         new_car_agents.append(Agent(
-            c.world.get_actor(actor_id), 'Car', path, 5.0 + c.rng.uniform(-0.5, 0.5),
+            c.world.get_actor(actor_id), 'Car', path, c.args.speed_car + c.rng.uniform(-0.5, 0.5),
             steer_angle_range, rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_cars = []
     c.crowd_service.spawn_car = len(car_agents) < c.args.num_car
@@ -944,7 +944,7 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents, statistics):
     for (actor_id, route_points, steer_angle_range) in c.crowd_service.new_bikes:
         path = SumoNetworkAgentPath(route_points, PATH_MIN_POINTS, PATH_INTERVAL)
         new_bike_agents.append(Agent(
-            c.world.get_actor(actor_id), 'Bicycle', path, 3.0 + c.rng.uniform(-0.5, 0.5),
+            c.world.get_actor(actor_id), 'Bicycle', path, c.args.speed_bike + c.rng.uniform(-0.5, 0.5),
             steer_angle_range, rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_bikes = []
     c.crowd_service.spawn_bike = len(bike_agents) < c.args.num_bike
@@ -955,7 +955,7 @@ def pull_new_agents(c, car_agents, bike_agents, pedestrian_agents, statistics):
         path = SidewalkAgentPath(route_points, route_orientations, PATH_MIN_POINTS, PATH_INTERVAL)
         path.resize(c.sidewalk, c.args.cross_probability)
         new_pedestrian_agents.append(Agent(
-            c.world.get_actor(actor_id), 'People', path, 1.0 + c.rng.uniform(-0.5, 0.5),
+            c.world.get_actor(actor_id), 'People', path, c.args.speed_pedestrian + c.rng.uniform(-0.5, 0.5),
             rand=c.rng.uniform(0.0, 1.0)))
     c.crowd_service.new_pedestrians = []
     c.crowd_service.spawn_pedestrian = len(pedestrian_agents) < c.args.num_pedestrian
@@ -1574,6 +1574,21 @@ if __name__ == '__main__':
         default='20',
         help='Number of pedestrians to spawn (default: 20)',
         type=int)
+    argparser.add_argument(
+        '--speed-car',
+        default='4.0',
+        help='Mean preferred_speed of cars',
+        type=float)
+    argparser.add_argument(
+        '--speed-bike',
+        default='2.0',
+        help='Mean preferred_speed of bikes',
+        type=float)
+    argparser.add_argument(
+        '--speed-pedestrian',
+        default='1.0',
+        help='Mean preferred_speed of pedestrains',
+        type=float)
     argparser.add_argument(
         '--clearance-car',
         default='10.0',
