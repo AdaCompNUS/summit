@@ -110,30 +110,22 @@ BIKE_STEER_PID_PROFILES = {
 
 # Convert (K_p, T_u) -> (K_p, K_i, K_d)
 for (k, v) in CAR_SPEED_PID_PROFILES.items():
-    # CAR_SPEED_PID_PROFILES[k] = [v[0], 0.0, 0.0]
-    CAR_SPEED_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
+    scale = 1.0
+    CAR_SPEED_PID_PROFILES[k] = [0.8 * v[0] * scale, 0.0,  v[0] * v[1] / 10.0 * scale] # PD
     # CAR_SPEED_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshoot
 
 for (k, v) in BIKE_SPEED_PID_PROFILES.items():
-    BIKE_SPEED_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
-    # BIKE_SPEED_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshoot
+    BIKE_SPEED_PID_PROFILES[k] = [v[0] / 2.0, 0.0, 0.0] # p
 
 
 for (k, v) in CAR_STEER_PID_PROFILES.items():
-    # CAR_STEER_PID_PROFILES[k] = [v[0], 0.0, 0.0]
-    # CAR_STEER_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]] # some overshhot
-    # CAR_STEER_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]] # no overshhot
-    # CAR_STEER_PID_PROFILES[k] = [0.6 * v[0], 1.2 * v[0] / v[1], 3.0/ 40.0 * v[0] * v[1]] # classic PID
-    # CAR_STEER_PID_PROFILES[k] = [0.8 * v[0], 0.0,  v[0] * v[1] / 10.0 ] # PD
-    CAR_STEER_PID_PROFILES[k] = [0.45 * v[0], 0.54 * v[0] / v[1], 0.0 ] # PI
+    scale = 0.9
+    CAR_STEER_PID_PROFILES[k] = [v[0] / 2.0, 0.0, 0.0]
 
 
 for (k, v) in BIKE_STEER_PID_PROFILES.items():
-    # BIKE_STEER_PID_PROFILES[k] = [v[0], 0.0, 0.0]
-    # BIKE_STEER_PID_PROFILES[k] = [v[0] / 3.0, v[0] * 0.666 / v[1], v[0] / 9.0 * v[1]]
-    # BIKE_STEER_PID_PROFILES[k] = [v[0] / 5.0, v[0] * 2.0 / 5.0 / v[1], v[0] / 15.0 * v[1]]
-    # BIKE_STEER_PID_PROFILES[k] = [0.45 * v[0], 0.54 * v[0] / v[1], 0.0 ] # PI
-    BIKE_STEER_PID_PROFILES[k] = [0.8 * v[0], 0.0,  v[0] * v[1] / 10.0 ] # PD
+    scale = 0.9
+    BIKE_STEER_PID_PROFILES[k] = [0.8 * v[0] * scale, 0.0,  v[0] * v[1] / 10.0 * scale ] # PD
 
 
 
@@ -1091,7 +1083,15 @@ def do_gamma(c, car_agents, bike_agents, pedestrian_agents, destroy_list):
                 else:
                     continue
 
-                gamma.add_agent(carla.AgentParams.get_default(type_tag), gamma_id)
+                agent_params = carla.AgentParams.get_default(type_tag)
+                if type_tag == 'Bicycle':                                                                                                                        
+                    agent_params.max_speed = c.args.speed_bike
+                elif type_tag == 'Car':
+                    agent_params.max_speed = c.args.speed_car
+                elif type_tag == 'People':
+                    agent_params.max_speed = c.args.speed_pedestrian
+
+                gamma.add_agent(agent_params, gamma_id) 
                 gamma.set_agent_position(gamma_id, get_position(actor))
                 gamma.set_agent_velocity(gamma_id, get_velocity(actor))
                 gamma.set_agent_heading(gamma_id, get_forward_direction(actor))
@@ -1283,7 +1283,10 @@ def do_control(c, speed_pid_integrals, speed_pid_last_errors, steer_pid_integral
             (steer_kp, steer_ki, steer_kd) = get_car_steer_pid_profile(actor.type_id) if type_tag == 'Car' else get_bike_steer_pid_profile(actor.type_id)
             
             # Clip to stabilize PID against sudden changes in GAMMA.
-            target_speed = np.clip(target_speed, speed - 1.0, speed + 1.0) 
+            if type_tag == 'Car':
+                target_speed = np.clip(target_speed, speed - 2.0, min(speed + 1.0, c.args.speed_car)) 
+            if type_tag == 'Bicycle':
+                target_speed = np.clip(target_speed, speed - 1.5, min(speed + 1.0, c.args.speed_bike)) 
             heading = math.atan2(cur_vel.y, cur_vel.x)
             heading_error = np.deg2rad(get_signed_angle_diff(control_velocity, cur_vel))
             target_heading = heading + heading_error
@@ -1291,7 +1294,7 @@ def do_control(c, speed_pid_integrals, speed_pid_last_errors, steer_pid_integral
             # Calculate error.
             speed_error = target_speed - speed
             heading_error = target_heading - heading
-            heading_error = np.clip(heading_error, -1.0, 1.0)
+            # heading_error = np.clip(heading_error, -1.5, 1.5)
 
             # Add to integral. Clip to stablize integral term.
             speed_pid_integrals[actor_id] += np.clip(speed_error, -0.3 / speed_kp, 0.3 / speed_kp) * dt 
