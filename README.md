@@ -36,11 +36,13 @@ Yuanfu Luo, David Hsu; To appear at ICRA 2020
 
 
 ```
-@article{cai2019summit,
+@inproceedings{cai2020summit,
   title={SUMMIT: A Simulator for Urban Driving in Massive Mixed Traffic},
   author={Cai, Panpan and Lee, Yiyuan and Luo, Yuanfu and Hsu, David},
-  journal={arXiv preprint arXiv:1911.04074},
-  year={2019}
+  booktitle={2020 IEEE International Conference on Robotics and Automation (ICRA)},
+  pages={4023--4029},
+  year={2020},
+  organization={IEEE}
 }
 ```
 
