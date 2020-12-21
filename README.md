@@ -31,7 +31,7 @@ Paper
 If you use SUMMIT, please cite our ICRA’2020 paper.
 
 _SUMMIT: A Simulator for Urban Driving in Massive Mixed Traffic_<br>Panpan Cai, Yiyuan Lee,
-Yuanfu Luo, David Hsu; 2020 IEEE International Conference on Robotics and Automation (ICRA). IEEE, 2020.
+Yuanfu Luo, David Hsu; 2020 IEEE International Conference on Robotics and Automation (ICRA).
 [[PDF](https://arxiv.org/abs/1911.04074)]
 
 
