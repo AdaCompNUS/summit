@@ -61,7 +61,7 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width,
       boost::geometry::strategy::buffer::join_round(18),
       boost::geometry::strategy::buffer::end_flat(),
       boost::geometry::strategy::buffer::point_circle(18));
-  
+
   b_multi_polygon_t outline_inner;
   boost::geometry::buffer(outline[0].outer(), outline_inner,
       boost::geometry::strategy::buffer::distance_symmetric<float>(-thickness / 2),
@@ -69,10 +69,10 @@ OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& line, float width,
       boost::geometry::strategy::buffer::join_round(18),
       boost::geometry::strategy::buffer::end_flat(),
       boost::geometry::strategy::buffer::point_circle(18));
-  
+
   boost::geometry::difference(outline_outer, outline_inner, _multi_polygon);
 }
-  
+
 OccupancyMap::OccupancyMap(const std::vector<geom::Vector2D>& polygon) {
   // Convert into b_multi_polygon_t.
   _multi_polygon.emplace_back();
@@ -90,7 +90,7 @@ OccupancyMap::OccupancyMap(const geom::Vector2D& bounds_min, const geom::Vector2
       bounds_max, geom::Vector2D(bounds_max.x, bounds_min.y)}) {
 
 }
-  
+
 OccupancyMap OccupancyMap::Load(const std::string& file) {
   std::ifstream ifs;
   ifs.open(file, std::ios::in);
@@ -173,11 +173,11 @@ OccupancyMap OccupancyMap::Load(const std::string& file) {
 void OccupancyMap::Save(const std::string& file) const {
   std::ofstream ofs;
   ofs.open(file, std::ios::out | std::ios::trunc);
-  
+
   ofs << '(';
   for (const b_polygon_t& polygon : _multi_polygon) {
     ofs << '(';
-    
+
     ofs << '(';
     for (const b_point_t& point : polygon.outer()) {
       ofs << '(';
@@ -206,7 +206,7 @@ void OccupancyMap::Save(const std::string& file) const {
 bool OccupancyMap::IsEmpty() const {
   return boost::geometry::is_empty(_multi_polygon);
 }
-  
+
 bool OccupancyMap::operator==(const OccupancyMap& occupancy_map) const {
   return boost::geometry::equals(_multi_polygon, occupancy_map._multi_polygon);
 }
@@ -246,7 +246,7 @@ OccupancyMap OccupancyMap::Buffer(float width) const {
 
   return result;
 }
-  
+
 bool OccupancyMap::Contains(const geom::Vector2D& point) const {
   return boost::geometry::covered_by(b_point_t(point.x, point.y), _multi_polygon);
 }
@@ -261,7 +261,7 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
   for (const b_polygon_t& polygon : _multi_polygon) {
 
     // Calculate outer buffer.
-    OccupancyMap outer_map; 
+    OccupancyMap outer_map;
     outer_map._multi_polygon.emplace_back(b_polygon_t({polygon.outer()}));
     boost::geometry::correct(outer_map._multi_polygon);
     outer_map = outer_map.Buffer(distance);
@@ -289,7 +289,7 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
     for (const b_ring_t& inner : polygon.inners()) {
 
       // Calculate inner buffer.
-      OccupancyMap inner_map; 
+      OccupancyMap inner_map;
       inner_map._multi_polygon.emplace_back(b_polygon_t({inner}));
       boost::geometry::correct(inner_map._multi_polygon);
       inner_map = inner_map.Buffer(-distance);
@@ -303,26 +303,26 @@ sidewalk::Sidewalk OccupancyMap::CreateSidewalk(float distance) const {
         }
       }
     }
-    
+
   }
-  
+
   return sidewalk::Sidewalk(std::move(polygons));
 }
- 
+
 std::vector<std::vector<std::vector<geom::Vector2D>>> OccupancyMap::GetPolygons() const {
   std::vector<std::vector<std::vector<geom::Vector2D>>> vertices;
 
-  for (const b_polygon_t polygon : _multi_polygon) {  
+  for (const b_polygon_t &polygon : _multi_polygon) {
     vertices.emplace_back(); // New polygon.
 
     vertices.back().emplace_back(); // New ring.
-    for (const b_point_t vertex : polygon.outer()) {
+    for (const b_point_t &vertex : polygon.outer()) {
       vertices.back().back().emplace_back(vertex.x(), vertex.y()); // New point.
     }
 
-    for (const b_ring_t ring : polygon.inners()) {
+    for (const b_ring_t &ring : polygon.inners()) {
       vertices.back().emplace_back(); // New ring.
-      for (const b_point_t vertex : ring) {
+      for (const b_point_t &vertex : ring) {
         vertices.back().back().emplace_back(vertex.x(), vertex.y()); // New point.
       }
     }
@@ -366,7 +366,7 @@ std::vector<geom::Triangle2D> OccupancyMap::GetTriangles() const {
             polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].y));
     }
   }
-  
+
   return triangles;
 }
 
@@ -392,7 +392,7 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles(float height) const {
     // Triangulate.
     std::vector<std::pair<size_t, size_t>> polygon_triangulation = geom::Triangulation::Triangulate(polygon_with_holes);
     for (size_t i = 0; i < polygon_triangulation.size(); i += 3) {
-      
+
       // Counterclockwise for upward facing triangle.
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i + 2].first][polygon_triangulation[i + 2].second].x,
@@ -406,7 +406,7 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles(float height) const {
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].y,
           height);
-      
+
       // Clockwise for downward facing triangle.
       triangles.emplace_back(
           polygon_with_holes[polygon_triangulation[i].first][polygon_triangulation[i].second].x,
@@ -422,7 +422,7 @@ std::vector<geom::Vector3D> OccupancyMap::GetMeshTriangles(float height) const {
           height);
     }
   }
-  
+
   return triangles;
 }
 

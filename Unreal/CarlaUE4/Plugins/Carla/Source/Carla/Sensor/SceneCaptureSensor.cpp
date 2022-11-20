@@ -321,13 +321,13 @@ float ASceneCaptureSensor::GetExposureSpeedUp() const
 void ASceneCaptureSensor::SetExposureCalibrationConstant(float Constant)
 {
   check(CaptureComponent2D != nullptr);
-  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant = Constant;
+  CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED = Constant;
 }
 
 float ASceneCaptureSensor::GetExposureCalibrationConstant() const
 {
   check(CaptureComponent2D != nullptr);
-  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant;
+  return CaptureComponent2D->PostProcessSettings.AutoExposureCalibrationConstant_DEPRECATED;
 }
 
 void ASceneCaptureSensor::SetMotionBlurIntensity(float Intensity)
@@ -499,7 +499,7 @@ namespace SceneCaptureSensor_local_ns {
     PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
     PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
     PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-    PostProcessSettings.bOverride_AutoExposureCalibrationConstant = true;
+    PostProcessSettings.bOverride_AutoExposureCalibrationConstant_DEPRECATED = true;
 
     // Camera
     PostProcessSettings.bOverride_CameraShutterSpeed = true;
@@ -569,7 +569,7 @@ namespace SceneCaptureSensor_local_ns {
 
     ShowFlags.SetAmbientOcclusion(false);
     ShowFlags.SetAntiAliasing(false);
-    ShowFlags.SetAtmosphericFog(false);
+    // ShowFlags.SetAtmosphericFog(false);
     // ShowFlags.SetAudioRadius(false);
     // ShowFlags.SetBillboardSprites(false);
     ShowFlags.SetBloom(false);
@@ -691,11 +691,11 @@ namespace SceneCaptureSensor_local_ns {
     // ShowFlags.SetVertexColors(false);
     // ShowFlags.SetVignette(false);
     // ShowFlags.SetVisLog(false);
-    ShowFlags.SetVisualizeAdaptiveDOF(false);
-    ShowFlags.SetVisualizeBloom(false);
+    // ShowFlags.SetVisualizeAdaptiveDOF(false);
+    // ShowFlags.SetVisualizeBloom(false);
     ShowFlags.SetVisualizeBuffer(false);
     ShowFlags.SetVisualizeDistanceFieldAO(false);
-    ShowFlags.SetVisualizeDistanceFieldGI(false);
+    //ShowFlags.SetVisualizeDistanceFieldGI(false);
     ShowFlags.SetVisualizeDOF(false);
     ShowFlags.SetVisualizeHDR(false);
     ShowFlags.SetVisualizeLightCulling(false);

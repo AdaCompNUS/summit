@@ -189,7 +189,7 @@ namespace element {
 
   void GeometryParamPoly3::PreComputeSpline() {
     size_t number_intervals = 1000;
-    double delta_p = 1.0 / number_intervals;
+    double delta_p = 1.0 / static_cast<double>(number_intervals);
     if (_arcLength) {
         delta_p *= _length;
     }

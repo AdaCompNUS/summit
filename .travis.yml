@@ -16,7 +16,7 @@ matrix:
             - llvm-toolchain-xenial-7
           packages:
             - g++-7 # we need this one for the libstdc++.
-            - clang-7
+            - clang-10
             - ninja-build
             - python
             - python-pip

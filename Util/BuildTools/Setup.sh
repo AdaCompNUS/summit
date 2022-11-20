@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-command -v /usr/bin/clang++-7 >/dev/null 2>&1 || {
-  echo >&2 "clang 7 is required, but it's not installed.";
+command -v /usr/bin/clang++-10 >/dev/null 2>&1 || {
+  echo >&2 "clang 10 is required, but it's not installed.";
   exit 1;
 }
 
-CXX_TAG=c7
-export CC=/usr/bin/clang-7
-export CXX=/usr/bin/clang++-7
+CXX_TAG=c10
+export CC=/usr/bin/clang-10
+export CXX=/usr/bin/clang++-10
 
 source $(dirname "$0")/Environment.sh
 
@@ -22,7 +22,7 @@ pushd ${CARLA_BUILD_FOLDER} >/dev/null
 # -- Get and compile libc++ ----------------------------------------------------
 # ==============================================================================
 
-LLVM_BASENAME=llvm-7.0
+LLVM_BASENAME=llvm-10.0
 
 LLVM_INCLUDE=${PWD}/${LLVM_BASENAME}-install/include/c++/v1
 LLVM_LIBPATH=${PWD}/${LLVM_BASENAME}-install/lib
@@ -69,7 +69,7 @@ unset LLVM_BASENAME
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.72.0
+BOOST_VERSION=1.71.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
@@ -84,44 +84,7 @@ else
   BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
   log "Retrieving boost."
-  wget "https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
-
-  log "Extracting boost for Python 2."
-  tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
-  mkdir -p ${BOOST_BASENAME}-install/include
-  mv ${BOOST_PACKAGE_BASENAME} ${BOOST_BASENAME}-source
-  # Boost patch for exception handling
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
-  cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
-  # ---
-
-  pushd ${BOOST_BASENAME}-source >/dev/null
-
-  BOOST_TOOLSET="clang-7.1"
-  BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
-
-  py2="/usr/bin/env python2"
-  py2_root=`${py2} -c "import sys; print(sys.prefix)"`
-  pyv=`$py2 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
-  ./bootstrap.sh \
-      --with-toolset=clang \
-      --prefix=../boost-install \
-      --with-libraries=python,filesystem \
-      --with-python=${py2} --with-python-root=${py2_root}
-
-  if ${TRAVIS} ; then
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > ${HOME}/user-config.jam
-  else
-    echo "using python : ${pyv} : ${py2_root}/bin/python2 ;" > project-config.jam
-  fi
-
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
-  ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} --clean-all
-
-  # Get rid of  python2 build artifacts completely & do a clean build for python3
-  popd >/dev/null
-  rm -Rf ${BOOST_BASENAME}-source
+  wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz"
 
   log "Extracting boost for Python 3."
   tar -xzf ${BOOST_PACKAGE_BASENAME}.tar.gz
@@ -131,6 +94,8 @@ else
   cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/rational.hpp" "${BOOST_BASENAME}-source/boost/rational.hpp"
   cp "${CARLA_BUILD_FOLDER}/../Util/BoostFiles/read.hpp" "${BOOST_BASENAME}-source/boost/geometry/io/wkt/read.hpp"
   # ---
+  BOOST_TOOLSET="clang-10.0"
+  BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
   pushd ${BOOST_BASENAME}-source >/dev/null
 
@@ -140,7 +105,7 @@ else
   ./bootstrap.sh \
       --with-toolset=clang \
       --prefix=../boost-install \
-      --with-libraries=python \
+      --with-libraries=python,filesystem,system \
       --with-python=${py3} --with-python-root=${py3_root}
 
   if ${TRAVIS} ; then
@@ -251,7 +216,7 @@ else
   log "Retrieving earcut."
 
   git clone -b ${EARCUT_VERSION} https://github.com/mapbox/earcut.hpp.git ${EARCUT_BASENAME}-source
-  
+
   mkdir -p ${EARCUT_BASENAME}-install
 
   cp -r ${EARCUT_BASENAME}-source/include ${EARCUT_BASENAME}-install/include
@@ -297,6 +262,10 @@ else
       -DINSTALL_UTFCPP=ON \
       -DBUILD_EXAMPLES=OFF \
       -DBUILD_TESTING=OFF \
+      -DBoost_NO_BOOST_CMAKE=TRUE \
+      -DBoost_NO_SYSTEM_PATHS=TRUE \
+      -DBOOST_ROOT:PATHNAME=${BOOST_INCLUDE} \
+      -DBoost_LIBRARY_DIRS:FILEPATH=${BOOST_LIBPATH} \
       ../${LIBOSMIUM_BASENAME}-source
 
   ninja

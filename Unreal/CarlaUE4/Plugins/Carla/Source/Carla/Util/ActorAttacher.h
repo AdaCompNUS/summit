@@ -19,6 +19,7 @@
 UENUM(BlueprintType)
 enum class EAttachmentType : uint8
 {
+  Null = 0,
   Rigid      = CARLA_ENUM_FROM_RPC(Rigid)      UMETA(DisplayName = "Rigid"),
   SpringArm  = CARLA_ENUM_FROM_RPC(SpringArm)  UMETA(DisplayName = "SpringArm"),
 

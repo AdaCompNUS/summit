@@ -12,6 +12,7 @@ import fnmatch
 import os
 import platform
 import sys
+import distro
 
 
 def get_libcarla_extensions():
@@ -30,7 +31,7 @@ def get_libcarla_extensions():
 
     if os.name == "posix":
         # @todo Replace deprecated method.
-        linux_distro = platform.dist()[0]  # pylint: disable=W1505
+        linux_distro = distro.like()  # pylint: disable=W1505
         if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
@@ -46,11 +47,11 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libDetourCrowd.a'),
                 os.path.join(pwd, 'dependencies/lib', pylib),
                 os.path.join(pwd, 'dependencies/lib', numpylib)]
-            
+
             # Additional link libraries. @todo Get order from pkg-config or cmake.
             extra_link_args += [
                 '-ldl', '-lm', '-lpthread', '-lrt']
-            
+
             # LibOsmium link libraries. @todo Get order from pkg-config or cmake.
             extra_link_args += [
                 '-lbz2', '-lexpat']
@@ -65,7 +66,7 @@ def get_libcarla_extensions():
                 '-Wno-unused-parameter',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
-            
+
             if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
                 print('Building AD RSS variant.')
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']
@@ -79,9 +80,11 @@ def get_libcarla_extensions():
                 extra_link_args += ['-lpng', '-ljpeg', '-ltiff']
                 extra_compile_args += ['-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT=true']
 
-            include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
-            library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
-            extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+            #include_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7/include']
+            #library_dirs += ['/usr/lib/gcc/x86_64-linux-gnu/7']
+            #extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
+            extra_link_args += ['-lstdc++']
+            print(extra_link_args)
         else:
             raise NotImplementedError
     elif os.name == "nt":
@@ -97,7 +100,7 @@ def get_libcarla_extensions():
         required_libs = [
             pylib, 'libboost_filesystem',
             'rpc.lib', 'carla_client.lib',
-            'libpng.lib', 'Recast.lib', 
+            'libpng.lib', 'Recast.lib',
             'Detour.lib', 'DetourCrowd.lib']
 
         # Search for files in 'PythonAPI\carla\dependencies\lib' that contains

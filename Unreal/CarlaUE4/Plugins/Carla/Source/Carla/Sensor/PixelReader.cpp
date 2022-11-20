@@ -53,8 +53,8 @@ static void WritePixelsToBuffer_Vulkan(
 {
   check(IsInRenderingThread());
   auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTextureRHIParamRef Texture = RenderResource->GetRenderTargetTexture();
+        static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
+  auto Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
     UE_LOG(LogCarla, Error, TEXT("FPixelReader: UTextureRenderTarget2D missing render target texture"));
@@ -100,7 +100,8 @@ TUniquePtr<TImagePixelData<FColor>> FPixelReader::DumpPixels(
 {
   const FIntPoint DestSize(RenderTarget.GetSurfaceWidth(), RenderTarget.GetSurfaceHeight());
   TUniquePtr<TImagePixelData<FColor>> PixelData = MakeUnique<TImagePixelData<FColor>>(DestSize);
-  if (!WritePixelsToArray(RenderTarget, PixelData->Pixels))
+  TArray<FColor> Pixels(PixelData->Pixels.GetData(), PixelData->Pixels.Num());
+  if (!WritePixelsToArray(RenderTarget, Pixels))
   {
     return nullptr;
   }

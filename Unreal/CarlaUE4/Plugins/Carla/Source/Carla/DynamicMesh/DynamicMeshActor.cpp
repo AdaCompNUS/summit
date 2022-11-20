@@ -19,7 +19,7 @@ void ADynamicMeshActor::SetMaterial(const FString& Material) {
 void ADynamicMeshActor::SetTriangles(const TArray<FVector>& Triangles) {
   TArray<int> VertexIndices;
   VertexIndices.SetNum(Triangles.Num(), true);
-  
+
   TArray<FVector> Normals;
   Normals.SetNum(Triangles.Num(), true);
 
@@ -49,17 +49,17 @@ void ADynamicMeshActor::SetTriangles(const TArray<FVector>& Triangles) {
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(
-      0, 
-      Triangles, 
-      VertexIndices, 
-      Normals, 
-      UV, 
-      {}, 
-      Tangents, 
+      0,
+      Triangles,
+      VertexIndices,
+      Normals,
+      UV,
+      {},
+      Tangents,
       true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
 }
-  
+
 /*
  * https://github.com/EpicGames/UnrealEngine/blob/ab237f46dc0eee40263acbacbe938312eb0dffbb/Engine/Source/Runtime/UMG/Private/Blueprint/AsyncTaskDownloadImage.cpp#L61
  * https://wiki.unrealengine.com/Procedural_Materials
@@ -79,7 +79,7 @@ void ADynamicMeshActor::SetTileMesh(FVector BoundsMin, FVector BoundsMax, const 
 
   TArray<int> VertexIndices;
   VertexIndices.SetNum(Triangles.Num(), true);
-  
+
   TArray<FVector> Normals;
   Normals.SetNum(Triangles.Num(), true);
 
@@ -107,7 +107,7 @@ void ADynamicMeshActor::SetTileMesh(FVector BoundsMin, FVector BoundsMax, const 
   UV[0] = FVector2D(0, 1);
   UV[1] = FVector2D(1, 0);
   UV[2] = FVector2D(0, 0);
-  
+
   // Top triangle
   UV[3] = FVector2D(1, 0);
   UV[4] = FVector2D(0, 1);
@@ -115,38 +115,38 @@ void ADynamicMeshActor::SetTileMesh(FVector BoundsMin, FVector BoundsMax, const 
 
   MeshComponent->bUseComplexAsSimpleCollision = true;
   MeshComponent->CreateMeshSection_LinearColor(
-      0, 
-      Triangles, 
-      VertexIndices, 
-      Normals, 
-      UV, 
-      {}, 
-      Tangents, 
+      0,
+      Triangles,
+      VertexIndices,
+      Normals,
+      UV,
+      {},
+      Tangents,
       true);
   MeshComponent->ContainsPhysicsTriMeshData(true);
-  
+
   // Convert into bitmap.
   IImageWrapperModule& ImageWrapperModule = FModuleManager::LoadModuleChecked<IImageWrapperModule>(FName("ImageWrapper"));
   TSharedPtr<IImageWrapper> ImageWrapper = ImageWrapperModule.CreateImageWrapper(EImageFormat::JPEG);
   ImageWrapper->SetCompressed(RawData.GetData(), RawData.Num());
-  const TArray<uint8>* Data = NULL;
+  TArray<uint8> Data;
 	ImageWrapper->GetRaw(ERGBFormat::BGRA, 8, Data);
 
   // Create texture from bitmap.
   UTexture2D* Texture2D = UTexture2D::CreateTransient(ImageWrapper->GetWidth(), ImageWrapper->GetHeight(), PF_B8G8R8A8);
   Texture2D->CompressionSettings = TextureCompressionSettings::TC_VectorDisplacementmap;
   Texture2D->SRGB = 0;
-  Texture2D->PlatformData->NumSlices = 1;
+  Texture2D->PlatformData->SetNumSlices(1);
   Texture2D->NeverStream = true;
   Texture2D->AddToRoot();
   uint8* TextureData = (uint8*)Texture2D->PlatformData->Mips[0].BulkData.Lock(LOCK_READ_WRITE);
-  FMemory::Memcpy(TextureData, Data->GetData(), Data->Num());
+  FMemory::Memcpy(TextureData, Data.GetData(), Data.Num());
   Texture2D->PlatformData->Mips[0].BulkData.Unlock();
   Texture2D->UpdateResource();
-  
+
   // Create material instance dynamic.
   UMaterial* Material = Cast<UMaterial>(StaticLoadObject(
-        UMaterial::StaticClass(), NULL, 
+        UMaterial::StaticClass(), NULL,
         TEXT("/Game/Carla/Static/GenericMaterials/Ground/M_Tile")));
   UMaterialInstanceDynamic* MaterialDynamic = UMaterialInstanceDynamic::Create(Material, NULL);
   MaterialDynamic->SetTextureParameterValue(FName("DynamicTexture"), Texture2D);

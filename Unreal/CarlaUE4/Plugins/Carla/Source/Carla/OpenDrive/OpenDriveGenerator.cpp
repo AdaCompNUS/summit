@@ -13,7 +13,7 @@
 #include <compiler/enable-ue4-macros.h>
 
 #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
-#include "PhysicsEngine/BodySetupEnums.h"
+#include "PhysicsCore/Public/BodySetupEnums.h"
 #include "ProceduralMeshComponent.h"
 
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
